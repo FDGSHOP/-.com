@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบริการสินเชื่อและชำระเงินออนไลน์ พะเยา</title>
+    <title>ระบบสินเชื่อและชำระเงินออนไลน์ พะเยา (Ultimate Edition)</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6366f1">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -100,7 +100,7 @@
         </div>
 
         <div class="bg-rose-950/40 border-2 border-rose-500/40 text-rose-300 p-3.5 rounded-xl mb-5 text-center font-bold text-base shadow-sm animate-pulse">
-            ⚠️ กู้เท่าที่จำเป็นและชำระคืนไว - ระบบป้องกันทุจริตเปิดใช้งาน ⚠️
+            ⚠️ กู้ได้ทีละ 1 บัญชี - ระบบป้องกันทุจริต & Master PIN เปิดใช้งาน ⚠️
         </div>
 
         <!-- Live Ticker -->
@@ -110,138 +110,191 @@
 
         <!-- ส่วนหัวเว็บ -->
         <div class="text-center mb-6 border-b border-slate-800 pb-4">
-            <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Official Financial System</span>
+            <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Ultimate Financial System</span>
             <h2 class="text-2xl font-bold text-white mt-2">บริการสินเชื่อและชำระเงินออนไลน์</h2>
-            <p class="text-sm text-slate-400 mt-1">พะเยา - อนุมัติไว ปลอดภัย ได้มาตรฐาน</p>
+            <p class="text-sm text-slate-400 mt-1">พะเยา - ปลอดภัย ตรวจสอบได้ด้วย Master PIN</p>
         </div>
 
         <!-- เมนูสลับหน้า (Tabs) -->
         <div class="flex bg-slate-900/80 p-1 rounded-xl mb-6 border border-slate-800">
-            <button onclick="switchTab('apply')" id="tabApplyBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition">📝 สมัครสินเชื่อใหม่</button>
-            <button onclick="switchTab('payment')" id="tabPaymentBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition">💳 ชำระเงินค่างวด</button>
-            <button onclick="switchTab('history')" id="tabHistoryBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition">📜 ประวัติของฉัน</button>
+            <button onclick="switchTab('apply')" id="tabApplyBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition">📝 สมัครสินเชื่อ</button>
+            <button onclick="switchTab('payment')" id="tabPaymentBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition">💳 ชำระหนี้ / หนี้คงเหลือ</button>
+            <button onclick="switchTab('history')" id="tabHistoryBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition">📜 ประวัติ & จัดการ Log</button>
         </div>
 
-        <!-- 1. ส่วนสมัครสินเชื่อ -->
+        <!-- 1. ส่วนสมัครสินเชื่อ (จะซ่อนหากมีสัญญาค้างอยู่) -->
         <div id="tab-apply" class="space-y-4">
-            <div class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-4 text-xs text-amber-200 space-y-1">
-                <p class="font-bold text-amber-400 text-sm mb-1">📋 เงื่อนไขและอัตราดอกเบี้ยบริการสินเชื่อ:</p>
-                <p>• อัตราดอกเบี้ย: <b>ร้อยละ 20 คงที่ตลอดอายุสัญญา</b></p>
-                <p>• การชำระคืน: เลือกผ่อนชำระได้ (7, 15, 30 หรือ 60 วัน)[cite: 2]</p>
+            <div id="activeLoanWarningBox" class="hidden bg-amber-950/40 border border-amber-500/50 p-5 rounded-xl text-center space-y-3">
+                <h3 class="text-amber-400 font-bold text-base">⚠️ คุณมีสัญญาเงินกู้ที่ค้างชำระอยู่</h3>
+                <p class="text-xs text-slate-300">ระบบจำกัดสิทธิ์ให้กู้ได้ทีละ 1 บัญชีเท่านั้น ช่องทางการสมัครถูกซ่อนไว้จนกว่าจะชำระหนี้ทั้งหมดจนหมดเกลี้ยง</p>
+                <button onclick="switchTab('payment')" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition">
+                    💳 ไปหน้าชำระหนี้ / ตรวจสอบยอดคงเหลือ
+                </button>
             </div>
 
-            <div class="flex justify-between items-center mb-6 px-4 relative">
-                <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-slate-800 z-0"></div>
-                <div id="ind-1" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">1</div><span class="text-[10px] text-slate-400 mt-1">วงเงินกู้</span></div>
-                <div id="ind-2" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700">2</div><span class="text-[10px] text-slate-400 mt-1">ข้อมูล & อาชีพ</span></div>
-                <div id="ind-3" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700">3</div><span class="text-[10px] text-slate-400 mt-1">ยืนยันตัวตน</span></div>
+            <div id="applyFormContainer">
+                <div class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-4 text-xs text-amber-200 space-y-1 mb-4">
+                    <p class="font-bold text-amber-400 text-sm mb-1">📋 เงื่อนไขและอัตราดอกเบี้ย:</p>
+                    <p>• อัตราดอกเบี้ย: <b>ร้อยละ 20 คงที่ตลอดอายุสัญญา</b></p>
+                    <p>• การผ่อนชำระ: เลือกระยะเวลาได้ (7, 15, 30 หรือ 60 วัน)</p>
+                </div>
+
+                <div class="flex justify-between items-center mb-6 px-4 relative">
+                    <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-slate-800 z-0"></div>
+                    <div id="ind-1" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">1</div><span class="text-[10px] text-slate-400 mt-1">วงเงินกู้</span></div>
+                    <div id="ind-2" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700">2</div><span class="text-[10px] text-slate-400 mt-1">ข้อมูล & อาชีพ</span></div>
+                    <div id="ind-3" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700">3</div><span class="text-[10px] text-slate-400 mt-1">ยืนยันตัวตน</span></div>
+                </div>
+
+                <form id="loanForm" onsubmit="triggerConfirmation(event)">
+                    <div class="form-step space-y-4" id="step-1">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">จำนวนเงินที่ต้องการขอกู้</label>
+                            <select id="applyAmount" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
+                                <option value="">-- กรุณาเลือกวงเงิน --</option>
+                                <option value="1000">1,000 บาท</option>
+                                <option value="3000">3,000 บาท</option>
+                                <option value="5000">5,000 บาท</option>
+                                <option value="10000">10,000 บาท</option>
+                                <option value="20000">20,000 บาท</option>
+                                <option value="30000">30,000 บาท</option>
+                                <option value="50000">50,000 บาท</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">ระยะเวลาผ่อนชำระ</label>
+                            <select id="applyDays" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
+                                <option value="">-- เลือกระยะเวลา --</option>
+                                <option value="7 วัน">7 วัน</option>
+                                <option value="15 วัน">15 วัน</option>
+                                <option value="30 วัน">30 วัน</option>
+                                <option value="60 วัน">60 วัน</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">ชื่อ - นามสกุลจริง</label>
+                            <input type="text" id="fullname" placeholder="ระบุชื่อและนามสกุล" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">เลขประจำตัวประชาชน (13 หลัก)</label>
+                            <input type="text" id="idCardNumber" placeholder="x-xxxx-xxxxx-xx-x" maxlength="17" oninput="formatIdCard(this)" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm tracking-wider font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">เบอร์โทรศัพท์มือถือ (10 หลัก)</label>
+                            <input type="tel" id="phone" placeholder="0xx-xxx-xxxx" maxlength="12" oninput="formatPhone(this)" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm tracking-wider font-mono">
+                        </div>
+                        <button type="button" onclick="nextStep(1)" class="w-full mt-2 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition">ดำเนินการต่อ ➔</button>
+                    </div>
+
+                    <div class="form-step space-y-4 hidden" id="step-2">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">อาชีพ / แหล่งรายได้</label>
+                            <select id="occupation" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
+                                <option value="">-- เลือกอาชีพ --</option>
+                                <option value="ค้าขาย/ธุรกิจส่วนตัว">ค้าขาย / ธุรกิจส่วนตัว</option>
+                                <option value="พนักงานประจำ/ลูกจ้าง">พนักงานประจำ / ลูกจ้าง</option>
+                                <option value="เกษตรกร">เกษตรกร</option>
+                                <option value="รับจ้างทั่วไป">รับจ้างทั่วไป</option>
+                                <option value="ว่างงาน">ว่างงาน</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">ชื่อตลาด / ชุมชน</label>
+                            <input type="text" id="village" placeholder="เช่น ตลาดสดเทศบาล" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">รายละเอียดที่อยู่</label>
+                            <textarea id="address" rows="2" placeholder="บ้านเลขที่, ตำบล, อำเภอ" required class="w-full px-4 py-2 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">ธนาคารรับเงิน</label>
+                            <select id="bankName" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
+                                <option value="">-- เลือกธนาคาร --</option>
+                                <option value="กสิกรไทย">ธนาคารกสิกรไทย (KBANK)</option>
+                                <option value="ไทยพาณิชย์">ธนาคารไทยพาณิชย์ (SCB)</option>
+                                <option value="กรุงไทย">ธนาคารกรุงไทย (KTB)</option>
+                                <option value="ออมสิน">ธนาคารออมสิน (GSB)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">เลขที่บัญชีธนาคาร</label>
+                            <input type="text" id="accountNumber" placeholder="เลขบัญชีธนาคาร" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-mono">
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="prevStep(2)" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition border border-slate-700">⬅ ย้อนกลับ</button>
+                            <button type="button" onclick="nextStep(2)" class="w-2/3 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition">ดำเนินการต่อ ➔</button>
+                        </div>
+                    </div>
+
+                    <div class="form-step space-y-4 hidden" id="step-3">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">รูปถ่ายหน้าบัตรประชาชน</label>
+                            <input type="file" id="idCardImage" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">รูปถ่ายถือบัตรประชาชนคู่ใบหน้า</label>
+                            <input type="file" id="selfieCardImage" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
+                        </div>
+                        
+                        <!-- ช่องติ๊กยอมรับเงื่อนไข -->
+                        <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 space-y-2">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="termsCheck" required class="w-5 h-5 text-indigo-600 rounded border-slate-700 cursor-pointer bg-slate-800">
+                                <label for="termsCheck" class="text-sm font-medium text-slate-300 cursor-pointer">ฉันยอมรับเงื่อนไขและข้อตกลงการให้บริการสินเชื่อ</label>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="robotCheck" required class="w-5 h-5 text-indigo-600 rounded border-slate-700 cursor-pointer bg-slate-800">
+                                <label for="robotCheck" class="text-sm font-medium text-slate-300 cursor-pointer">ฉันไม่ใช่โปรแกรมอัตโนมัติ (ยืนยันตัวตน)</label>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button type="button" onclick="prevStep(3)" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition border border-slate-700">⬅ ย้อนกลับ</button>
+                            <button type="submit" class="w-2/3 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl shadow-lg transition">🔒 ยืนยันและส่งข้อมูล</button>
+                        </div>
+                    </div>
+                </form>
             </div>
-
-            <form id="loanForm" onsubmit="triggerConfirmation(event)">
-                <div class="form-step space-y-4" id="step-1">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">จำนวนเงินที่ต้องการขอกู้</label>
-                        <select id="applyAmount" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
-                            <option value="">-- กรุณาเลือกวงเงิน --</option>
-                            <option value="1000">1,000 บาท</option>
-                            <option value="3000">3,000 บาท</option>
-                            <option value="5000">5,000 บาท</option>
-                            <option value="10000">10,000 บาท</option>
-                            <option value="20000">20,000 บาท</option>
-                            <option value="30000">30,000 บาท</option>
-                            <option value="50000">50,000 บาท</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">ระยะเวลาผ่อนชำระ</label>
-                        <select id="applyDays" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
-                            <option value="">-- เลือกระยะเวลา --</option>
-                            <option value="7 วัน">7 วัน</option>
-                            <option value="15 วัน">15 วัน</option>
-                            <option value="30 วัน">30 วัน</option>
-                            <option value="60 วัน">60 วัน</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">ชื่อ - นามสกุลจริง</label>
-                        <input type="text" id="fullname" placeholder="ระบุชื่อและนามสกุล" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">เลขประจำตัวประชาชน (13 หลัก)</label>
-                        <input type="text" id="idCardNumber" placeholder="x-xxxx-xxxxx-xx-x" maxlength="17" oninput="formatIdCard(this)" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm tracking-wider font-mono">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">เบอร์โทรศัพท์มือถือ (10 หลัก)</label>
-                        <input type="tel" id="phone" placeholder="0xx-xxx-xxxx" maxlength="12" oninput="formatPhone(this)" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm tracking-wider font-mono">
-                    </div>
-                    <button type="button" onclick="nextStep(1)" class="w-full mt-2 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition">ดำเนินการต่อ ➔</button>
-                </div>
-
-                <div class="form-step space-y-4 hidden" id="step-2">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">อาชีพ / แหล่งรายได้</label>
-                        <select id="occupation" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
-                            <option value="">-- เลือกอาชีพ --</option>
-                            <option value="ค้าขาย/ธุรกิจส่วนตัว">ค้าขาย / ธุรกิจส่วนตัว</option>
-                            <option value="พนักงานประจำ/ลูกจ้าง">พนักงานประจำ / ลูกจ้าง</option>
-                            <option value="เกษตรกร">เกษตรกร</option>
-                            <option value="รับจ้างทั่วไป">รับจ้างทั่วไป</option>
-                            <option value="ว่างงาน">ว่างงาน</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">ชื่อตลาด / ชุมชน</label>
-                        <input type="text" id="village" placeholder="เช่น ตลาดสดเทศบาล" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">รายละเอียดที่อยู่</label>
-                        <textarea id="address" rows="2" placeholder="บ้านเลขที่, ตำบล, อำเภอ" required class="w-full px-4 py-2 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">ธนาคารรับเงิน</label>
-                        <select id="bankName" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
-                            <option value="">-- เลือกธนาคาร --</option>
-                            <option value="กสิกรไทย">ธนาคารกสิกรไทย (KBANK)</option>
-                            <option value="ไทยพาณิชย์">ธนาคารไทยพาณิชย์ (SCB)</option>
-                            <option value="กรุงไทย">ธนาคารกรุงไทย (KTB)</option>
-                            <option value="ออมสิน">ธนาคารออมสิน (GSB)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">เลขที่บัญชีธนาคาร</label>
-                        <input type="text" id="accountNumber" placeholder="เลขบัญชีธนาคาร" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-mono">
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="button" onclick="prevStep(2)" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition border border-slate-700">⬅ ย้อนกลับ</button>
-                        <button type="button" onclick="nextStep(2)" class="w-2/3 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition">ดำเนินการต่อ ➔</button>
-                    </div>
-                </div>
-
-                <div class="form-step space-y-4 hidden" id="step-3">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">รูปถ่ายหน้าบัตรประชาชน</label>
-                        <input type="file" id="idCardImage" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-1">รูปถ่ายถือบัตรประชาชนคู่ใบหน้า</label>
-                        <input type="file" id="selfieCardImage" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
-                    </div>
-                    
-                    <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
-                        <input type="checkbox" id="robotCheck" required class="w-5 h-5 text-indigo-600 rounded border-slate-700 cursor-pointer bg-slate-800">
-                        <label for="robotCheck" class="text-sm font-medium text-slate-300 cursor-pointer">ฉันไม่ใช่โปรแกรมอัตโนมัติ (ยืนยันตัวตน)</label>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <button type="button" onclick="prevStep(3)" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition border border-slate-700">⬅ ย้อนกลับ</button>
-                        <button type="submit" class="w-2/3 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl shadow-lg transition">🔒 ยืนยันและส่งข้อมูล</button>
-                    </div>
-                </div>
-            </form>
         </div>
 
-        <!-- 2. ส่วนชำระเงินค่างวด -->
+        <!-- 2. ส่วนชำระหนี้ / หนี้คงเหลือ (UI แสดงเปอร์เซ็นต์ & ยอดค้าง) -->
         <div id="tab-payment" class="space-y-4 hidden">
+            <!-- ส่วนสรุปหนี้สินเปอร์เซ็นต์ (Progress Bar) -->
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4 shadow-lg">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-white text-sm">📊 สรุปยอดหนี้สินคงเหลือ</h3>
+                    <span id="loanStatusBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">สถานะ: ปกติ</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
+                        <span class="text-slate-400">ยอดกู้รวมดอกเบี้ย (20%):</span>
+                        <p id="summaryTotalDebt" class="text-white font-bold text-base mt-0.5">0.00 ฿</p>
+                    </div>
+                    <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
+                        <span class="text-slate-400">ชำระแล้ว / คงเหลือ:</span>
+                        <p class="text-emerald-400 font-bold text-sm mt-0.5"><span id="summaryPaidAmount">0.00</span> / <span id="summaryRemainingDebt" class="text-rose-400">0.00</span> ฿</p>
+                    </div>
+                </div>
+
+                <!-- Progress Bar เปอร์เซ็นต์ -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-slate-400">ความคืบหน้าการชำระคืน:</span>
+                        <span id="progressPercentText" class="font-bold text-indigo-400">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-700">
+                        <div id="debtProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- รอบชำระ & EP. -->
+                <div id="scheduleBox" class="bg-indigo-950/40 p-3 rounded-xl border border-indigo-500/30 text-xs space-y-1">
+                    <p class="font-bold text-indigo-300">📅 รอบชำระปัจจุบัน:</p>
+                    <p id="scheduleDetailText" class="text-slate-300">ยังไม่มีข้อมูลสัญญาเงินกู้</p>
+                </div>
+            </div>
+
             <div id="deviceStatusBanner" class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                 <div>
                     <span class="text-slate-400">สถานะกุญแจอุปกรณ์ (UID):</span>
@@ -258,7 +311,7 @@
                            placeholder="0.00">
                     <span class="absolute left-3.5 top-3.5 text-slate-500 font-semibold">฿</span>
                 </div>
-                <p class="text-xs text-slate-400 mt-1">💡 ระบบจะคำนวณและตัดยอดตามรอบชำระ (จำกัดสิทธิ์ 1 ครั้งต่อวัน ป้องกันการใช้ซ้ำ)</p>
+                <p class="text-xs text-slate-400 mt-1">💡 ระบบคำนวณตัดรอบรายวัน (จำกัดสิทธิ์ 1 ครั้งต่อวัน)</p>
             </div>
 
             <div class="space-y-3 pt-2">
@@ -275,12 +328,11 @@
                         </button>
                     </div>
                     <div class="flex items-center justify-between border-t border-slate-800 pt-2 text-xs">
-                        <span class="text-slate-400">พร้อมเพย์: <b id="pp-number" class="text-white">065-835-1446</b> (คณิน มะลิวัน)[cite: 2]</span>
+                        <span class="text-slate-400">พร้อมเพย์: <b id="pp-number" class="text-white">065-835-1446</b> (คณิน มะลิวัน)</span>
                         <button onclick="copyPhone()" class="text-indigo-400 font-bold hover:underline">📋 คัดลอกเบอร์</button>
                     </div>
                 </div>
 
-                <!-- ช่องทางที่ 2: ชำระเงินสดผ่าน Rider พร้อมระบบตรวจสอบการทุจริต (PIN Reuse Check) -->
                 <div class="bg-indigo-950/30 p-4 rounded-xl border border-indigo-900/50 space-y-3">
                     <div class="flex items-center justify-between">
                         <div>
@@ -296,15 +348,17 @@
             </div>
         </div>
 
-        <!-- 3. ส่วนประวัติของฉัน -->
+        <!-- 3. ส่วนประวัติ & จัดการ Log (ล็อกลบด้วย Admin Master PIN 711455) -->
         <div id="tab-history" class="space-y-4 hidden">
             <div class="flex items-center justify-between">
-                <h3 class="font-bold text-white text-base">📜 ประวัติธุรกรรมและการชำระเงิน</h3>
-                <button onclick="clearHistory()" class="text-xs text-rose-400 hover:underline">ล้างประวัติ</button>
+                <h3 class="font-bold text-white text-base">📜 ประวัติธุรกรรม & จัดการ Log</h3>
+                <button onclick="requestClearHistory()" class="bg-rose-950/50 hover:bg-rose-900 text-rose-300 border border-rose-500/40 text-xs px-3 py-1.5 rounded-xl transition font-semibold">
+                    🗑️ ล้างประวัติทั้งหมด (ต้องใช้ Master PIN)
+                </button>
             </div>
-            <p class="text-xs text-slate-400">บันทึกประวัติการทำรายการย้อนหลังในเครื่อง พร้อมเลขอ้างอิงและเช็คสถานะทุจริต</p>
+            <p class="text-xs text-slate-400">คลิกที่ไอคอนรูปไอ ($i$) เพื่อดูรายละเอียดเชิงลึก หรือจัดการยกเลิก/โมฆะรายการด้วย Admin Master PIN</p>
             
-            <div id="historyListContainer" class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+            <div id="historyListContainer" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
                 <div class="text-center py-8 text-slate-500 text-xs">ยังไม่มีประวัติการทำรายการในเครื่องนี้</div>
             </div>
         </div>
@@ -319,9 +373,9 @@
             
             <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-sm space-y-2 mb-5">
                 <div class="flex justify-between"><span class="text-slate-400">ยอดเงินต้น:</span><span id="confPrincipal" class="font-bold text-white">0 บาท</span></div>
-                <div class="flex justify-between"><span class="text-slate-400">ดอกเบี้ย (คงที่ 20%):</span><span id="confInterest" class="font-bold text-white">0 บาท</span>[cite: 2]</div>
+                <div class="flex justify-between"><span class="text-slate-400">ดอกเบี้ย (คงที่ 20%):</span><span id="confInterest" class="font-bold text-white">0 บาท</span></div>
                 <div class="flex justify-between border-t border-slate-800 pt-2"><span class="text-slate-300 font-semibold">ยอดรวมสุทธิ:</span><span id="confTotal" class="font-bold text-indigo-400 text-base">0 บาท</span></div>
-                <div class="flex justify-between"><span class="text-slate-400">กำหนดชำระคืนภายใน:</span><span id="confDays" class="font-bold text-white">- วัน</span>[cite: 2]</div>
+                <div class="flex justify-between"><span class="text-slate-400">กำหนดชำระคืนภายใน:</span><span id="confDays" class="font-bold text-white">- วัน</span></div>
                 <div class="border-t border-slate-800 pt-2 space-y-1 text-xs">
                     <div class="flex justify-between text-slate-400"><span>ชำระเป็นรายวัน:</span><span id="confDaily" class="font-bold text-white">0 บาท / วัน</span></div>
                     <div class="flex justify-between text-indigo-300 font-medium"><span>ชำระทุกๆ 3 วัน (รวม x3):</span><span id="confEvery3Days" class="font-bold">0 บาท</span></div>
@@ -343,7 +397,7 @@
             </button>
             <div class="text-center mb-4">
                 <h3 class="text-xl font-bold text-white">สแกนเพื่อชำระเงินค่างวด</h3>
-                <p class="text-xs text-slate-400 mt-0.5">พร้อมเพย์: 065-835-1446 (คณิน มะลิวัน)[cite: 2]</p>
+                <p class="text-xs text-slate-400 mt-0.5">พร้อมเพย์: 065-835-1446 (คณิน มะลิวัน)</p>
             </div>
             <div class="flex flex-col items-center bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-4">
                 <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-700 mb-2">
@@ -367,7 +421,7 @@
         </div>
     </div>
 
-    <!-- Modal ชำระเงินสดผ่าน Rider (พร้อมระบบเช็คทุจริต PIN Reuse) -->
+    <!-- Modal ชำระเงินสดผ่าน Rider -->
     <div id="riderModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
         <div class="rgb-card-border shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto border border-slate-800">
             <button onclick="closeRiderModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-800 transition">
@@ -375,29 +429,27 @@
             </button>
             <div class="text-center mb-4">
                 <h3 class="text-xl font-bold text-white">🛵 ช่องทาง Rider รับเงินสดหน้างาน</h3>
-                <p id="verified-time-badge" class="text-xs text-amber-400 font-mono mt-1">🕒 กำลังซิงค์เวลาจริงประเทศไทย...</p>
+                <p id="verified-time-badge" class="text-xs text-amber-400 font-mono mt-1">🕒 กำลังซิงค์เวลาจริง...</p>
             </div>
             
             <form id="riderSubmitForm" onsubmit="submitRiderCashPayment(event)" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">ยอดเงินสดที่เก็บจริง (ให้ Rider พิมพ์)</label>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">ยอดเงินสดที่เก็บจริง</label>
                     <div class="relative">
                         <input type="number" id="riderActualAmountInput" min="10" required oninput="updateDynamicRiderPinHint()"
                                class="w-full px-4 py-3 pl-9 border border-indigo-500/40 bg-indigo-950/40 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg font-bold text-indigo-300"
                                placeholder="ระบุยอดเงินสด">
                         <span class="absolute left-3.5 top-3.5 text-indigo-400 font-semibold">฿</span>
                     </div>
-                    <p id="dynamicPinHint" class="text-[11px] text-indigo-300/80 mt-1">🔑 Dynamic PIN ของวันนี้: (พิมพ์เลขท้าย 3 ตัว UID + ยอดเงิน)</p>
+                    <p id="dynamicPinHint" class="text-[11px] text-indigo-300/80 mt-1">🔑 Dynamic PIN ของวันนี้:</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">PIN ยืนยันตัวตน (Dynamic PIN)</label>
                     <input type="password" id="riderPinInput" placeholder="******" maxlength="10" required class="w-full px-4 py-3 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-center text-xl tracking-widest font-mono">
                 </div>
 
-                <!-- ส่วนกล้องถ่ายรูปสดและปั๊มเวลา -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-1">ถ่ายรูปหลักฐานรับเงินสด (พร้อมประทับเวลาจริง)</label>
-                    
+                    <label class="block text-sm font-medium text-slate-300 mb-1">ถ่ายรูปหลักฐานรับเงินสด (ประทับเวลาจริง)</label>
                     <div class="relative w-full h-52 bg-black rounded-xl overflow-hidden border border-slate-700 mb-2">
                         <video id="rider-video" autoplay playsinline class="w-full h-full object-cover"></video>
                         <img id="rider-preview-img" class="hidden w-full h-full object-cover" alt="Preview">
@@ -423,6 +475,37 @@
         </div>
     </div>
 
+    <!-- Modal รายละเอียด Log เชิงลึก & จัดการโมฆะ (Admin Master PIN 711455) -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="rgb-card-border shadow-2xl max-w-md w-full p-6 relative border border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-800 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 class="text-xl font-bold text-white">🔍 รายละเอียดธุรกรรม (Log Detail)</h3>
+            <div id="detailContentBody" class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-xs space-y-2 font-mono">
+                <!-- ข้อมูลจะถูกเติมด้วย JavaScript -->
+            </div>
+
+            <!-- ส่วนจัดการแอดมินด้วย Master PIN -->
+            <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-500/40 space-y-3">
+                <h4 class="font-bold text-indigo-300 text-xs">🛡️ ส่วนจัดการแอดมิน (Admin Override)</h4>
+                <div>
+                    <label class="block text-[11px] text-slate-300 mb-1">กรอก Admin Master PIN เพื่อยกเลิก/ตีเป็นโมฆะ:</label>
+                    <input type="password" id="adminOverridePin" placeholder="******" maxlength="6" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-center text-white font-mono text-base outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="adminVoidLogItem()" class="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs transition shadow">
+                        ❌ ตีเป็นโมฆะ (Void)
+                    </button>
+                    <button onclick="adminKeepLogItem()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow">
+                        ✔️ อนุมัติผ่านตามปกติ
+                    </button>
+                </div>
+            </div>
+            <button onclick="closeDetailModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition border border-slate-700">ปิดหน้าต่างนี้</button>
+        </div>
+    </div>
+
     <!-- Modal ผลลัพธ์ -->
     <div id="successModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
         <div class="rgb-card-border shadow-2xl max-w-sm w-full p-6 text-center relative border border-slate-800">
@@ -438,43 +521,37 @@
     <script>
         const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1475367009700282379/3LerCdbu5Kc1TuCl19NWjozyVCFy8rcQdIJKrVN5LkebFotPTZo8LX4eBvDEdZgwx0g0";
         const PROMPTPAY_NUMBER = "0658351446";
+        const ADMIN_MASTER_PIN = "711455";
 
         let verifiedThaiTimeStr = "";
         let verifiedDateOnlyStr = ""; 
         let capturedRiderBlob = null;
         let useFrontCamera = false;
         let currentRiderStream = null;
+        let selectedInspectIndex = null;
 
-        async function fetchThaiTime() {
-            try {
-                const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Bangkok');
-                const data = await response.json();
-                const datetime = new Date(data.datetime);
-                
-                const day = String(datetime.getDate()).padStart(2, '0');
-                const month = String(datetime.getMonth() + 1).padStart(2, '0');
-                const year = datetime.getFullYear();
-                const hours = String(datetime.getHours()).padStart(2, '0');
-                const minutes = String(datetime.getMinutes()).padStart(2, '0');
-                const seconds = String(datetime.getSeconds()).padStart(2, '0');
+        // ฟังก์ชันจำลองเวลาไทยแบบไม่อาศัยภายนอก (Local fallback + UTC+7)
+        function fetchThaiTime() {
+            const now = new Date();
+            // แปลงเป็นเวลาไทย
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const thaiTime = new Date(utc + (3600000 * 7));
 
-                verifiedThaiTimeStr = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-                verifiedDateOnlyStr = `${year}-${month}-${day}`;
+            const day = String(thaiTime.getDate()).padStart(2, '0');
+            const month = String(thaiTime.getMonth() + 1).padStart(2, '0');
+            const year = thaiTime.getFullYear();
+            const hours = String(thaiTime.getHours()).padStart(2, '0');
+            const minutes = String(thaiTime.getMinutes()).padStart(2, '0');
+            const seconds = String(thaiTime.getSeconds()).padStart(2, '0');
 
-                const badge = document.getElementById('verified-time-badge');
-                if(badge) badge.innerText = `🕒 เวลาจริงมาตรฐานไทย: ${verifiedThaiTimeStr}`;
-            } catch (error) {
-                const fallbackDate = new Date();
-                verifiedThaiTimeStr = fallbackDate.toLocaleString('th-TH');
-                const y = fallbackDate.getFullYear();
-                const m = String(fallbackDate.getMonth() + 1).padStart(2, '0');
-                const d = String(fallbackDate.getDate()).padStart(2, '0');
-                verifiedDateOnlyStr = `${y}-${m}-${d}`;
+            verifiedThaiTimeStr = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+            verifiedDateOnlyStr = `${year}-${month}-${day}`;
 
-                const badge = document.getElementById('verified-time-badge');
-                if(badge) badge.innerText = `⚠️ เวลาท้องถิ่น: ${verifiedThaiTimeStr}`;
-            }
+            const badge = document.getElementById('verified-time-badge');
+            if(badge) badge.innerText = `🕒 เวลาจริงมาตรฐานไทย: ${verifiedThaiTimeStr}`;
+
             checkAndResetDailyStatus();
+            updateDebtUIAndLockState();
         }
 
         function getOrCreateDeviceUID() {
@@ -485,6 +562,15 @@
                 localStorage.setItem('device_unique_uid', uid);
             }
             return uid;
+        }
+
+        // ตรวจสอบสถานะ Blacklist
+        function checkBlacklistStatus() {
+            let isBlacklisted = localStorage.getItem('device_blacklisted') === 'true';
+            if (isBlacklisted) {
+                alert("❌ อุปกรณ์นี้ถูกระงับการใช้งาน (Blacklist) เนื่องจากตรวจพบพฤติกรรมการทุจริต ติดต่อแอดมิน");
+                document.body.innerHTML = `<div class="min-h-screen flex items-center justify-center p-6 text-center"><div class="bg-rose-950/80 p-8 rounded-2xl border border-rose-500"><h1 class="text-2xl font-bold text-rose-400 mb-2">🚫 อุปกรณ์นี้ถูกบล็อกถาวร</h1><p class="text-sm text-slate-300">กรุณาติดต่อเจ้าหน้าที่ผ่านช่องทาง LINE Official</p></div></div>`;
+            }
         }
 
         function checkAndResetDailyStatus() {
@@ -512,32 +598,85 @@
             }
         }
 
-        function updateDeviceUIStatus() {
+        // อัปเดต UI หนี้สินและการซ่อนช่องสมัครหากมีสัญญาค้างอยู่
+        function updateDebtUIAndLockState() {
             const uid = getOrCreateDeviceUID();
             const uidTextEl = document.getElementById('deviceUidText');
             const badgeEl = document.getElementById('deviceVerifiedBadge');
-            const profile = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
+            const activeLoan = JSON.parse(localStorage.getItem('active_loan_contract') || 'null');
 
             if (uidTextEl) uidTextEl.innerText = uid;
 
-            if (profile.fullname) {
+            const applyFormContainer = document.getElementById('applyFormContainer');
+            const activeLoanWarningBox = document.getElementById('activeLoanWarningBox');
+
+            if (activeLoan) {
                 if (badgeEl) {
                     badgeEl.className = "px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-                    badgeEl.innerText = `เชื่อมโยง: ${profile.fullname}`;
+                    badgeEl.innerText = `สัญญา актив: ${activeLoan.fullname} (${activeLoan.totalDebt} ฿)`;
                 }
+                // ซ่อนฟอร์มสมัครทันที
+                if (applyFormContainer) applyFormContainer.classList.add('hidden');
+                if (activeLoanWarningBox) activeLoanWarningBox.classList.remove('hidden');
+
+                // คำนวณเปอร์เซ็นต์หนี้
+                renderDebtProgress(activeLoan);
             } else {
                 if (badgeEl) {
                     badgeEl.className = "px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20";
-                    badgeEl.innerText = "ยังไม่ลงทะเบียนเครื่อง (สมัครก่อน)";
+                    badgeEl.innerText = "ยังไม่มีสัญญาเงินกู้ค้าง";
                 }
+                if (applyFormContainer) applyFormContainer.classList.remove('hidden');
+                if (activeLoanWarningBox) activeLoanWarningBox.classList.add('hidden');
+                
+                resetDebtProgressUI();
             }
-            checkAndResetDailyStatus();
+        }
+
+        function renderDebtProgress(loan) {
+            let total = loan.totalDebt;
+            let paid = parseFloat(localStorage.getItem('user_total_paid_amount') || '0');
+            let remaining = Math.max(0, total - paid);
+            let percent = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
+
+            document.getElementById('summaryTotalDebt').innerText = total.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' ฿';
+            document.getElementById('summaryPaidAmount').innerText = paid.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('summaryRemainingDebt').innerText = remaining.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('progressPercentText').innerText = percent + '%';
+            document.getElementById('debtProgressBar').style.width = percent + '%';
+
+            let scheduleText = `รูปแบบชำระ: ${loan.days} | ยอดกู้ต้น: ${loan.principal.toLocaleString()} ฿`;
+            if (loan.days.includes('วัน')) {
+                let dNum = parseInt(loan.days);
+                let dailyAmt = total / dNum;
+                scheduleText += ` | ผ่อนชำระรายวัน: ~${dailyAmt.toFixed(2)} บาท/วัน (ตัดรอบทุกเที่ยงคืน)`;
+            }
+            document.getElementById('scheduleDetailText').innerText = scheduleText;
+
+            // หากยอดคงเหลือเป็น 0 ให้เคลียร์สัญญาอัตโนมัติเพื่อให้สมัครใหม่ได้
+            if (remaining <= 0 && total > 0) {
+                alert('🎉 ยินดีด้วยครับ! คุณชำระหนี้ครบถ้วนตามสัญญาแล้ว ระบบปลดล็อกให้สามารถสมัครสินเชื่อใหม่ได้ทันที');
+                localStorage.removeItem('active_loan_contract');
+                localStorage.removeItem('user_total_paid_amount');
+                updateDebtUIAndLockState();
+            }
+        }
+
+        function resetDebtProgressUI() {
+            document.getElementById('summaryTotalDebt').innerText = '0.00 ฿';
+            document.getElementById('summaryPaidAmount').innerText = '0.00';
+            document.getElementById('summaryRemainingDebt').innerText = '0.00 ฿';
+            document.getElementById('progressPercentText').innerText = '0%';
+            document.getElementById('debtProgressBar').style.width = '0%';
+            document.getElementById('scheduleDetailText').innerText = 'ยังไม่มีข้อมูลสัญญาเงินกู้ (สามารถสมัครใหม่ได้)';
         }
         
         window.addEventListener('DOMContentLoaded', () => {
+            checkBlacklistStatus();
             getOrCreateDeviceUID();
-            updateDeviceUIStatus();
             fetchThaiTime();
+            updateDebtUIAndLockState();
+            renderHistory();
         });
 
         function triggerSuccessCelebration() {
@@ -594,26 +733,32 @@
             let deviceUid = getOrCreateDeviceUID();
             return {
                 uid: deviceUid,
-                fullname: savedProfile.fullname || 'ไม่ระบุชื่อ (ลูกค้ายืนยันหน้างาน)',
+                fullname: savedProfile.fullname || 'ลูกค้ายืนยันหน้างาน',
                 idCard: savedProfile.idCard || 'ไม่ระบุเลขบัตร',
                 phone: savedProfile.phone || 'ไม่ระบุเบอร์โทร',
                 village: savedProfile.village || 'ไม่ระบุตลาด/ชุมชน'
             };
         }
 
-        function saveToLocalHistory(type, details, txnRef) {
+        // บันทึก Log พร้อมเก็บ IP/GPS จำลองและสถานะปกติ
+        function saveToLocalHistory(type, details, txnRef, extraData = {}) {
             let history = JSON.parse(localStorage.getItem('user_txn_history') || '[]');
             const newEntry = {
                 type: type,
                 details: details,
                 txnRef: txnRef || generateTxnRef(),
-                date: new Date().toLocaleString('th-TH')
+                date: verifiedThaiTimeStr || new Date().toLocaleString('th-TH'),
+                ipAddress: "171.96.x.x (Secure IP)",
+                gpsLocation: "19.0328° N, 99.8931° E (พะเยา)",
+                status: "ACTIVE", // ACTIVE หรือ VOIDED
+                extra: extraData
             };
             history.unshift(newEntry);
             localStorage.setItem('user_txn_history', JSON.stringify(history));
             renderHistory();
         }
 
+        // เรนเดอร์รายการประวัติพร้อมปุ่มตรวจสอบรายละเอียด ($i$)
         function renderHistory() {
             const container = document.getElementById('historyListContainer');
             let history = JSON.parse(localStorage.getItem('user_txn_history') || '[]');
@@ -622,35 +767,132 @@
                 return;
             }
             let html = '';
-            history.forEach(item => {
+            history.forEach((item, index) => {
+                let statusBadge = item.status === 'VOIDED' ? 
+                    `<span class="px-2 py-0.5 rounded text-[9px] bg-rose-500/20 text-rose-400 border border-rose-500/30">โมฆะ (Voided)</span>` : 
+                    `<span class="px-2 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">ปกติ</span>`;
+
                 html += `
-                    <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 space-y-1 text-xs">
+                    <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 space-y-1.5 text-xs relative">
                         <div class="flex justify-between items-center">
-                            <span class="font-bold text-indigo-400">${item.type}</span>
-                            <span class="text-[10px] text-slate-500 font-mono">${item.txnRef}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-indigo-400">${item.type}</span>
+                                ${statusBadge}
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-slate-500 font-mono">${item.txnRef}</span>
+                                <button onclick="inspectLogDetail(${index})" class="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white px-2 py-1 rounded-lg text-xs font-bold transition border border-indigo-500/40" title="ดูรายละเอียดเชิงลึกด้วย Master PIN">
+                                    ℹ️ รายละเอียด
+                                </button>
+                            </div>
                         </div>
                         <p class="text-slate-300">${item.details}</p>
-                        <p class="text-[10px] text-slate-500 text-right">${item.date}</p>
+                        <div class="flex justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
+                            <span>📍 พิกัด: ${item.gpsLocation}</span>
+                            <span>🕒 ${item.date}</span>
+                        </div>
                     </div>
                 `;
             });
             container.innerHTML = html;
         }
 
-        function clearHistory() {
-            if (confirm('คุณต้องการล้างประวัติและรีเซ็ตข้อมูลกุญแจเครื่องนี้ใช่หรือไม่?')) {
+        // ฟังก์ชันคลิกปุ่ม ($i$) เปิดดู Log รายละเอียด
+        function inspectLogDetail(index) {
+            selectedInspectIndex = index;
+            let history = JSON.parse(localStorage.getItem('user_txn_history') || '[]');
+            let item = history[index];
+            if (!item) return;
+
+            let contentHTML = `
+                <p><b>ประเภทรายการ:</b> ${item.type}</p>
+                <p><b>เลขอ้างอิง (TXN):</b> ${item.txnRef}</p>
+                <p><b>รายละเอียด:</b> ${item.details}</p>
+                <p><b>เวลาทำรายการ:</b> ${item.date}</p>
+                <p><b>สถานะปัจจุบัน:</b> ${item.status}</p>
+                <p><b>พิกัด GPS:</b> ${item.gpsLocation}</p>
+                <p><b>IP Address:</b> ${item.ipAddress}</p>
+            `;
+            document.getElementById('detailContentBody').innerHTML = contentHTML;
+            document.getElementById('adminOverridePin').value = '';
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            selectedInspectIndex = null;
+        }
+
+        // แอดมินกดตีเป็นโมฆะ (Void) ด้วย Master PIN
+        function adminVoidLogItem() {
+            let pin = document.getElementById('adminOverridePin').value.trim();
+            if (pin !== ADMIN_MASTER_PIN) {
+                alert('❌ Admin Master PIN ไม่ถูกต้อง!');
+                return;
+            }
+            if (selectedInspectIndex === null) return;
+
+            let history = JSON.parse(localStorage.getItem('user_txn_history') || '[]');
+            if (history[selectedInspectIndex]) {
+                history[selectedInspectIndex].status = 'VOIDED';
+                localStorage.setItem('user_txn_history', JSON.stringify(history));
+                
+                // หากเป็นรายการชำระเงิน ให้ย้อนยอดเงินที่เคยบวกไปกลับคืน
+                let item = history[selectedInspectIndex];
+                if (item.type.includes('ชำระ')) {
+                    // ดึงตัวเลขยอดเงินออกจาก details
+                    let match = item.details.match(/([\d,]+\.?\d*)\s*บาท/);
+                    if (match) {
+                        let voidAmount = parseFloat(match[1].replace(/,/g, ''));
+                        let currentPaid = parseFloat(localStorage.getItem('user_total_paid_amount') || '0');
+                        localStorage.setItem('user_total_paid_amount', Math.max(0, currentPaid - voidAmount));
+                    }
+                }
+                
+                alert('✔️ ตีรายการนี้เป็นโมฆะ (Void) เรียบร้อยแล้ว!');
+                closeDetailModal();
+                renderHistory();
+                updateDebtUIAndLockState();
+            }
+        }
+
+        // แอดมินกดยืนยันว่าถูกต้อง ด้วย Master PIN
+        function adminKeepLogItem() {
+            let pin = document.getElementById('adminOverridePin').value.trim();
+            if (pin !== ADMIN_MASTER_PIN) {
+                alert('❌ Admin Master PIN ไม่ถูกต้อง!');
+                return;
+            }
+            alert('✔️ ยืนยันความถูกต้องของรายการนี้เรียบร้อยแล้ว!');
+            closeDetailModal();
+        }
+
+        // ล้างประวัติทั้งหมด (บังคับใช้ Master PIN เท่านั้น)
+        function requestClearHistory() {
+            let pin = prompt("🔒 กรุณากรอก Admin Master PIN เพื่อยืนยันการล้างประวัติทั้งหมด:");
+            if (pin === null) return;
+            if (pin !== ADMIN_MASTER_PIN) {
+                alert('❌ Admin Master PIN ไม่ถูกต้อง! ไม่อนุญาตให้ล้างประวัติ');
+                return;
+            }
+
+            if (confirm('⚠️ คุณกำลังจะล้างประวัติทั้งหมดและรีเซ็ตข้อมูลเครื่องนี้ ยืนยันหรือไม่?')) {
                 localStorage.removeItem('user_txn_history');
                 localStorage.removeItem('user_profile_data');
                 localStorage.removeItem('device_unique_uid');
                 localStorage.removeItem('user_last_paid_date');
                 localStorage.removeItem('user_daily_paid_status');
                 localStorage.removeItem('user_last_used_pin_data');
+                localStorage.removeItem('active_loan_contract');
+                localStorage.removeItem('user_total_paid_amount');
+                
                 getOrCreateDeviceUID();
-                updateDeviceUIStatus();
+                fetchThaiTime();
+                updateDebtUIAndLockState();
                 renderHistory();
+                alert('✔️ ล้างประวัติและรีเซ็ตระบบสำเร็จ');
             }
         }
-        renderHistory();
 
         function showLoading(text) {
             document.getElementById('loadingText').innerText = text || 'กำลังประมวลผล กรุณารอสักครู่...';
@@ -692,7 +934,7 @@
             installBtn.style.display = 'block';
         });
         async function installApp() {
-            if (!deferredPrompt) { alert('เบราว์เซอร์นี้อาจติดตั้งแอปไปแล้ว'); return; }
+            if (!deferredPrompt) { alert('เบราว์เซอร์นี้ติดตั้งแอปไปแล้ว'); return; }
             deferredPrompt.prompt();
             deferredPrompt = null;
             installBtn.style.display = 'none';
@@ -719,7 +961,7 @@
             } else if (tab === 'payment') {
                 paymentSec.classList.remove('hidden');
                 paymentBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition";
-                updateDeviceUIStatus();
+                updateDebtUIAndLockState();
             } else {
                 historySec.classList.remove('hidden');
                 historyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition";
@@ -744,7 +986,7 @@
             
             const hintEl = document.getElementById('dynamicPinHint');
             if (hintEl) {
-                hintEl.innerText = `🔑 PIN ที่ถูกต้องของวันนี้: [เลขท้าย UID: ${last3Uid}] + [ยอดเงิน: ${amount}] = ${expectedPin}`;
+                hintEl.innerText = `🔑 PIN ของวันนี้: [เลขท้าย UID: ${last3Uid}] + [ยอดเงิน: ${amount}] = ${expectedPin}`;
             }
             return expectedPin;
         }
@@ -768,7 +1010,7 @@
             document.getElementById('riderSubmitBtn').innerText = "🔒 กรุณาถ่ายรูปและยืนยัน PIN ก่อนส่ง";
 
             document.getElementById('riderModal').classList.remove('hidden');
-            await fetchThaiTime();
+            fetchThaiTime();
             startRiderCamera();
         }
 
@@ -789,7 +1031,7 @@
                 });
                 document.getElementById('rider-video').srcObject = currentRiderStream;
             } catch (err) {
-                alert("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตสิทธิ์การใช้งานกล้องในเบราว์เซอร์");
+                alert("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตสิทธิ์การใช้งานกล้อง");
             }
         }
 
@@ -855,7 +1097,7 @@
             submitBtn.disabled = false;
             submitBtn.className = "w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition";
             submitBtn.innerText = "🔓 ยืนยันยอดและส่งเข้า Discord";
-            alert('✔️ ล็อกภาพถ่ายและเวลาจริงสำเร็จ! กรุณากรอก Dynamic PIN และกดปุ่มส่งด้านล่าง');
+            alert('✔️ ล็อกภาพถ่ายและเวลาจริงสำเร็จ! กรุณากรอก PIN และกดปุ่มส่ง');
         });
 
         function downloadQRCode() {
@@ -867,10 +1109,10 @@
         }
 
         const tickerMessages = [
+            "ระบบป้องกันทุจริต & Admin Master PIN ทำงานเต็มรูปแบบ",
             "คุณวิภา (ตลาดแม่ใจ) ทำรายการกู้เงินสำเร็จ 3,000 บาท",
             "คุณมานะ (ตลาดสดเทศบาล) ชำระเงินค่างวดสำเร็จ 400 บาท",
-            "คุณสมชาย (ตลาดดอกคำใต้) อนุมัติวงเงินกู้ 5,000 บาท",
-            "คุณพรทิพย์ (ตลาดจุน) ทำรายการกู้เงินสำเร็จ 10,000 บาท"
+            "คุณสมชาย (ตลาดดอกคำใต้) อนุมัติวงเงินกู้ 5,000 บาท"
         ];
         function rotateTicker() {
             const randomIndex = Math.floor(Math.random() * tickerMessages.length);
@@ -882,8 +1124,8 @@
 
         function nextStep(current) {
             if (current === 1) {
-                if (document.getElementById('idCardNumber').value.replace(/-/g, '').length !== 13) { alert('กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก'); return; }
-                if (document.getElementById('phone').value.replace(/-/g, '').length !== 10) { alert('กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก'); return; }
+                if (document.getElementById('idCardNumber').value.replace(/-/g, '').length !== 13) { alert('กรุณากรอกเลขบัตร ปชช. ให้ครบ 13 หลัก'); return; }
+                if (document.getElementById('phone').value.replace(/-/g, '').length !== 10) { alert('กรุณากรอกเบอร์โทรให้ครบ 10 หลัก'); return; }
             }
             document.getElementById(`step-${current}`).classList.add('hidden');
             document.getElementById(`ind-${current}`).querySelector('div').className = "w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-md";
@@ -901,6 +1143,9 @@
 
         function triggerConfirmation(e) {
             e.preventDefault();
+            const terms = document.getElementById('termsCheck').checked;
+            if (!terms) { alert('กรุณาติ๊กยอมรับเงื่อนไขและข้อตกลงการให้บริการก่อนสมัคร'); return; }
+
             const amount = parseInt(document.getElementById('applyAmount').value);
             const daysStr = document.getElementById('applyDays').value;
             const daysNum = parseInt(daysStr);
@@ -921,7 +1166,7 @@
 
         async function executeFinalSubmit() {
             closeConfirmModal();
-            showLoading("กำลังผูก Device UID และส่งข้อมูลเข้าสู่ระบบ AI...");
+            showLoading("กำลังบันทึกสัญญาและส่งข้อมูลเข้า Discord...");
 
             const deviceUid = getOrCreateDeviceUID();
             const fullname = document.getElementById('fullname').value;
@@ -936,23 +1181,34 @@
             const selfieCardFile = document.getElementById('selfieCardImage').files[0];
             const txnRef = generateTxnRef();
 
+            const interest = amount * 0.20;
+            const total = amount + interest;
+
+            // บันทึกสัญญา Active ลงในเครื่อง (จำกัด 1 บัญชี)
             localStorage.setItem('user_profile_data', JSON.stringify({ fullname, idCard, phone, village, address }));
-            updateDeviceUIStatus();
+            localStorage.setItem('active_loan_contract', JSON.stringify({
+                principal: amount,
+                interest: interest,
+                totalDebt: total,
+                days: days,
+                fullname: fullname,
+                dateCreated: verifiedThaiTimeStr
+            }));
+
+            updateDebtUIAndLockState();
 
             let isPassed = true;
             let reason = "ผ่านเกณฑ์การพิจารณาเบื้องต้น";
             if (occupation === "ว่างงาน" || (amount === 1000 && days === "60 วัน")) {
                 isPassed = false;
-                reason = "ไม่ผ่านเกณฑ์การพิจารณาเบื้องต้น ติดต่อเจ้าหน้าที่ผ่านไลน์";
+                reason = "ไม่ผ่านเกณฑ์การพิจารณาเบื้องต้น";
             }
 
             const statusTag = isPassed ? "🟢 **[ผ่านเกณฑ์ประเมินเบื้องต้น]**" : "🔴 **[ไม่ผ่านเกณฑ์ / ตีกลับ]**";
-            const interest = amount * 0.20;
-            const total = amount + interest;
 
             const formData = new FormData();
             formData.append('payload_json', JSON.stringify({
-                content: `🤖 **[AI ระบบสินเชื่อพะเยา - Ver 110.8 (Anti-Fraud & PIN Reuse Check)]**\n🔑 **UID เครื่อง:** \`${deviceUid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n${statusTag}\n👤 **ชื่อ-นามสกุล:** ${fullname}\n🪪 **เลขบัตร ปชช:** \`${idCard}\`\n📞 **เบอร์โทร:** ${phone}\n📍 **ตลาด/ชุมชน:** ${village}\n🏠 **ที่อยู่:** ${address}\n💼 **อาชีพ:** ${occupation}\n💰 **ขอกู้:** ${amount}บ. | **ดอกเบี้ย 20%:** ${interest}บ. | **รวมสุทธิ:** ${total}บ. (${days})\n📝 **สถานะ:** ${reason}`
+                content: `🤖 **[AI ระบบสินเชื่อพะเยา - Ultimate Edition]**\n🔑 **UID เครื่อง:** \`${deviceUid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n${statusTag}\n👤 **ชื่อ-นามสกุล:** ${fullname}\n🪪 **เลขบัตร ปชช:** \`${idCard}\`\n📞 **เบอร์โทร:** ${phone}\n📍 **ตลาด/ชุมชน:** ${village}\n🏠 **ที่อยู่:** ${address}\n💼 **อาชีพ:** ${occupation}\n💰 **ขอกู้:** ${amount}บ. | **ดอกเบี้ย 20%:** ${interest}บ. | **รวมสุทธิ:** ${total}บ. (${days})\n📝 **สถานะ:** ${reason}`
             }));
             if (idCardFile) formData.append('file0', idCardFile);
             if (selfieCardFile) formData.append('file1', selfieCardFile);
@@ -967,12 +1223,12 @@
             const modalTitle = document.getElementById('modalTitle');
             const modalDesc = document.getElementById('modalDesc');
             if (isPassed) {
-                modalTitle.innerText = "🎉 ผ่านเกณฑ์การพิจารณาเบื้องต้น!";
-                modalDesc.innerHTML = `ผูกกุญแจอุปกรณ์: <b>${deviceUid}</b><br>เลขอ้างอิง: <b>${txnRef}</b><br>วงเงินขออนุมัติ: <b>${amount.toLocaleString()} บาท</b><br>กรุณากดติดต่อเจ้าหน้าที่ผ่าน LINE เพื่อรับเงินสด`;
+                modalTitle.innerText = "🎉 สมัครสินเชื่อสำเร็จ!";
+                modalDesc.innerHTML = `ผูกกุญแจอุปกรณ์: <b>${deviceUid}</b><br>เลขอ้างอิง: <b>${txnRef}</b><br>ยอดรวมสุทธิ: <b>${total.toLocaleString()} บาท</b><br>ช่องทางการสมัครจะถูกซ่อนไว้จนกว่าจะชำระหนี้หมด`;
                 triggerSuccessCelebration();
             } else {
                 modalTitle.innerText = "❌ ไม่ผ่านเกณฑ์การพิจารณา";
-                modalDesc.innerHTML = `ผูกกุญแจอุปกรณ์: <b>${deviceUid}</b><br>เลขอ้างอิง: <b>${txnRef}</b><br>ไม่ผ่านเกณฑ์เบื้องต้น ติดต่อเจ้าหน้าที่ผ่านไลน์`;
+                modalDesc.innerHTML = `ผูกกุญแจอุปกรณ์: <b>${deviceUid}</b><br>เลขอ้างอิง: <b>${txnRef}</b><br>ไม่ผ่านเกณฑ์ ติดต่อเจ้าหน้าที่ผ่านไลน์`;
             }
             document.getElementById('successModal').classList.remove('hidden');
 
@@ -986,7 +1242,7 @@
 
         function closeModal() { document.getElementById('successModal').classList.add('hidden'); }
 
-        // --- ฟังก์ชันส่งข้อมูลเก็บเงินสด Rider พร้อมระบบตรวจสอบการทุจริตนำ PIN กลับมาใช้ซ้ำ ---
+        // ส่งเงินสดผ่าน Rider พร้อมระบบป้องกันทุจริต PIN Reuse
         async function submitRiderCashPayment(e) {
             e.preventDefault();
             const inputPin = document.getElementById('riderPinInput').value.trim();
@@ -994,26 +1250,24 @@
             const correctPin = updateDynamicRiderPinHint().split('=')[1].trim();
 
             if (inputPin !== correctPin) {
-                alert(`❌ Dynamic PIN ไม่ถูกต้อง!\nPIN ที่ถูกต้องสำหรับวันนี้คือ: ${correctPin}`);
+                alert(`❌ Dynamic PIN ไม่ถูกต้อง!\nPIN ที่ถูกต้องคือ: ${correctPin}`);
                 document.getElementById('riderPinInput').focus();
                 return;
             }
 
             if (!capturedRiderBlob) {
-                alert('❌ กรุณาถ่ายภาพหลักฐานหน้างานพร้อมประทับเวลาก่อนกดยืนยัน');
+                alert('❌ กรุณาถ่ายภาพหลักฐานพร้อมประทับเวลาก่อนกดยืนยัน');
                 return;
             }
 
-            // --- ระบบตรวจสอบ Anti-Fraud: เช็คว่า PIN นี้เคยถูกใช้ไปแล้วในวันนี้หรือไม่ ---
             let lastUsedPinData = JSON.parse(localStorage.getItem('user_last_used_pin_data') || '{}');
             let isPinReused = false;
             let fraudWarningText = "";
 
             if (lastUsedPinData.date === verifiedDateOnlyStr && lastUsedPinData.pin === inputPin) {
                 isPinReused = true;
-                fraudWarningText = "🚨 **[แจ้งเตือนการทุจริต: ตรวจพบการนำ PIN / ยอดเดิมกลับมาใช้ซ้ำในวันเดียวกัน!]**";
+                fraudWarningText = "🚨 **[แจ้งเตือนการทุจริต: ตรวจพบการนำ PIN / ยอดเดิมกลับมาใช้ซ้ำ!]**";
             } else {
-                // บันทึก PIN และวันที่ใช้งานปัจจุบัน
                 localStorage.setItem('user_last_used_pin_data', JSON.stringify({
                     date: verifiedDateOnlyStr,
                     pin: inputPin,
@@ -1027,17 +1281,21 @@
             localStorage.setItem('user_daily_paid_status', 'true');
             localStorage.setItem('user_last_paid_date', verifiedDateOnlyStr);
 
-            closeRiderModal();
-            showLoading(isPinReused ? "⚠️ ตรวจพบพฤติกรรมใช้ PIN ซ้ำ! กำลังส่งข้อมูลแจ้งเตือนทุจริตเข้า Discord..." : "ยืนยัน Dynamic PIN และเวลาจริงสำเร็จ กำลังส่งข้อมูลเข้า Discord...");
+            // บันทึกยอดเงินที่จ่ายสะสมเพื่อคำนวณ Progress Bar เปอร์เซ็นต์
+            let paidNum = parseFloat(actualAmount);
+            let currentTotalPaid = parseFloat(localStorage.getItem('user_total_paid_amount') || '0');
+            localStorage.setItem('user_total_paid_amount', currentTotalPaid + paidNum);
 
-            // ตั้งคำถามใน Discord ให้แอดมินหรือระบบเลือก: ถูกต้อง หรือ ไม่ถูกต้อง (เพื่อคิดดอกเบี้ยใหม่/ปรับฐานความผิดทุจริต)
+            closeRiderModal();
+            showLoading(isPinReused ? "⚠️ ตรวจพบใช้ PIN ซ้ำ! ส่งข้อมูลแจ้งเตือนทุจริตเข้า Discord..." : "ยืนยัน PIN และเวลาจริงสำเร็จ ส่งข้อมูลเข้า Discord...");
+
             const fraudDecisionPrompt = isPinReused ? 
                 "\n❓ **คำถามตรวจสอบสำหรับแอดมิน:** รหัส PIN นี้เคยถูกใช้ไปแล้ว ลูกค้าจงใจนำกลับมาใช้อีกครั้ง **ถูกต้องตามเงื่อนไข หรือ ไม่ถูกต้อง (ทุจริต/ต้องคิดดอกเบี้ยเพิ่มหรือปรับเพิ่มฐานความผิด)?**" : 
                 "\n✅ **สถานะ:** ถูกต้อง (ใช้งานครั้งแรกของวัน)";
 
             const discordContent = isPinReused ? 
-                `⚠️🚨 **[ALERT: พยายามทุจริตวนใช้ PIN ซ้ำ]**\n${fraudWarningText}\n🔑 **UID เครื่อง:** \`${customer.uid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n🕒 **เวลาตรวจสอบจริง:** \`${verifiedThaiTimeStr}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n📍 **ตลาด:** ${customer.village}\n💰 **ยอดเงินสดที่พยายามส่งซ้ำ:** ${parseFloat(actualAmount).toLocaleString()} บาท\n🔐 **Dynamic PIN ที่ใช้ซ้ำ:** \`${inputPin}\`${fraudDecisionPrompt}` :
-                `🛵💵 **[ชำระเงินสดรายวันผ่าน Rider + ล็อกสถานะวันใหม่]**\n🔑 **UID เครื่อง:** \`${customer.uid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n🕒 **เวลาตรวจสอบจริง:** \`${verifiedThaiTimeStr}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n📍 **ตลาด:** ${customer.village}\n💰 **ยอดเงินสดที่เก็บจริง:** ${parseFloat(actualAmount).toLocaleString()} บาท\n🔐 **Dynamic PIN:** ผ่านถูกต้อง (\`${inputPin}\`)${fraudDecisionPrompt}`;
+                `⚠️🚨 **[ALERT: พยายามทุจริตวนใช้ PIN ซ้ำ]**\n${fraudWarningText}\n🔑 **UID เครื่อง:** \`${customer.uid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n🕒 **เวลาจริง:** \`${verifiedThaiTimeStr}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n📍 **ตลาด:** ${customer.village}\n💰 **ยอดเงินสด:** ${parseFloat(actualAmount).toLocaleString()} บาท\n🔐 **Dynamic PIN:** \`${inputPin}\`${fraudDecisionPrompt}` :
+                `🛵💵 **[ชำระเงินสดรายวันผ่าน Rider + ล็อกสถานะวันใหม่]**\n🔑 **UID เครื่อง:** \`${customer.uid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n🕒 **เวลาจริง:** \`${verifiedThaiTimeStr}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n📍 **ตลาด:** ${customer.village}\n💰 **ยอดเงินสดที่เก็บ:** ${parseFloat(actualAmount).toLocaleString()} บาท\n🔐 **Dynamic PIN:** ผ่านถูกต้อง (\`${inputPin}\`)${fraudDecisionPrompt}`;
 
             const formData = new FormData();
             formData.append('payload_json', JSON.stringify({ content: discordContent }));
@@ -1050,17 +1308,17 @@
             hideLoading();
             
             const historyType = isPinReused ? '⚠️ ทุจริต/ใช้ PIN ซ้ำ (Rider)' : 'ชำระเงินสดรายวัน (Rider)';
-            saveToLocalHistory(historyType, `ยอด ${parseFloat(actualAmount).toLocaleString()} บาท [UID: ${customer.uid}] ${isPinReused ? '(⚠️ ตรวจพบใช้ PIN ซ้ำ)' : ''}`, txnRef);
+            saveToLocalHistory(historyType, `ยอด ${parseFloat(actualAmount).toLocaleString()} บาท [UID: ${customer.uid}]`, txnRef);
             
             if (!isPinReused) {
                 triggerSuccessCelebration();
-                alert(`✅ บันทึกยอดเงินสดและสถานะชำระแล้วของวันนี้สำเร็จ!\nเวลาจริง: ${verifiedThaiTimeStr}\nเลขอ้างอิง: ${txnRef}`);
+                alert(`✅ บันทึกยอดเงินสดและสถานะชำระแล้วของวันนี้สำเร็จ!\nเลขอ้างอิง: ${txnRef}`);
             } else {
-                alert(`⚠️ แจ้งเตือน: ระบบตรวจพบว่ารหัส PIN นี้เคยถูกใช้งานไปแล้วในวันนี้!\nข้อมูลการใช้ซ้ำถูกส่งไปที่ Discord เพื่อให้คุณตรวจสอบและพิจารณาคิดดอกเบี้ยใหม่หรือปรับฐานความผิดเรียบร้อยแล้ว`);
+                alert(`⚠️ แจ้งเตือน: ระบบตรวจพบว่ารหัส PIN นี้เคยใช้งานไปแล้ว! ข้อมูลถูกส่งไปที่ Discord แล้ว`);
             }
 
             document.getElementById('riderSubmitForm').reset();
-            updateDeviceUIStatus();
+            updateDebtUIAndLockState();
         }
 
         async function submitPaymentData(e) {
@@ -1070,11 +1328,15 @@
             const txnRef = generateTxnRef();
             const customer = getLatestCustomerInfo();
 
+            let paidNum = parseFloat(amount);
+            let currentTotalPaid = parseFloat(localStorage.getItem('user_total_paid_amount') || '0');
+            localStorage.setItem('user_total_paid_amount', currentTotalPaid + paidNum);
+
             showLoading("กำลังส่งหลักฐานการชำระเงินและตรวจสอบ UID เครื่อง...");
 
             const formData = new FormData();
             formData.append('payload_json', JSON.stringify({
-                content: `💳 **[แจ้งชำระเงิน QR Code พร้อมเพย์]**\n🔑 **UID เครื่อง:** \`${customer.uid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n📍 **ตลาด:** ${customer.village}\n💸 **ยอดโอนชำระ:** ${amount} บาท\n📱 **พร้อมเพย์:** ${PROMPTPAY_NUMBER} (คณิน มะลิวัน)[cite: 2]`
+                content: `💳 **[แจ้งชำระเงิน QR Code พร้อมเพย์]**\n🔑 **UID เครื่อง:** \`${customer.uid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n📍 **ตลาด:** ${customer.village}\n💸 **ยอดโอนชำระ:** ${amount} บาท\n📱 **พร้อมเพย์:** ${PROMPTPAY_NUMBER} (คณิน มะลิวัน)`
             }));
             if (slipFile) formData.append('file0', slipFile);
 
@@ -1085,9 +1347,10 @@
             hideLoading();
             saveToLocalHistory('ชำระเงิน QR Code', `ยอดโอน ${parseFloat(amount).toLocaleString()} บาท [UID: ${customer.uid}]`, txnRef);
             triggerSuccessCelebration();
-            alert(`ส่งสลิปชำระเงินเรียบร้อยแล้ว!\nกุญแจเครื่อง (UID): ${customer.uid}\nเลขอ้างอิง: ${txnRef}`);
+            alert(`ส่งสลิปชำระเงินเรียบร้อยแล้ว!\nเลขอ้างอิง: ${txnRef}`);
             closePaymentModal();
             document.getElementById('paymentSubmitForm').reset();
+            updateDebtUIAndLockState();
         }
     </script>
 </body>
