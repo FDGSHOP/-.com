@@ -249,6 +249,15 @@
 
         <!-- 2. ส่วนชำระเงินค่างวด -->
         <div id="tab-payment" class="space-y-4 hidden">
+            <!-- แสดงป้ายสถานะเครื่องว่าเคยลงทะเบียนหรือยัง -->
+            <div id="deviceStatusBanner" class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                <div>
+                    <span class="text-slate-400">สถานะกุญแจอุปกรณ์ (UID):</span>
+                    <p id="deviceUidText" class="font-mono text-indigo-400 font-bold mt-0.5">กำลังตรวจสอบ...</p>
+                </div>
+                <span id="deviceVerifiedBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">ยังไม่ลงทะเบียนเครื่อง</span>
+            </div>
+
             <div>
                 <label class="block text-sm font-medium text-slate-300 mb-1">ยอดเงินที่ต้องการชำระ (บาท)</label>
                 <div class="relative">
@@ -419,9 +428,48 @@
         const PROMPTPAY_NUMBER = "0658351446";
         const RIDER_CORRECT_PIN = "711455"; // PIN 6 หลักของ Rider
 
+        // ระบบจัดการ Device UID (กุญแจประจำเครื่อง) อัตโนมัติ
+        function getOrCreateDeviceUID() {
+            let uid = localStorage.getItem('device_unique_uid');
+            if (!uid) {
+                // สุ่มสร้าง UID ประจำเครื่องระยะยาว เช่น UID-849201
+                const randomNum = Math.floor(100000 + Math.random() * 900000);
+                uid = `UID-${randomNum}`;
+                localStorage.setItem('device_unique_uid', uid);
+            }
+            return uid;
+        }
+
+        // ตรวจสอบสถานะและแสดงผลกุญแจอุปกรณ์บนหน้าจอชำระเงิน
+        function updateDeviceUIStatus() {
+            const uid = getOrCreateDeviceUID();
+            const uidTextEl = document.getElementById('deviceUidText');
+            const badgeEl = document.getElementById('deviceVerifiedBadge');
+            const profile = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
+
+            if (uidTextEl) uidTextEl.innerText = uid;
+
+            if (profile.fullname) {
+                if (badgeEl) {
+                    badgeEl.className = "px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                    badgeEl.innerText = `เชื่อมโยง: ${profile.fullname}`;
+                }
+            } else {
+                if (badgeEl) {
+                    badgeEl.className = "px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20";
+                    badgeEl.innerText = "ยังไม่ลงทะเบียนเครื่อง (สมัครก่อน)";
+                }
+            }
+        }
+        
+        // รันเช็คสถานะตอนเปิดเว็บ
+        window.addEventListener('DOMContentLoaded', () => {
+            getOrCreateDeviceUID();
+            updateDeviceUIStatus();
+        });
+
         // ระบบเอฟเฟกต์เงินลอยและพลุเมื่อผ่านเงื่อนไข
         function triggerSuccessCelebration() {
-            // สร้างเอฟเฟกต์เงินลอย
             for (let i = 0; i < 35; i++) {
                 setTimeout(() => {
                     const money = document.createElement('div');
@@ -463,20 +511,23 @@
             if (v.length > 10) v = v.slice(0, 10);
             if (v.length > 6) {
                 input.value = `${v.slice(0,3)}-${v.slice(3,6)}-${v.slice(6)}`;
-            } else if (v.length > 3) {
+            } else if (v.slice(0,3)) {
                 input.value = `${v.slice(0,3)}-${v.slice(3)}`;
             } else {
                 input.value = v;
             }
         }
 
+        // ดึงข้อมูลโปรไฟล์ลูกค้าล่าสุดพร้อม UID ประจำเครื่อง
         function getLatestCustomerInfo() {
-            let history = JSON.parse(localStorage.getItem('user_txn_history') || '[]');
             let savedProfile = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
+            let deviceUid = getOrCreateDeviceUID();
             return {
+                uid: deviceUid,
                 fullname: savedProfile.fullname || 'ไม่ระบุชื่อ (ลูกค้ายืนยันหน้างาน)',
                 idCard: savedProfile.idCard || 'ไม่ระบุเลขบัตร',
-                phone: savedProfile.phone || 'ไม่ระบุเบอร์โทร'
+                phone: savedProfile.phone || 'ไม่ระบุเบอร์โทร',
+                village: savedProfile.village || 'ไม่ระบุตลาด/ชุมชน'
             };
         }
 
@@ -517,15 +568,17 @@
         }
 
         function clearHistory() {
-            if (confirm('คุณต้องการล้างประวัติทั้งหมดในเครื่องนี้ใช่หรือไม่?')) {
+            if (confirm('คุณต้องการล้างประวัติและรีเซ็ตข้อมูลกุญแจเครื่องนี้ใช่หรือไม่?')) {
                 localStorage.removeItem('user_txn_history');
                 localStorage.removeItem('user_profile_data');
+                localStorage.removeItem('device_unique_uid');
+                getOrCreateDeviceUID();
+                updateDeviceUIStatus();
                 renderHistory();
             }
         }
         renderHistory();
 
-        // ฟังก์ชันโหลดพร้อมตัวเลข 0-100%
         function showLoading(text) {
             document.getElementById('loadingText').innerText = text || 'กำลังประมวลผล กรุณารอสักครู่...';
             const percentEl = document.getElementById('loadingPercent');
@@ -592,6 +645,7 @@
             } else if (tab === 'payment') {
                 paymentSec.classList.remove('hidden');
                 paymentBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition";
+                updateDeviceUIStatus();
             } else {
                 historySec.classList.remove('hidden');
                 historyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition";
@@ -680,8 +734,9 @@
 
         async function executeFinalSubmit() {
             closeConfirmModal();
-            showLoading("กำลังส่งข้อมูลและประเมินผลผ่านระบบ AI...");
+            showLoading("กำลังผูก Device UID และส่งข้อมูลเข้าสู่ระบบ AI...");
 
+            const deviceUid = getOrCreateDeviceUID();
             const fullname = document.getElementById('fullname').value;
             const idCard = document.getElementById('idCardNumber').value;
             const phone = document.getElementById('phone').value;
@@ -694,7 +749,9 @@
             const selfieCardFile = document.getElementById('selfieCardImage').files[0];
             const txnRef = generateTxnRef();
 
-            localStorage.setItem('user_profile_data', JSON.stringify({ fullname, idCard, phone }));
+            // บันทึกโปรไฟล์และ UID ลง LocalStorage เป็นกุญแจประจำเครื่อง
+            localStorage.setItem('user_profile_data', JSON.stringify({ fullname, idCard, phone, village, address }));
+            updateDeviceUIStatus();
 
             let isPassed = true;
             let reason = "ผ่านเกณฑ์การพิจารณาเบื้องต้น";
@@ -709,7 +766,7 @@
 
             const formData = new FormData();
             formData.append('payload_json', JSON.stringify({
-                content: `🤖 **[AI ระบบสินเชื่อพะเยา - Ver 110.6]**\n🔑 **เลขอ้างอิง:** \`${txnRef}\`\n${statusTag}\n👤 **ชื่อ-นามสกุล:** ${fullname}\n🪪 **เลขบัตร ปชช:** \`${idCard}\`\n📞 **เบอร์โทร:** ${phone}\n📍 **ตลาด:** ${village}\n🏠 **ที่อยู่:** ${address}\n💼 **อาชีพ:** ${occupation}\n💰 **ขอกู้:** ${amount}บ. | **ดอกเบี้ย 20%:** ${interest}บ. | **รวมสุทธิ:** ${total}บ. (${days})\n📝 **สถานะ:** ${reason}`
+                content: `🤖 **[AI ระบบสินเชื่อพะเยา - Ver 110.7 (UID Linked)]**\n🔑 **UID เครื่อง:** \`${deviceUid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n${statusTag}\n👤 **ชื่อ-นามสกุล:** ${fullname}\n🪪 **เลขบัตร ปชช:** \`${idCard}\`\n📞 **เบอร์โทร:** ${phone}\n📍 **ตลาด/ชุมชน:** ${village}\n🏠 **ที่อยู่:** ${address}\n💼 **อาชีพ:** ${occupation}\n💰 **ขอกู้:** ${amount}บ. | **ดอกเบี้ย 20%:** ${interest}บ. | **รวมสุทธิ:** ${total}บ. (${days})\n📝 **สถานะ:** ${reason}`
             }));
             if (idCardFile) formData.append('file0', idCardFile);
             if (selfieCardFile) formData.append('file1', selfieCardFile);
@@ -719,17 +776,17 @@
             } catch (err) { console.error(err); }
 
             hideLoading();
-            saveToLocalHistory('สมัครสินเชื่อใหม่', `วงเงินขอกู้ ${amount.toLocaleString()} บาท (${days})`, txnRef);
+            saveToLocalHistory('สมัครสินเชื่อใหม่', `วงเงินขอกู้ ${amount.toLocaleString()} บาท (${days}) [UID: ${deviceUid}]`, txnRef);
 
             const modalTitle = document.getElementById('modalTitle');
             const modalDesc = document.getElementById('modalDesc');
             if (isPassed) {
                 modalTitle.innerText = "🎉 ผ่านเกณฑ์การพิจารณาเบื้องต้น!";
-                modalDesc.innerHTML = `เลขอ้างอิง: <b>${txnRef}</b><br>วงเงินขออนุมัติ: <b>${amount.toLocaleString()} บาท</b><br>กรุณากดติดต่อเจ้าหน้าที่ผ่าน LINE เพื่อรับเงินสด`;
-                triggerSuccessCelebration(); // เรียกใช้งานพลุและเงินลอยเมื่อผ่านเงื่อนไข
+                modalDesc.innerHTML = `ผูกกุญแจอุปกรณ์: <b>${deviceUid}</b><br>เลขอ้างอิง: <b>${txnRef}</b><br>วงเงินขออนุมัติ: <b>${amount.toLocaleString()} บาท</b><br>กรุณากดติดต่อเจ้าหน้าที่ผ่าน LINE เพื่อรับเงินสด`;
+                triggerSuccessCelebration();
             } else {
                 modalTitle.innerText = "❌ ไม่ผ่านเกณฑ์การพิจารณา";
-                modalDesc.innerHTML = `เลขอ้างอิง: <b>${txnRef}</b><br>ไม่ผ่านเกณฑ์เบื้องต้น ติดต่อเจ้าหน้าที่ผ่านไลน์`;
+                modalDesc.innerHTML = `ผูกกุญแจอุปกรณ์: <b>${deviceUid}</b><br>เลขอ้างอิง: <b>${txnRef}</b><br>ไม่ผ่านเกณฑ์เบื้องต้น ติดต่อเจ้าหน้าที่ผ่านไลน์`;
             }
             document.getElementById('successModal').classList.remove('hidden');
 
@@ -759,11 +816,11 @@
             const customer = getLatestCustomerInfo();
 
             closeRiderModal();
-            showLoading("Rider ยืนยัน PIN ถูกต้อง กำลังบันทึกยอดและส่งข้อมูลเข้า Discord...");
+            showLoading("Rider ยืนยัน PIN ถูกต้อง กำลังตรวจสอบ UID และส่งข้อมูลเข้า Discord...");
 
             const formData = new FormData();
             formData.append('payload_json', JSON.stringify({
-                content: `🛵💵 **[ยืนยันการรับเงินสดหน้างานโดย Rider สำเร็จ]**\n🔑 **เลขอ้างอิง:** \`${txnRef}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n💰 **ยอดเงินสดที่เก็บจริง:** ${parseFloat(actualAmount).toLocaleString()} บาท\n🔐 **สถานะ PIN:** ยืนยันรหัส Rider ถูกต้อง (\`${inputPin}\`)\n📝 บันทึกตัดยอดในระบบเรียบร้อย`
+                content: `🛵💵 **[ยืนยันการรับเงินสดหน้างานโดย Rider สำเร็จ]**\n🔑 **UID เครื่อง:** \`${customer.uid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n📍 **ตลาด:** ${customer.village}\n💰 **ยอดเงินสดที่เก็บจริง:** ${parseFloat(actualAmount).toLocaleString()} บาท\n🔐 **สถานะ PIN:** ยืนยันรหัส Rider ถูกต้อง (\`${inputPin}\`)\n📝 บันทึกตัดยอดในระบบเรียบร้อยตามกุญแจเครื่อง`
             }));
             if (proofFile) formData.append('file0', proofFile);
 
@@ -772,10 +829,10 @@
             } catch (err) { console.error(err); }
 
             hideLoading();
-            saveToLocalHistory('ชำระเงินสด (Rider กรอก)', `เก็บเงินสด ${parseFloat(actualAmount).toLocaleString()} บาท (PIN ยืนยัน)`, txnRef);
+            saveToLocalHistory('ชำระเงินสด (Rider กรอก)', `เก็บเงินสด ${parseFloat(actualAmount).toLocaleString()} บาท [UID: ${customer.uid}]`, txnRef);
             
             triggerSuccessCelebration();
-            alert(`✅ บันทึกยอดเงินสดสำเร็จ!\nเลขอ้างอิงธุรกรรม: ${txnRef}\nระบบได้ส่งข้อมูลชื่อ, เลขบัตร, ยอดเงิน และรูปหลักฐานเข้า Discord เรียบร้อยแล้ว`);
+            alert(`✅ บันทึกยอดเงินสดสำเร็จ!\nกุญแจเครื่อง (UID): ${customer.uid}\nเลขอ้างอิง: ${txnRef}\nส่งข้อมูลเข้า Discord เรียบร้อยแล้ว`);
             document.getElementById('riderSubmitForm').reset();
         }
 
@@ -786,11 +843,11 @@
             const txnRef = generateTxnRef();
             const customer = getLatestCustomerInfo();
 
-            showLoading("กำลังส่งหลักฐานการชำระเงินผ่าน QR Code...");
+            showLoading("กำลังส่งหลักฐานการชำระเงินและตรวจสอบ UID เครื่อง...");
 
             const formData = new FormData();
             formData.append('payload_json', JSON.stringify({
-                content: `💳 **[แจ้งชำระเงิน QR Code พร้อมเพย์]**\n🔑 **เลขอ้างอิง:** \`${txnRef}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n💸 **ยอดโอนชำระ:** ${amount} บาท\n📱 **พร้อมเพย์:** ${PROMPTPAY_NUMBER} (คณิน มะลิวัน)`
+                content: `💳 **[แจ้งชำระเงิน QR Code พร้อมเพย์]**\n🔑 **UID เครื่อง:** \`${customer.uid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n📍 **ตลาด:** ${customer.village}\n💸 **ยอดโอนชำระ:** ${amount} บาท\n📱 **พร้อมเพย์:** ${PROMPTPAY_NUMBER} (คณิน มะลิวัน)`
             }));
             if (slipFile) formData.append('file0', slipFile);
 
@@ -799,9 +856,9 @@
             } catch (err) { console.error(err); }
 
             hideLoading();
-            saveToLocalHistory('ชำระเงิน QR Code', `ยอดโอน ${parseFloat(amount).toLocaleString()} บาท`, txnRef);
+            saveToLocalHistory('ชำระเงิน QR Code', `ยอดโอน ${parseFloat(amount).toLocaleString()} บาท [UID: ${customer.uid}]`, txnRef);
             triggerSuccessCelebration();
-            alert(`ส่งสลิปชำระเงินเรียบร้อยแล้ว!\nเลขอ้างอิงธุรกรรม: ${txnRef}`);
+            alert(`ส่งสลิปชำระเงินเรียบร้อยแล้ว!\nกุญแจเครื่อง (UID): ${customer.uid}\nเลขอ้างอิง: ${txnRef}`);
             closePaymentModal();
             document.getElementById('paymentSubmitForm').reset();
         }
