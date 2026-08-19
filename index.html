@@ -33,6 +33,7 @@
             background: var(--green); color: white; padding: 4px 14px;
             border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 0.8rem;
             transition: transform 0.2s, background 0.2s;
+            cursor: pointer;
         }
         .top-app-banner a:hover { background: var(--green-hover); transform: scale(1.05); }
 
@@ -40,10 +41,9 @@
         @media (min-width: 768px) { .page-wrapper { grid-template-columns: 360px 1fr; align-items: start; } }
 
         /* Sidebar ด้านซ้าย */
-        .sidebar-info { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.8); }
-        .sidebar-info h3 { color: var(--primary); margin-bottom: 15px; font-size: 1.15rem; font-weight: 600; }
-        .countdown { background: linear-gradient(135deg, #0f172a, #1e293b); color: white; padding: 12px; text-align: center; border-radius: 10px; font-weight: 500; font-size: 0.9rem; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .live-status { background: #fef2f2; padding: 12px 15px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 20px; border-left: 4px solid var(--primary); color: #991b1b; animation: pulseGlow 3s infinite; }
+        .sidebar-info { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.8); display: flex; flex-direction: column; gap: 15px; }
+        .countdown { background: linear-gradient(135deg, #0f172a, #1e293b); color: white; padding: 12px; text-align: center; border-radius: 10px; font-weight: 500; font-size: 0.9rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .live-status { background: #fef2f2; padding: 12px 15px; border-radius: 10px; font-size: 0.85rem; border-left: 4px solid var(--primary); color: #991b1b; animation: pulseGlow 3s infinite; }
         
         @keyframes pulseGlow {
             0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.1); }
@@ -51,8 +51,12 @@
             100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
         }
 
-        .calc-box { background: #f8fafc; border: 1px solid var(--border); padding: 18px; border-radius: 12px; margin-top: 15px; }
-        .calc-box h4 { font-size: 0.95rem; color: var(--dark); margin-bottom: 12px; }
+        /* ตารางคำนวณแบบพับได้ */
+        .calc-accordion { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #f8fafc; }
+        .calc-header { background: #e2e8f0; padding: 12px 15px; font-size: 0.95rem; font-weight: 600; color: var(--dark); cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .calc-header:hover { background: #cbd5e1; }
+        .calc-body { padding: 15px; display: none; background: #f8fafc; }
+        .calc-body.show { display: block; }
         .calc-result { background: white; padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 0.85rem; border: 1px solid var(--border); }
         .calc-result p { margin-bottom: 6px; display: flex; justify-content: space-between; }
         .calc-result span { font-weight: 600; color: var(--primary); }
@@ -92,24 +96,24 @@
         .btn-prev:hover { background: #e2e8f0; }
 
         /* Modal แอนิเมชัน Pop-up QR Code */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.65); backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.3s ease; }
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.65); backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.3s ease; overflow-y: auto; }
         .modal.show { display: flex; opacity: 1; }
 
-        .modal-content { background: white; padding: 35px 25px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; box-shadow: 0 20px 35px rgba(0,0,0,0.2); position: relative; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .modal-content { background: white; padding: 30px 25px; border-radius: 20px; text-align: left; max-width: 420px; width: 100%; box-shadow: 0 20px 35px rgba(0,0,0,0.2); position: relative; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin: auto; }
         .modal.show .modal-content { transform: scale(1); }
 
         .close-x { position: absolute; top: 15px; right: 18px; font-size: 1.4rem; cursor: pointer; color: #94a3b8; font-weight: bold; transition: color 0.2s; }
         .close-x:hover { color: var(--dark); }
 
         /* QR Code จาก promptpay.io */
-        .qr-display-box { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 2px dashed #cbd5e1; padding: 20px; border-radius: 14px; margin: 15px 0; }
-        .qr-image-wrapper { width: 210px; height: 210px; background: white; margin: 0 auto 12px; padding: 8px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; }
+        .qr-display-box { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 2px dashed #cbd5e1; padding: 15px; border-radius: 14px; margin: 15px 0; text-align: center; }
+        .qr-image-wrapper { width: 180px; height: 180px; background: white; margin: 0 auto 10px; padding: 6px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; }
         .qr-image-wrapper img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
 
-        .btn-save-qr { background: var(--blue); color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 600; width: 100%; cursor: pointer; margin-top: 10px; transition: background 0.2s; text-decoration: none; display: inline-block; }
+        .btn-save-qr { background: var(--blue); color: white; padding: 10px; border: none; border-radius: 10px; font-weight: 600; width: 100%; cursor: pointer; margin-top: 5px; transition: background 0.2s; text-decoration: none; display: inline-block; text-align: center; font-size: 0.9rem; }
         .btn-save-qr:hover { background: #1d4ed8; }
 
-        .btn-line-direct { background: #06c755; color: white; text-decoration: none; display: block; padding: 12px; border-radius: 10px; font-weight: 600; margin-top: 15px; transition: background 0.2s; }
+        .btn-line-direct { background: #06c755; color: white; text-decoration: none; display: block; padding: 12px; border-radius: 10px; font-weight: 600; margin-top: 15px; text-align: center; transition: background 0.2s; }
         .btn-line-direct:hover { background: #05b34c; }
 
         .floating-line { position: fixed; bottom: 20px; right: 20px; background: #06c755; color: white; padding: 12px 20px; border-radius: 50px; text-decoration: none; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
@@ -131,7 +135,7 @@
 
     <div class="top-app-banner">
         <span>📱 สะดวกยิ่งขึ้น! ติดตั้งเว็บแอปไว้ใช้งานบนหน้าจอหลักมือถือ</span>
-        <a href="#install" onclick="alert('วิธีติดตั้ง: กดแชร์บนเบราว์เซอร์ แล้วเลือก \"เพิ่มลงหน้าจอหลัก\"')">ติดตั้งแอป</a>
+        <a id="installAppBtn" onclick="triggerInstall()">ติดตั้งแอป</a>
     </div>
 
 <div class="page-wrapper">
@@ -140,23 +144,28 @@
         <div class="countdown">⏰ ปิดรอบระบบ: 21:00 น.</div>
         <div class="live-status" id="live-status">กำลังโหลดสถานะระบบ...</div>
         
-        <h3>🧮 ตารางทดลองคำนวณ</h3>
-        <div class="calc-box">
-            <h4>💡 คำนวณยอดชำระรายวัน</h4>
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label style="font-size: 0.8rem;">วงเงินกู้ (บาท)</label>
-                <input type="number" id="testAmount" value="5000" min="1000" max="50000" step="500" oninput="testCalculate()" style="padding: 8px; font-size: 0.85rem;">
+        <!-- ตารางคำนวณแบบพับเก็บได้ อยู่ล่างสุด -->
+        <div class="calc-accordion">
+            <div class="calc-header" onclick="toggleCalculator()">
+                <span>🧮 ตารางทดลองคำนวณค่างวด</span>
+                <span id="calcArrow">▼</span>
             </div>
-            <div class="form-group" style="margin-bottom: 10px;">
-                <label style="font-size: 0.8rem;">ระยะเวลาผ่อน</label>
-                <select id="testDays" oninput="testCalculate()" style="padding: 8px; font-size: 0.85rem;">
-                    <option value="7">7 วัน (ดอกเบี้ย 20%)</option>
-                    <option value="15">15 วัน (ดอกเบี้ย 20%)</option>
-                    <option value="30" selected>30 วัน (ดอกเบี้ย 20%)</option>
-                    <option value="60">60 วัน (ดอกเบี้ย 20%)</option>
-                </select>
+            <div class="calc-body" id="calcBody">
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 0.8rem;">วงเงินกู้ (บาท)</label>
+                    <input type="number" id="testAmount" value="5000" min="1000" max="50000" step="500" oninput="testCalculate()" style="padding: 8px; font-size: 0.85rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 0.8rem;">ระยะเวลาผ่อน</label>
+                    <select id="testDays" oninput="testCalculate()" style="padding: 8px; font-size: 0.85rem;">
+                        <option value="7">7 วัน (ดอกเบี้ย 20%)</option>
+                        <option value="15">15 วัน (ดอกเบี้ย 20%)</option>
+                        <option value="30" selected>30 วัน (ดอกเบี้ย 20%)</option>
+                        <option value="60">60 วัน (ดอกเบี้ย 20%)</option>
+                    </select>
+                </div>
+                <div class="calc-result" id="testResultBox"></div>
             </div>
-            <div class="calc-result" id="testResultBox"></div>
         </div>
     </div>
 
@@ -275,63 +284,109 @@
         <!-- TAB 2: ช่องทางชำระเงินรายวัน -->
         <div class="tab-content" id="tab-payment">
             <h1>ชำระเงินค่างวดรายวัน</h1>
-            <div class="subtitle">ระบุจำนวนเงินที่ต้องการชำระวันนี้ แล้วกดสร้าง QR Code เพื่อสแกนจ่ายได้ทันที</div>
+            <div class="subtitle">ระบุจำนวนเงินแล้วกดสร้าง QR Code เพื่อสแกนชำระและแนบสลิปส่งแจ้งเตือนเข้าระบบ</div>
 
             <div class="form-group">
                 <label for="payAmount">ยอดเงินที่ต้องการชำระวันนี้ (บาท)</label>
-                <!-- กำหนดค่าเริ่มต้นเป็น 400 บาท ตามที่ลูกค้าคุ้นเคย -->
                 <input type="number" id="payAmount" value="400" min="10" step="10" style="font-size: 1.2rem; font-weight: 600; color: var(--green);">
-                <small class="helper-text">💡 ปกติค่างวดรายวันคือ 400 บาท (สามารถแก้ไขยอดได้ตามต้องการ)</small>
+                <small class="helper-text">💡 ค่าเริ่มต้น 400 บาท (สามารถแก้ไขยอดได้ตามต้องการ)</small>
             </div>
 
             <div class="btn-group">
-                <button type="button" class="action-btn btn-pay" onclick="openQRCodeModal()">⚡ สร้าง QR Code ชำระเงิน</button>
-            </div>
-
-            <div style="margin-top: 35px; border-top: 1px solid var(--border); padding-top: 25px;">
-                <div class="section-title" style="margin-top: 0;">ต้องการให้พนักงานไปเก็บเงินสด?</div>
-                <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 15px;">หากสะดวกชำระเป็นเงินสดกับเจ้าหน้าที่ที่แผงค้า สามารถแจ้งข้อมูลผ่าน LINE ได้เลยครับ</p>
-                <a href="https://lin.ee/8YLly76" target="_blank" style="background: #06c755; color: white; display: inline-block; padding: 12px 22px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(6,199,85,0.2);">💬 แจ้งเจ้าหน้าที่รับเงินสด</a>
+                <button type="button" class="action-btn btn-pay" onclick="openQRCodeModal()">⚡ สร้าง QR Code ชำระเงิน & แนบสลิป</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Pop-up แสดง QR Code พร้อมแอนิเมชัน -->
+<!-- Modal Pop-up แสดง QR Code และฟอร์มแนบสลิปด้านล่างปุ่มบันทึก -->
 <div class="modal" id="qrModal">
     <div class="modal-content">
         <span class="close-x" onclick="closeQRCodeModal()">&times;</span>
-        <h3 style="color: var(--dark); font-size: 1.25rem; margin-bottom: 4px;">สแกนเพื่อชำระเงิน</h3>
-        <p style="font-size: 0.85rem; color: #64748b;">พร้อมเพย์: <strong style="color:var(--dark);">065-835-1446</strong></p>
+        <h3 style="color: var(--dark); font-size: 1.2rem; margin-bottom: 2px; text-align: center;">สแกนเพื่อชำระเงิน</h3>
+        <p style="font-size: 0.8rem; color: #64748b; text-align: center;">พร้อมเพย์: <strong style="color:var(--dark);">065-835-1446</strong></p>
 
         <div class="qr-display-box">
             <div class="qr-image-wrapper">
-                <!-- โหลด QR Code จาก promptpay.io แบบไดนามิกตามจำนวนเงินที่กรอก -->
                 <img id="dynamicQRImage" src="" alt="PromptPay QR Code">
             </div>
             <p style="font-size: 0.85rem; color: var(--green); font-weight: 600;" id="modalDisplayAmount">ยอดชำระ: 400 บาท</p>
         </div>
 
+        <!-- ปุ่มบันทึกรูป QR Code -->
         <a id="downloadQRLink" href="" target="_blank" download="PromptPay-QR.png" class="btn-save-qr">📥 บันทึกรูป QR Code</a>
+
+        <!-- ฟอร์มแนบสลิป อยู่ใต้ปุ่มบันทึกรูป QR Code ทันที -->
+        <div style="margin-top: 20px; border-top: 1px dashed var(--border); padding-top: 15px;">
+            <div style="font-size: 0.95rem; font-weight: 600; color: var(--dark); margin-bottom: 10px;">📤 แนบสลิปแจ้งโอนเงินเข้าระบบ</div>
+            <form id="paymentSlipForm">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.8rem;">ชื่อ-นามสกุล ผู้ชำระ</label>
+                    <input type="text" id="payerName" placeholder="ระบุชื่อของคุณ" required style="padding: 8px; font-size: 0.85rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.8rem;">เบอร์โทรศัพท์มือถือ</label>
+                    <input type="tel" id="payerPhone" placeholder="0812345678" maxlength="10" required style="padding: 8px; font-size: 0.85rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.8rem;">รูปภาพสลิปโอนเงิน</label>
+                    <input type="file" id="slipFile" accept="image/*" required style="padding: 6px; font-size: 0.8rem;">
+                </div>
+                <button type="submit" class="action-btn btn-submit" id="slipSubmitBtn" style="width: 100%; padding: 10px; font-size: 0.9rem;">🚀 ส่งสลิปไปที่ Discord</button>
+            </form>
+        </div>
     </div>
 </div>
 
-<!-- Popup Modal สมัครสำเร็จ -->
+<!-- Popup Modal สำเร็จ -->
 <div class="modal" id="successModal">
-    <div class="modal-content">
+    <div class="modal-content" style="text-align: center;">
         <span class="close-x" onclick="closeModal()">&times;</span>
-        <h3 style="color: var(--green);">✅ ส่งข้อมูลการสมัครสำเร็จ!</h3>
-        <p style="color: #475569; font-size: 0.9rem; margin-bottom: 15px; margin-top: 10px;">
-            ระบบได้รับข้อมูลแล้ว <strong>เจ้าหน้าที่ของเราจะติดต่อกลับไปทางโทรศัพท์หรือ LINE</strong> เพื่อแจ้งผลการอนุมัติวงเงินครับ
+        <h3 style="color: var(--green);" id="successTitle">✅ ทำรายการสำเร็จ!</h3>
+        <p style="color: #475569; font-size: 0.9rem; margin-bottom: 15px; margin-top: 10px;" id="successDesc">
+            ระบบได้รับข้อมูลแล้ว เจ้าหน้าที่ตรวจสอบยอดและอัปเดตสถานะให้ทันทีครับ
         </p>
-        <a href="https://lin.ee/8YLly76" target="_blank" class="btn-line-direct">💬 แอด LINE เพื่อติดตามผล</a>
+        <a href="https://lin.ee/8YLly76" target="_blank" class="btn-line-direct">💬 ติดต่อเจ้าหน้าที่ผ่าน LINE</a>
     </div>
 </div>
 
 <a href="https://lin.ee/8YLly76" target="_blank" class="floating-line">💬 ติดต่อผ่าน LINE</a>
 
 <script>
-    // สลับแท็บหน้าเว็บ
+    // PWA Install Trigger
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    function triggerInstall() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                }
+                deferredPrompt = null;
+            });
+        } else {
+            alert('วิธีติดตั้งแอปบนมือถือ:\n- Android: กดเมนู 3 จุด มุมขวาบนของเบราว์เซอร์ แล้วเลือก "เพิ่มลงในหน้าจอหลัก" หรือ "ติดตั้งแอป"\n- iPhone (iOS): กดปุ่มแชร์ที่แถบด้านล่าง แล้วเลือก "เพิ่มไปยังหน้าจอโฮม"');
+        }
+    }
+
+    // Toggle ตารางคำนวณแบบพับได้
+    function toggleCalculator() {
+        const body = document.getElementById('calcBody');
+        const arrow = document.getElementById('calcArrow');
+        if (body.classList.contains('show')) {
+            body.classList.remove('show');
+            arrow.innerText = '▼';
+        } else {
+            body.classList.add('show');
+            arrow.innerText = '▲';
+        }
+    }
+
     function switchTab(tabName) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -345,7 +400,6 @@
         }
     }
 
-    // เปิด Modal แสดง QR Code ผ่าน promptpay.io ตามยอดเงินที่ระบุ
     function openQRCodeModal() {
         const amount = parseFloat(document.getElementById('payAmount').value) || 0;
         if (amount <= 0) {
@@ -355,27 +409,19 @@
         }
 
         const phoneNumber = "0658351446";
-        
-        // สร้าง URL รูปภาพจาก promptpay.io โดยระบุเบอร์โทรและจำนวนเงินต่อท้าย
         const qrUrl = `https://promptpay.io/${phoneNumber}/${amount}.png`;
 
-        // นำไปใส่ในแท็กรูปภาพและลิงก์ดาวน์โหลด
         document.getElementById('dynamicQRImage').src = qrUrl;
         document.getElementById('downloadQRLink').href = qrUrl;
         document.getElementById('modalDisplayAmount').innerText = "ยอดชำระ: " + amount.toLocaleString() + " บาท";
 
-        // แสดง Modal พร้อมแอนิเมชัน
-        const modal = document.getElementById('qrModal');
-        modal.classList.add('show');
+        document.getElementById('qrModal').classList.add('show');
     }
 
-    // ปิด Modal QR Code
     function closeQRCodeModal() {
-        const modal = document.getElementById('qrModal');
-        modal.classList.remove('show');
+        document.getElementById('qrModal').classList.remove('show');
     }
 
-    // ฟังก์ชันคำนวณทดลองด้านข้าง
     function testCalculate() {
         const amount = parseFloat(document.getElementById('testAmount').value) || 0;
         const days = parseInt(document.getElementById('testDays').value);
@@ -402,7 +448,6 @@
     setInterval(updateStatus, 6000);
     updateStatus();
 
-    // ควบคุมสเต็ปฟอร์มสมัคร
     function nextStep(current) {
         if (current === 1) {
             const idCard = document.getElementById('idCardNumber').value;
@@ -428,25 +473,61 @@
         document.getElementById(`ind-${prev}`).classList.remove('completed');
     }
 
-    // ส่ง Discord Webhook สมัครสมาชิก
     const webhookURL = "https://discordapp.com/api/webhooks/1475367009700282379/3LerCdbu5Kc1TuCl19NWjozyVCFy8rcQdIJKrVN5LkebFotPTZo8LX4eBvDEdZgwx0g0";
+
+    // ส่ง Discord Webhook สมัครสมาชิก
     document.getElementById('loanForm').onsubmit = async function(e) {
         e.preventDefault();
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
-        submitBtn.textContent = "กำลังส่งข้อมูล... অপেক্ষা করুন";
+        submitBtn.textContent = "กำลังส่งข้อมูล...";
 
         const formData = new FormData();
         formData.append('content', `🤖 **[สมัครสินเชื่อใหม่]**\nชื่อ: ${document.getElementById('fullname').value}\nเลขบัตร: ${document.getElementById('idCardNumber').value}\nวงเงิน: ${document.getElementById('applyAmount').value} บาท`);
         
         try {
             await fetch(webhookURL, { method: 'POST', body: formData });
+            document.getElementById('successTitle').innerText = "✅ ส่งข้อมูลการสมัครสำเร็จ!";
+            document.getElementById('successDesc').innerHTML = "ระบบได้รับข้อมูลแล้ว <strong>เจ้าหน้าที่ของเราจะติดต่อกลับไปทางโทรศัพท์หรือ LINE</strong> เพื่อแจ้งผลการอนุมัติวงเงินครับ";
             document.getElementById('successModal').classList.add('show');
         } catch (error) {
             document.getElementById('successModal').classList.add('show');
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = "🔒 ยืนยันและส่งข้อมูล";
+        }
+    };
+
+    // ส่ง Discord Webhook แจ้งสลิปชำระเงิน
+    document.getElementById('paymentSlipForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const slipBtn = document.getElementById('slipSubmitBtn');
+        slipBtn.disabled = true;
+        slipBtn.textContent = "กำลังส่งสลิป...";
+
+        const formData = new FormData();
+        const name = document.getElementById('payerName').value;
+        const phone = document.getElementById('payerPhone').value;
+        const amount = document.getElementById('payAmount').value;
+        const slipFile = document.getElementById('slipFile').files[0];
+
+        formData.append('content', `💳 **[แจ้งชำระเงินรายวัน / ส่งสลิป]**\n👤 ชื่อผู้จ่าย: **${name}**\n📞 เบอร์โทร: **${phone}**\n💰 ยอดเงิน: **${amount} บาท**\n📲 พร้อมเพย์ปลายทาง: \`0658351446\``);
+        if (slipFile) {
+            formData.append('file', slipFile);
+        }
+
+        try {
+            await fetch(webhookURL, { method: 'POST', body: formData });
+            closeQRCodeModal();
+            document.getElementById('successTitle').innerText = "✅ ส่งสลิปชำระเงินสำเร็จ!";
+            document.getElementById('successDesc').innerHTML = "ระบบได้ส่งสลิปและข้อมูลไปยังห้อง Discord ของคุณเรียบร้อยแล้ว แอดมินกำลังตรวจสอบยอดเงินครับ";
+            document.getElementById('successModal').classList.add('show');
+            document.getElementById('paymentSlipForm').reset();
+        } catch (error) {
+            alert('เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง');
+        } finally {
+            slipBtn.disabled = false;
+            slipBtn.textContent = "🚀 ส่งสลิปไปที่ Discord";
         }
     };
 
