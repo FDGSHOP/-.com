@@ -12,9 +12,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Prompt', sans-serif; }
+        /* ปุ่ม LINE ลอยมุมขวาล่าง */
+        .float-line { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen py-6 px-4 flex flex-col items-center justify-center">
+
+    <!-- ปุ่มลอยติดต่อ LINE เจ้าหน้าที่ -->
+    <a href="https://lin.ee/8YLly76" target="_blank" class="float-line bg-emerald-500 text-white p-3.5 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:bg-emerald-600 transition-all transform hover:scale-105 flex items-center gap-2 border-2 border-white">
+        <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M19.365 9.863c0-3.37-3.414-6.108-7.616-6.108-4.204 0-7.619 2.738-7.619 6.108 0 3.012 2.593 5.534 6.113 5.998.239.052.563.161.646.368l.222 1.442c.026.171.111.666.195.666.079 0 .235-.126.326-.188l1.644-1.286c.264-.199.55-.262.86-.262h.016c3.277 0 5.94-2.58 5.94-5.73z"/></svg>
+        <span class="text-xs font-bold hidden sm:inline">ติดต่อเจ้าหน้าที่ / สอบถาม</span>
+    </a>
 
     <!-- Container หลักของเว็บไซต์ -->
     <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl max-w-xl w-full border border-slate-200">
@@ -30,10 +38,14 @@
                     <p class="text-xs text-indigo-100">ใช้งานสะดวกรวดเร็ว คลิกเดียวติดตั้งทันที</p>
                 </div>
             </div>
-            <!-- ปุ่มกดติดตั้งที่จะเรียกตัวติดตั้งขึ้นมาทันที -->
             <button id="installAppBtn" onclick="installApp()" class="w-full sm:w-auto bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs px-4 py-2.5 rounded-xl shadow transition whitespace-nowrap">
                 📥 ติดตั้งแอปทันที
             </button>
+        </div>
+
+        <!-- คำเตือนตัวหนาใหญ่สีแดง ตามเงื่อนไข -->
+        <div class="bg-red-50 border-2 border-red-300 text-red-700 p-3.5 rounded-xl mb-5 text-center font-bold text-base shadow-sm animate-pulse">
+            ⚠️ กู้เท่าที่จำเป็นและชำระคืนไว ⚠️
         </div>
 
         <!-- แถบแจ้งสถานะจำลอง (Live Ticker) -->
@@ -57,6 +69,14 @@
         <!-- 1. ส่วนสมัครสินเชื่อ -->
         <div id="tab-apply" class="space-y-4">
             
+            <!-- กล่องเงื่อนไขอัตราดอกเบี้ย -->
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 space-y-1">
+                <p class="font-bold text-amber-950 text-sm mb-1">📋 เงื่อนไขและอัตราดอกเบี้ยบริการสินเชื่อ:</p>
+                <p>• อัตราดอกเบี้ย: <b>ร้อยละ 20 คงที่ตลอดอายุสัญญา</b></p>
+                <p>• การชำระคืน: สามารถเลือกผ่อนชำระได้ตามกำหนด (7, 15, 30 หรือ 60 วัน)</p>
+                <p>• ระบบจะนำเงินต้นรวมดอกเบี้ยมาคำนวณยอดผ่อนชำระแบบรายวัน หรือ ทุกๆ 3 วัน ให้ท่านตรวจสอบก่อนกดยืนยัน</p>
+            </div>
+
             <!-- Step Indicators -->
             <div class="flex justify-between items-center mb-6 px-4 relative">
                 <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-slate-200 z-0"></div>
@@ -65,7 +85,7 @@
                 <div id="ind-3" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">3</div><span class="text-[10px] text-slate-500 mt-1">ยืนยันตัวตน</span></div>
             </div>
 
-            <form id="loanForm">
+            <form id="loanForm" onsubmit="triggerConfirmation(event)">
                 <!-- Step 1 -->
                 <div class="form-step space-y-4" id="step-1">
                     <div>
@@ -185,7 +205,15 @@
                 </div>
             </div>
 
-            <p class="text-xs text-slate-500 text-center">พร้อมเพย์รับเงิน: <b class="text-slate-700">065-835-1446</b> (คณิน มะลิวัน)</p>
+            <!-- กล่องพร้อมเพย์พร้อมปุ่มคัดลอกเบอร์ -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center space-y-1">
+                <p class="text-xs text-slate-500">พร้อมเพย์รับเงิน:</p>
+                <div class="flex items-center justify-center gap-2">
+                    <b id="pp-number" class="text-slate-800 text-lg tracking-wide">065-835-1446</b>
+                    <button type="button" onclick="copyPhone()" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-indigo-200 transition">📋 คัดลอกเบอร์</button>
+                </div>
+                <p class="text-xs text-slate-500">(คณิน มะลิวัน)</p>
+            </div>
 
             <button onclick="openPaymentModal()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-lg shadow-emerald-100 transition flex items-center justify-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
@@ -193,6 +221,48 @@
             </button>
         </div>
 
+    </div>
+
+    <!-- Pop-up Modal ยืนยันข้อมูลก่อนส่ง (Confirmation Modal) -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <h3 class="text-xl font-bold text-slate-800 mb-2 text-center">📌 ทวนสอบเงื่อนไขสินเชื่อ</h3>
+            <p class="text-xs text-slate-500 text-center mb-4">คุณแน่ใจที่จะสมัครใช้บริการนี้หรือไม่? โปรดตรวจสอบรายละเอียด</p>
+            
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm space-y-2 mb-5">
+                <div class="flex justify-between">
+                    <span class="text-slate-600">ยอดเงินต้น:</span>
+                    <span id="confPrincipal" class="font-bold text-slate-800">0 บาท</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-600">ดอกเบี้ย (คงที่ 20%):</span>
+                    <span id="confInterest" class="font-bold text-slate-800">0 บาท</span>
+                </div>
+                <div class="flex justify-between border-t border-slate-200 pt-2">
+                    <span class="text-slate-700 font-semibold">ยอดชำระคืนรวมทั้งหมด:</span>
+                    <span id="confTotal" class="font-bold text-indigo-600 text-base">0 บาท</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-600">กำหนดชำระคืนภายใน:</span>
+                    <span id="confDays" class="font-bold text-slate-800">- วัน</span>
+                </div>
+                <div class="border-t border-slate-200 pt-2 space-y-1 text-xs">
+                    <div class="flex justify-between text-slate-700">
+                        <span>ชำระเป็นรายวัน:</span>
+                        <span id="confDaily" class="font-bold">0 บาท / วัน</span>
+                    </div>
+                    <div class="flex justify-between text-indigo-700 font-medium">
+                        <span>ชำระทุกๆ 3 วัน (รวม x3):</span>
+                        <span id="confEvery3Days" class="font-bold">0 บาท</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="button" onclick="closeConfirmModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition text-sm">แก้ไขข้อมูล</button>
+                <button type="button" onclick="executeFinalSubmit()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-md transition text-sm">ยืนยันสมัครทันที</button>
+            </div>
+        </div>
     </div>
 
     <!-- Pop-up Modal ชำระเงิน -->
@@ -232,10 +302,10 @@
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center relative">
             <h3 id="modalTitle" class="text-xl font-bold text-slate-800 mb-2">ผลการประเมิน</h3>
             <p id="modalDesc" class="text-sm text-slate-600 mb-5">กำลังประมวลผล...</p>
-            <a href="https://lin.ee/8YLly76" target="_blank" class="block w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition shadow-md">
+            <a href="https://lin.ee/8YLly76" target="_blank" class="block w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition shadow-md mb-2">
                 💬 ติดต่อเจ้าหน้าที่ผ่าน LINE
             </a>
-            <button onclick="closeModal()" class="mt-3 text-xs text-slate-400 hover:text-slate-600">ปิดหน้าต่างนี้</button>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl transition">ปิดหน้าต่างนี้</button>
         </div>
     </div>
 
@@ -244,47 +314,43 @@
         const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1475367009700282379/3LerCdbu5Kc1TuCl19NWjozyVCFy8rcQdIJKrVN5LkebFotPTZo8LX4eBvDEdZgwx0g0";
         const PROMPTPAY_NUMBER = "0658351446";
 
-        // 🚀 ระบบตัวแปรสำหรับการติดตั้งแอปแบบคลิกเดียว (PWA Install Prompt)
+        // ฟังก์ชันคัดลอกเบอร์พร้อมเพย์
+        function copyPhone() {
+            const phone = document.getElementById('pp-number').innerText.replace(/-/g, '');
+            navigator.clipboard.writeText(phone).then(() => {
+                alert('คัดลอกเลขพร้อมเพย์เรียบร้อยแล้ว: ' + document.getElementById('pp-number').innerText);
+            }).catch(err => {
+                alert('ไม่สามารถคัดลอกอัตโนมัติได้');
+            });
+        }
+
+        // ระบบ PWA ติดตั้งแอป
         let deferredPrompt;
         const installBtn = document.getElementById('installAppBtn');
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // ป้องกันไม่ให้เบราว์เซอร์แสดงแถบติดตั้งเดิมอัตโนมัติ
             e.preventDefault();
-            // เก็บ event ไว้เรียกใช้งานเมื่อผู้ใช้กดปุ่ม
             deferredPrompt = e;
-            // แสดงปุ่มติดตั้ง
             installBtn.style.display = 'block';
         });
 
-        // ฟังก์ชันสั่งติดตั้งทันทีเมื่อคลิกปุ่ม
         async function installApp() {
             if (!deferredPrompt) {
-                alert('เบราว์เซอร์นี้อาจติดตั้งแอปไปแล้ว หรืออยู่ในระหว่างโหลดระบบ กรุณาลองใหม่อีกครั้ง');
+                alert('เบราว์เซอร์นี้อาจติดตั้งแอปไปแล้ว หรืออยู่ในระหว่างโหลดระบบ');
                 return;
             }
-            // แสดงหน้าต่างติดตั้งของระบบขึ้นมาทันที
             deferredPrompt.prompt();
-            // รอรับผลการตัดสินใจของผู้ใช้
             const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                console.log('ผู้ใช้ยอมรับการติดตั้งแอป');
-            }
-            // ล้างตัวแปรเพราะใช้ได้ครั้งเดียว
             deferredPrompt = null;
             installBtn.style.display = 'none';
         }
 
-        // ลงทะเบียน Service Worker ให้สมบูรณ์
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then((reg) => console.log('Service Worker Registered scope:', reg.scope))
-                    .catch((err) => console.log('Service Worker Registration failed:', err));
+                navigator.serviceWorker.register('sw.js').catch((err) => console.log(err));
             });
         }
 
-        // ระบบเปลี่ยนแท็บเมนู
         function switchTab(tab) {
             const applySec = document.getElementById('tab-apply');
             const paymentSec = document.getElementById('tab-payment');
@@ -330,7 +396,7 @@
             document.body.removeChild(a);
         }
 
-        // ระบบสุ่ม Live Ticker 40 รูปแบบ
+        // ระบบสุ่ม Live Ticker
         const tickerMessages = [
             "คุณวิภา (ตลาดแม่ใจ) ทำรายการกู้เงินสำเร็จ 3,000 บาท",
             "คุณมานะ (ตลาดสดเทศบาล) ชำระเงินค่างวดสำเร็จ 400 บาท",
@@ -339,46 +405,14 @@
             "คุณธนพล (ตลาดแม่ใจ) ชำระเงินค่างวดสำเร็จ 800 บาท",
             "คุณลัดดา (ตลาดสดเทศบาล) ทำรายการกู้เงินสำเร็จ 2,000 บาท",
             "คุณกาญจนา (ตลาดดอกคำใต้) ชำระเงินค่างวดสำเร็จ 500 บาท",
-            "คุณประเสริฐ (ตลาดจุน) อนุมัติวงเงินกู้ 20,000 บาท",
-            "คุณนงลักษณ์ (ตลาดแม่ใจ) ทำรายการกู้เงินสำเร็จ 3,000 บาท",
-            "คุณวันชัย (ตลาดสดเทศบาล) ชำระเงินค่างวดสำเร็จ 1,200 บาท",
-            "คุณมยุรี (ตลาดดอกคำใต้) ทำรายการกู้เงินสำเร็จ 5,000 บาท",
-            "คุณชาญชัย (ตลาดจุน) ชำระเงินค่างวดสำเร็จ 400 บาท",
-            "คุณอภิชัย (ตลาดแม่ใจ) อนุมัติวงเงินกู้ 15,000 บาท",
-            "คุณศิริพร (ตลาดสดเทศบาล) ทำรายการกู้เงินสำเร็จ 1,000 บาท",
-            "คุณเกียรติศักดิ์ (ตลาดดอกคำใต้) ชำระเงินค่างวดสำเร็จ 600 บาท",
-            "คุณรัตนา (ตลาดจุน) ทำรายการกู้เงินสำเร็จ 7,000 บาท",
-            "คุณสุรศักดิ์ (ตลาดแม่ใจ) ชำระเงินค่างวดสำเร็จ 400 บาท",
-            "คุณจิราภรณ์ (ตลาดสดเทศบาล) อนุมัติวงเงินกู้ 30,000 บาท",
-            "คุณบัญชา (ตลาดดอกคำใต้) ทำรายการกู้เงินสำเร็จ 3,000 บาท",
-            "คุณอรัญญา (ตลาดจุน) ชำระเงินค่างวดสำเร็จ 900 บาท",
-            "คุณพงษ์ศักดิ์ (ตลาดแม่ใจ) ทำรายการกู้เงินสำเร็จ 5,000 บาท",
-            "คุณนันทิดา (ตลาดสดเทศบาล) ชำระเงินค่างวดสำเร็จ 400 บาท",
-            "คุณวีระ (ตลาดดอกคำใต้) อนุมัติวงเงินกู้ 10,000 บาท",
-            "คุณสายฝน (ตลาดจุน) ทำรายการกู้เงินสำเร็จ 2,500 บาท",
-            "คุณวิชัย (ตลาดแม่ใจ) ชำระเงินค่างวดสำเร็จ 500 บาท",
-            "คุณกุลนัฐ (ตลาดสดเทศบาล) ทำรายการกู้เงินสำเร็จ 3,000 บาท",
-            "คุณธนากร (ตลาดดอกคำใต้) ชำระเงินค่างวดสำเร็จ 400 บาท",
-            "คุณเบญจมาศ (ตลาดจุน) อนุมัติวงเงินกู้ 50,000 บาท",
-            "คุณอำนวย (ตลาดแม่ใจ) ทำรายการกู้เงินสำเร็จ 4,000 บาท",
-            "คุณยุพา (ตลาดสดเทศบาล) ชำระเงินค่างวดสำเร็จ 1,000 บาท",
-            "คุณสมศักดิ์ (ตลาดดอกคำใต้) ทำรายการกู้เงินสำเร็จ 3,000 บาท",
-            "คุณกนกวรรณ (ตลาดจุน) ชำระเงินค่างวดสำเร็จ 400 บาท",
-            "คุณถาวร (ตลาดแม่ใจ) อนุมัติวงเงินกู้ 12,000 บาท",
-            "คุณสุดา (ตลาดสดเทศบาล) ทำรายการกู้เงินสำเร็จ 1,500 บาท",
-            "คุณไพฑูรย์ (ตลาดดอกคำใต้) ชำระเงินค่างวดสำเร็จ 700 บาท",
-            "คุณมาลี (ตลาดจุน) ทำรายการกู้เงินสำเร็จ 3,000 บาท",
-            "คุณบุญส่ง (ตลาดแม่ใจ) ชำระเงินค่างวดสำเร็จ 400 บาท",
-            "คุณเอื้อมพร (ตลาดสดเทศบาล) อนุมัติวงเงินกู้ 8,000 บาท",
-            "คุณพิชิต (ตลาดดอกคำใต้) ทำรายการกู้เงินสำเร็จ 5,000 บาท",
-            "คุณรัชนี (ตลาดจุน) ชำระเงินค่างวดสำเร็จ 400 บาท"
+            "คุณประเสริฐ (ตลาดจุน) อนุมัติวงเงินกู้ 20,000 บาท"
         ];
 
         function rotateTicker() {
             const randomIndex = Math.floor(Math.random() * tickerMessages.length);
             const tickerEl = document.getElementById('ticker-text');
             if (tickerEl) tickerEl.innerText = tickerMessages[randomIndex];
-            setTimeout(rotateTicker, Math.floor(Math.random() * 4000) + 4000);
+            setTimeout(rotateTicker, 5000);
         }
         rotateTicker();
 
@@ -401,61 +435,89 @@
             document.getElementById(`ind-${prev}`).querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm";
         }
 
-        // ส่งข้อมูลสมัครสินเชื่อ + รีเซ็ตฟอร์มกลับค่าเริ่มต้น
-        const loanForm = document.getElementById('loanForm');
-        if (loanForm) {
-            loanForm.onsubmit = async function(e) {
-                e.preventDefault();
-                const fullname = document.getElementById('fullname').value;
-                const phone = document.getElementById('phone').value;
-                const amount = parseInt(document.getElementById('applyAmount').value);
-                const days = document.getElementById('applyDays').value;
-                const occupation = document.getElementById('occupation').value;
-                const idCardFile = document.getElementById('idCardImage').files[0];
-                const selfieCardFile = document.getElementById('selfieCardImage').files[0];
+        function triggerConfirmation(e) {
+            e.preventDefault();
+            
+            const amount = parseInt(document.getElementById('applyAmount').value);
+            const daysStr = document.getElementById('applyDays').value;
+            const daysNum = parseInt(daysStr);
 
-                let isPassed = true;
-                let reason = "ผ่านเกณฑ์การพิจารณาเบื้องต้น";
+            const interest = amount * 0.20;
+            const total = amount + interest;
+            const daily = total / daysNum;
+            const every3Days = daily * 3;
 
-                if (occupation === "ว่างงาน" || (amount === 1000 && days === "60 วัน")) {
-                    isPassed = false;
-                    reason = "ไม่ผ่านเกณฑ์การพิจารณาเบื้องต้น หากมีข้อสงสัยกรุณาติดต่อผ่านทางช่องทางไลน์ หรือติดต่อเจ้าหน้าที่";
-                }
+            document.getElementById('confPrincipal').innerText = amount.toLocaleString() + ' บาท';
+            document.getElementById('confInterest').innerText = interest.toLocaleString() + ' บาท';
+            document.getElementById('confTotal').innerText = total.toLocaleString() + ' บาท';
+            document.getElementById('confDays').innerText = daysStr;
+            document.getElementById('confDaily').innerText = daily.toFixed(2) + ' บาท / วัน';
+            document.getElementById('confEvery3Days').innerText = every3Days.toFixed(2) + ' บาท';
 
-                const statusTag = isPassed ? "🟢 **[ผ่านเกณฑ์ประเมินเบื้องต้น]**" : "🔴 **[ไม่ผ่านเกณฑ์ / ตีกลับ]**";
-                const formData = new FormData();
-                formData.append('payload_json', JSON.stringify({
-                    content: `🤖 **[AI ระบบประเมินสินเชื่อพะเยา]**\n${statusTag}\n👤 **ชื่อ-นามสกุล:** ${fullname}\n📞 **เบอร์โทรศัพท์:** ${phone}\n💼 **อาชีพ:** ${occupation}\n💰 **วงเงินที่ขอ:** ${amount} บาท (${days})\n📝 **สถานะ:** ${reason}`
-                }));
-                if (idCardFile) formData.append('file0', idCardFile);
-                if (selfieCardFile) formData.append('file1', selfieCardFile);
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
 
-                alert('กำลังส่งข้อมูลและประเมินผลผ่านระบบ AI...');
-                try {
-                    await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: formData });
-                } catch (err) { console.error(err); }
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
 
-                const modalTitle = document.getElementById('modalTitle');
-                const modalDesc = document.getElementById('modalDesc');
-                
-                if (isPassed) {
-                    modalTitle.innerText = "🎉 ผ่านเกณฑ์การพิจารณาเบื้องต้น!";
-                    modalDesc.innerHTML = `วงเงินขออนุมัติ: <b>${amount.toLocaleString()} บาท</b><br>ข้อมูลถูกส่งเข้าระบบเรียบร้อยแล้ว กรุณากดติดต่อเจ้าหน้าที่เพื่อรับเงินสด`;
-                } else {
-                    modalTitle.innerText = "❌ ไม่ผ่านเกณฑ์การพิจารณา";
-                    modalDesc.innerHTML = `ไม่ผ่านเกณฑ์การพิจารณาเบื้องต้น<br>หากมีข้อสงสัยกรุณาติดต่อผ่านทางช่องทางไลน์ หรือติดต่อเจ้าหน้าที่`;
-                }
-                
-                document.getElementById('successModal').classList.remove('hidden');
+        async function executeFinalSubmit() {
+            closeConfirmModal();
 
-                // รีเซ็ตฟอร์มกลับค่าเริ่มต้น
-                loanForm.reset();
-                document.getElementById('step-3').classList.add('hidden');
-                document.getElementById('step-1').classList.remove('hidden');
-                document.getElementById('ind-1').querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm";
-                document.getElementById('ind-2').querySelector('div').className = "w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs";
-                document.getElementById('ind-3').querySelector('div').className = "w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs";
-            };
+            const fullname = document.getElementById('fullname').value;
+            const phone = document.getElementById('phone').value;
+            const village = document.getElementById('village').value;
+            const address = document.getElementById('address').value;
+            const amount = parseInt(document.getElementById('applyAmount').value);
+            const days = document.getElementById('applyDays').value;
+            const occupation = document.getElementById('occupation').value;
+            const idCardFile = document.getElementById('idCardImage').files[0];
+            const selfieCardFile = document.getElementById('selfieCardImage').files[0];
+
+            let isPassed = true;
+            let reason = "ผ่านเกณฑ์การพิจารณาเบื้องต้น";
+
+            if (occupation === "ว่างงาน" || (amount === 1000 && days === "60 วัน")) {
+                isPassed = false;
+                reason = "ไม่ผ่านเกณฑ์การพิจารณาเบื้องต้น หากมีข้อสงสัยกรุณาติดต่อผ่านทางช่องทางไลน์ หรือติดต่อเจ้าหน้าที่";
+            }
+
+            const statusTag = isPassed ? "🟢 **[ผ่านเกณฑ์ประเมินเบื้องต้น]**" : "🔴 **[ไม่ผ่านเกณฑ์ / ตีกลับ]**";
+            const interest = amount * 0.20;
+            const total = amount + interest;
+
+            const formData = new FormData();
+            formData.append('payload_json', JSON.stringify({
+                content: `🤖 **[AI ระบบประเมินสินเชื่อพะเยา - Ver 110.3]**\n${statusTag}\n👤 **ชื่อ-นามสกุล:** ${fullname}\n📞 **เบอร์โทรศัพท์:** ${phone}\n📍 **ตลาด/ชุมชน:** ${village}\n🏠 **ที่อยู่:** ${address}\n💼 **อาชีพ:** ${occupation}\n💰 **วงเงินขอกู้:** ${amount} บาท | **ดอกเบี้ย 20%:** ${interest} บาท | **รวมสุทธิ:** ${total} บาท (${days})\n📝 **สถานะ:** ${reason}`
+            }));
+            if (idCardFile) formData.append('file0', idCardFile);
+            if (selfieCardFile) formData.append('file1', selfieCardFile);
+
+            alert('กำลังส่งข้อมูลและประเมินผลผ่านระบบ AI...');
+            try {
+                await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: formData });
+            } catch (err) { console.error(err); }
+
+            const modalTitle = document.getElementById('modalTitle');
+            const modalDesc = document.getElementById('modalDesc');
+            
+            if (isPassed) {
+                modalTitle.innerText = "🎉 ผ่านเกณฑ์การพิจารณาเบื้องต้น!";
+                modalDesc.innerHTML = `วงเงินขออนุมัติ: <b>${amount.toLocaleString()} บาท</b> (ยอดรวมชำระ ${total.toLocaleString()} บาท)<br>ข้อมูลถูกส่งเข้าระบบเรียบร้อยแล้ว กรุณากดติดต่อเจ้าหน้าที่ผ่าน LINE เพื่อรับเงินสด`;
+            } else {
+                modalTitle.innerText = "❌ ไม่ผ่านเกณฑ์การพิจารณา";
+                modalDesc.innerHTML = `ไม่ผ่านเกณฑ์การพิจารณาเบื้องต้น<br>หากมีข้อสงสัยกรุณาติดต่อผ่านทางช่องทางไลน์ หรือติดต่อเจ้าหน้าที่`;
+            }
+            
+            document.getElementById('successModal').classList.remove('hidden');
+
+            const loanForm = document.getElementById('loanForm');
+            loanForm.reset();
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('step-1').classList.remove('hidden');
+            document.getElementById('ind-1').querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm";
+            document.getElementById('ind-2').querySelector('div').className = "w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs";
+            document.getElementById('ind-3').querySelector('div').className = "w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs";
         }
 
         function closeModal() {
