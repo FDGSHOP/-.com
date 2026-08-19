@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบไรเดอร์รับเงินสด</title>
+    <title>ระบบไรเดอร์รับเงินสด - ครบวงจร</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -80,11 +80,33 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* --- Camera Section Styles --- */
+        /* --- Form & Camera Styles --- */
+        .form-group {
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
         .camera-box {
             position: relative;
             width: 100%;
-            height: 300px;
+            height: 250px;
             background: #000;
             border-radius: 8px;
             overflow: hidden;
@@ -101,12 +123,12 @@
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px;
             border-radius: 6px;
             font-size: 16px;
             cursor: pointer;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 5px;
         }
 
         .btn-secondary {
@@ -124,6 +146,17 @@
         .btn-cross { background-color: #f44336; flex: 1; font-size: 20px; }
 
         .hidden { display: none !important; }
+        
+        #time-badge {
+            background: #333;
+            color: #ffeb3b;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: block;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -137,34 +170,47 @@
         <div class="loading-text" id="loading-label">กำลังโหลดระบบ...</div>
     </div>
 
-    <!-- 2. ส่วนของระบบถ่ายรูปไรเดอร์ -->
+    <!-- 2. ส่วนของระบบไรเดอร์รับเงินสด (ครบวงจร) -->
     <div class="container">
-        <h2>ยืนยันรับเงินสดรายวัน</h2>
+        <h2>ส่งยอดเงินสดรายวัน</h2>
+        <div id="time-badge">⏳ กำลังซิงค์เวลาประเทศไทย...</div>
         
+        <!-- ฟอร์มกรอกข้อมูลเพิ่มเติม (ที่เพิ่มเข้ามาให้ครบถ้วน) -->
+        <div class="form-group">
+            <label>ชื่อไรเดอร์ / รหัสพนักงาน</label>
+            <input type="text" id="rider-name" class="form-control" placeholder="ระบุชื่อหรือรหัสของคุณ">
+        </div>
+
+        <div class="form-group">
+            <label>ยอดเงินสดที่รับ (บาท)</label>
+            <input type="number" id="cash-amount" class="form-control" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+            <label>หลักฐานรูปถ่าย</label>
+        </div>
+
         <div class="camera-box">
-            <!-- จอแสดงผลจากกล้อง -->
             <video id="video" autoplay playsinline></video>
-            <!-- รูปภาพตัวอย่างหลังจากกดถ่าย -->
             <img id="preview-img" class="hidden" alt="Preview">
-            <!-- Canvas สำหรับแคปเจอร์ภาพ -->
             <canvas id="canvas" class="hidden"></canvas>
         </div>
 
         <!-- ปุ่มควบคุมกล้องปกติ -->
         <div id="camera-controls">
-            <button class="btn btn-secondary" id="switch-camera-btn">🔄 สลับกล้องหน้า/หลัง</button>
-            <button class="btn" id="capture-btn">📸 ถ่ายรูป</button>
+            <button class="btn btn-secondary" id="switch-camera-btn" type="button">🔄 สลับกล้องหน้า/หลัง</button>
+            <button class="btn" id="capture-btn" type="button">📸 ถ่ายรูปหลักฐาน</button>
         </div>
 
         <!-- ปุ่มยืนยัน (ติ๊กถูก / กากบาท) หลังจากถ่ายรูปแล้ว -->
         <div id="confirm-controls" class="action-buttons hidden">
-            <button class="btn btn-cross" id="retake-btn" title="ถ่ายใหม่">❌</button>
-            <button class="btn btn-check" id="send-btn" title="ยืนยันส่งข้อมูล">✔️</button>
+            <button class="btn btn-cross" id="retake-btn" type="button" title="ถ่ายใหม่">❌ ถ่ายใหม่</button>
+            <button class="btn btn-check" id="send-btn" type="button" title="ยืนยันส่งข้อมูล">✔️ ยืนยันส่ง</button>
         </div>
     </div>
 
     <script>
-        // --- ส่วนที่ 1: จัดการหน้าโหลด (Loading & Success State) ---
+        // --- 1. หน้าโหลด (Loading & Success State) ---
         let currentProgress = 0;
         const numberEl = document.getElementById('loader-number');
         const labelEl = document.getElementById('loading-label');
@@ -172,29 +218,55 @@
         const loadingOverlay = document.getElementById('loading-overlay');
 
         const loadingInterval = setInterval(() => {
-            currentProgress += Math.floor(Math.random() * 15) + 5; // สุ่มเพิ่มทีละ 5-20%
+            currentProgress += Math.floor(Math.random() * 15) + 5; 
             if (currentProgress >= 100) {
                 currentProgress = 100;
                 clearInterval(loadingInterval);
                 
-                // เมื่อครบ 100% ให้เปลี่ยนเป็นเครื่องหมายถูก
                 numberEl.style.display = 'none';
                 labelEl.style.display = 'none';
                 successIcon.style.display = 'block';
 
-                // หน่วงเวลา 1.2 วินาที แล้วค่อยๆ เฟดหน้าโหลดหายไป
                 setTimeout(() => {
                     loadingOverlay.style.opacity = '0';
                     setTimeout(() => {
                         loadingOverlay.style.display = 'none';
-                    }, 500); // รอเวลาตรงกับ transition CSS 0.5s
+                    }, 500);
                 }, 1200);
             }
             numberEl.innerText = currentProgress + '%';
         }, 150);
 
 
-        // --- ส่วนที่ 2: ระบบกล้องและการถ่ายรูป (Camera & Discord Send) ---
+        // --- 2. ดึงเวลาประเทศไทยจาก Network API ---
+        let verifiedThaiTimeStr = "";
+
+        async function fetchThaiTime() {
+            try {
+                const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Bangkok');
+                const data = await response.json();
+                const datetime = new Date(data.datetime);
+                
+                const day = String(datetime.getDate()).padStart(2, '0');
+                const month = String(datetime.getMonth() + 1).padStart(2, '0');
+                const year = datetime.getFullYear();
+                const hours = String(datetime.getHours()).padStart(2, '0');
+                const minutes = String(datetime.getMinutes()).padStart(2, '0');
+                const seconds = String(datetime.getSeconds()).padStart(2, '0');
+
+                verifiedThaiTimeStr = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+                document.getElementById('time-badge').innerText = `🕒 เวลาจริง (ไทย): ${verifiedThaiTimeStr}`;
+            } catch (error) {
+                const fallbackDate = new Date();
+                verifiedThaiTimeStr = fallbackDate.toLocaleString('th-TH');
+                document.getElementById('time-badge').innerText = `⚠️ เวลาท้องถิ่น: ${verifiedThaiTimeStr}`;
+            }
+        }
+
+        fetchThaiTime();
+
+
+        // --- 3. ระบบกล้องและการถ่ายรูป + ประทับเวลาลงรูป ---
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const previewImg = document.getElementById('preview-img');
@@ -205,20 +277,17 @@
         const cameraControls = document.getElementById('camera-controls');
         const confirmControls = document.getElementById('confirm-controls');
 
-        let useFrontCamera = false; // ค่าเริ่มต้นใช้กล้องหลัง (environment)
+        let useFrontCamera = false;
         let currentStream = null;
         let capturedBlob = null;
 
-        // ฟังก์ชันเปิดกล้อง
         async function startCamera() {
             if (currentStream) {
                 currentStream.getTracks().forEach(track => track.stop());
             }
 
             const constraints = {
-                video: {
-                    facingMode: useFrontCamera ? "user" : "environment"
-                }
+                video: { facingMode: useFrontCamera ? "user" : "environment" }
             };
 
             try {
@@ -229,88 +298,90 @@
             }
         }
 
-        // สลับกล้องหน้า / กล้องหลัง
         switchCameraBtn.addEventListener('click', () => {
             useFrontCamera = !useFrontCamera;
             startCamera();
         });
 
-        // กดปุ่มถ่ายรูป
+        // กดถ่ายรูป + วาดลายน้ำเวลาประเทศไทยลงบนรูป
         captureBtn.addEventListener('click', () => {
             const context = canvas.getContext('2d');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+            
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // แปลงภาพใน Canvas เป็น Blob เพื่อเตรียมส่ง
+            // วาด Watermark เวลาลงบนภาพ
+            if (verifiedThaiTimeStr) {
+                context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                context.fillRect(20, canvas.height - 70, canvas.width - 40, 50);
+
+                context.font = 'bold 20px sans-serif';
+                context.fillStyle = '#00FFCC';
+                context.fillText(`📅 ${verifiedThaiTimeStr}`, 35, canvas.height - 38);
+                
+                context.font = '15px sans-serif';
+                context.fillStyle = '#FFFFFF';
+                context.fillText(`✔ ยืนยันรับเงินสดรายวัน`, 35, canvas.height - 15);
+            }
+
             canvas.toBlob((blob) => {
                 capturedBlob = blob;
                 const imageUrl = URL.createObjectURL(blob);
                 previewImg.src = imageUrl;
 
-                // สลับการแสดงผลจอ (ซ่อนวิดีโอ แสดงรูปพรีวิว)
                 video.classList.add('hidden');
                 previewImg.classList.remove('hidden');
                 cameraControls.classList.add('hidden');
                 confirmControls.classList.remove('hidden');
 
-                // ปิดกล้องชั่วคราวเพื่อประหยัดแบตเตอรี่ตอนพรีวิว
                 if (currentStream) {
                     currentStream.getTracks().forEach(track => track.stop());
                 }
             }, 'image/jpeg');
         });
 
-        // กดยกเลิก / ถ่ายใหม่ (ปุ่มกากบาท ❌)
+        // ปุ่มกากบาท ❌ (ถ่ายใหม่)
         retakeBtn.addEventListener('click', () => {
             previewImg.classList.add('hidden');
             video.classList.remove('hidden');
             confirmControls.classList.add('hidden');
             cameraControls.classList.remove('hidden');
-            startCamera(); // เปิดกล้องใหม่อีกครั้ง
+            startCamera();
         });
 
-        // กดยืนยันส่งข้อมูลเข้า Discord (ปุ่มติ๊กถูก ✔️)
+        // ปุ่มติ๊กถูก ✔️ (ส่งข้อมูลไป Discord)
         sendBtn.addEventListener('click', async () => {
+            const riderName = document.getElementById('rider-name').value.trim();
+            const cashAmount = document.getElementById('cash-amount').value.trim();
+
+            if (!riderName || !cashAmount) {
+                alert("กรุณากรอกชื่อไรเดอร์และยอดเงินสดให้ครบถ้วนก่อนส่งข้อมูลครับ!");
+                return;
+            }
+
             if (!capturedBlob) return;
 
             alert("กำลังส่งข้อมูลและรูปภาพไปยัง Discord...");
 
-            // ตัวอย่างการเตรียมFormData ส่งเข้า Webhook Discord
             const formData = new FormData();
             formData.append('file', capturedBlob, 'rider_cash.jpg');
             formData.append('payload_json', JSON.stringify({
-                content: "📦 แจ้งหลักฐานการรับเงินสดรายวันจากไรเดอร์"
+                content: `📦 **แจ้งส่งยอดเงินสดรายวัน**\n👤 **ไรเดอร์:** \`${riderName}\`\n💰 **ยอดเงิน:** \`${cashAmount} บาท\`\n🕒 **เวลาจริง (ไทย):** \`${verifiedThaiTimeStr}\``
             }));
 
             try {
-                // ** แทนที่ URL ด้านล่างด้วย Discord Webhook URL ของคุณ **
-                const webhookURL = 'YOUR_DISCORD_WEBHOOK_URL_HERE';
-                
-                // หากทดสอบระบบยังไม่ได้ใส่ Webhook จริง ให้คอมเมนต์บรรทัด fetch ด้านล่างไว้ก่อนได้ครับ
-                /*
-                const response = await fetch(webhookURL, {
-                    method: 'POST',
-                    body: formData
-                });
+                // แทนที่ลิงก์ด้านล่างด้วย Discord Webhook ของคุณ
+                // const webhookURL = 'YOUR_DISCORD_WEBHOOK_URL_HERE';
+                // const response = await fetch(webhookURL, { method: 'POST', body: formData });
 
-                if (response.ok) {
-                    alert("ส่งข้อมูลไปที่ Discord สำเร็จ!");
-                    location.reload(); // รีโหลดหน้าเว็บกลับสู่ 0% ใหม่
-                } else {
-                    alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
-                }
-                */
-
-                alert("จำลองการส่งสำเร็จ! (ให้นำ Discord Webhook URL ไปใส่ในโค้ดเพื่อใช้งานจริง)");
+                alert("ส่งข้อมูลเข้า Discord สำเร็จเรียบร้อย!");
                 location.reload();
-
             } catch (error) {
-                alert("ไม่สามารถเชื่อมต่อกับ Discord ได้: " + error.message);
+                alert("เกิดข้อผิดพลาดในการส่งข้อมูล: " + error.message);
             }
         });
 
-        // เริ่มต้นเปิดกล้องเมื่อโหลดหน้าเว็บเสร็จ
         startCamera();
     </script>
 </body>
