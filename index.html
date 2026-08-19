@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บริการสินเชื่อเงินด่วน พะเยา</title>
-    <!-- เชื่อมโยง Manifest สำหรับติดตั้ง PWA บนมือถือ -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#dc2626">
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -24,7 +23,6 @@
         * { box-sizing: border-box; font-family: 'Prompt', sans-serif; margin: 0; padding: 0; }
         body { background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); color: var(--dark); line-height: 1.6; padding-top: 50px; min-height: 100vh; padding-bottom: 40px; }
 
-        /* แบนเนอร์ด้านบนสำหรับติดตั้งแอป */
         .top-app-banner {
             position: fixed; top: 0; left: 0; width: 100%;
             background: linear-gradient(135deg, #1e293b, #0f172a);
@@ -40,13 +38,10 @@
         .top-app-banner button:hover { background: var(--green-hover); transform: scale(1.05); }
 
         .page-wrapper { max-width: 800px; margin: 25px auto; display: flex; flex-direction: column; gap: 25px; padding: 0 20px; }
-
-        /* ส่วนเนื้อหาหลัก */
         .main-container { background: white; padding: 35px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.8); }
         
         .live-status { background: #fef2f2; padding: 12px 15px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 20px; border-left: 4px solid var(--primary); color: #991b1b; }
 
-        /* ปุ่มสลับแท็บ */
         .tab-menu { display: flex; gap: 10px; margin-bottom: 30px; background: #f1f5f9; padding: 6px; border-radius: 12px; }
         .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #64748b; font-weight: 600; border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: all 0.3s ease; }
         .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -77,11 +72,9 @@
         .btn-prev { background: #f1f5f9; color: #475569; border: 1.5px solid var(--border); }
         .btn-prev:hover { background: #e2e8f0; }
 
-        /* ส่วน QR Code สำหรับชำระเงิน */
         .qr-container { text-align: center; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px dashed var(--border); margin-bottom: 20px; }
         .qr-container img { width: 180px; height: 180px; object-fit: contain; margin-bottom: 10px; border-radius: 8px; }
 
-        /* ส่วนคำนวณแบบพับเปิด-ปิดได้ (ด้านล่างสุด) */
         .calculator-section { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.8); }
         .accordion-header { background: #f8fafc; border: 1px solid var(--border); padding: 15px 20px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1rem; color: var(--dark); transition: background 0.2s; }
         .accordion-header:hover { background: #f1f5f9; }
@@ -92,7 +85,6 @@
         .calc-result p { margin-bottom: 6px; display: flex; justify-content: space-between; }
         .calc-result span { font-weight: 600; color: var(--primary); }
 
-        /* Modal Pop-up */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.65); backdrop-filter: blur(5px); justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.3s ease; }
         .modal.show { display: flex; opacity: 1; }
         .modal-content { background: white; padding: 35px 25px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; box-shadow: 0 20px 35px rgba(0,0,0,0.2); position: relative; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -106,7 +98,6 @@
         .floating-line { position: fixed; bottom: 20px; right: 20px; background: #06c755; color: white; padding: 12px 20px; border-radius: 50px; text-decoration: none; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
         .floating-line:hover { transform: scale(1.05); }
 
-        /* Step Indicators */
         .step-indicators { display: flex; justify-content: space-between; margin-bottom: 30px; position: relative; }
         .step-indicators::before { content: ''; position: absolute; top: 15px; left: 10%; right: 10%; height: 2px; background: #e2e8f0; z-index: 1; }
         .step-ind { position: relative; z-index: 2; text-align: center; flex: 1; }
@@ -120,18 +111,15 @@
 </head>
 <body>
 
-    <!-- แบนเนอร์ติดตั้ง PWA -->
     <div class="top-app-banner" id="installBanner" style="display: none;">
         <span>📱 ติดตั้งแอปไว้ใช้งานบนหน้าจอหลักมือถือได้เลย</span>
         <button id="installBtn">ติดตั้งแอป</button>
     </div>
 
 <div class="page-wrapper">
-    <!-- ส่วนเนื้อหาหลัก -->
     <div class="main-container">
         <div class="live-status" id="live-status">กำลังโหลดสถานะระบบ...</div>
 
-        <!-- เมนูปุ่มสลับแท็บ -->
         <div class="tab-menu">
             <button class="tab-btn active" onclick="switchTab('apply')">📝 สมัครสินเชื่อใหม่</button>
             <button class="tab-btn" onclick="switchTab('payment')">💳 แนบสลิปชำระเงิน</button>
@@ -144,7 +132,7 @@
 
             <div class="step-indicators">
                 <div class="step-ind active" id="ind-1"><div class="step-num">1</div><span>วงเงินกู้</span></div>
-                <div class="step-ind" id="ind-2"><div class="step-num">2</div><span>ที่อยู่ & บัญชี</span></div>
+                <div class="step-ind" id="ind-2"><div class="step-num">2</div><span>ที่อยู่ & อาชีพ</span></div>
                 <div class="step-ind" id="ind-3"><div class="step-num">3</div><span>ยืนยันตัวตน</span></div>
             </div>
 
@@ -194,7 +182,19 @@
                 </div>
 
                 <div class="form-step" id="step-2">
-                    <div class="section-title" style="margin-top:0;">ที่อยู่ & บัญชีรับเงิน</div>
+                    <div class="section-title" style="margin-top:0;">ที่อยู่ & อาชีพหลัก</div>
+                    <div class="form-group">
+                        <label for="occupation">อาชีพ / แหล่งรายได้</label>
+                        <select id="occupation" required>
+                            <option value="">-- เลือกอาชีพ --</option>
+                            <option value="ค้าขาย/ธุรกิจส่วนตัว">ค้าขาย / ธุรกิจส่วนตัว</option>
+                            <option value="พนักงานประจำ/ลูกจ้าง">พนักงานประจำ / ลูกจ้าง</option>
+                            <option value="เกษตรกร">เกษตรกร</option>
+                            <option value="รับจ้างทั่วไป">รับจ้างทั่วไป</option>
+                            <option value="ว่างงาน">ว่างงาน (ไม่ผ่านเกณฑ์)</option>
+                        </select>
+                        <small class="helper-text">*ระบบ AI จะประเมินคุณสมบัติจากอาชีพและเงื่อนไขการกู้ทันที</small>
+                    </div>
                     <div class="form-group">
                         <label for="village">ชื่อตลาด / ชุมชน</label>
                         <input type="text" id="village" placeholder="เช่น ตลาดสดเทศบาล" required>
@@ -241,20 +241,24 @@
             </form>
         </div>
 
-        <!-- TAB 2: แนบสลิปชำระเงิน (คง QR Code ไว้ + ตัดชื่อเบอร์ออกเหลือแค่แนบสลิป) -->
+        <!-- TAB 2: แนบสลิปชำระเงิน -->
         <div class="tab-content" id="tab-payment">
             <h1>แนบสลิปชำระเงินค่างวด</h1>
-            <div class="subtitle">สแกน QR Code เพื่อชำระเงินผ่านพร้อมเพย์ จากนั้นแนบสลิปหลักฐานการโอนด้านล่าง</div>
+            <div class="subtitle">สแกน QR Code เพื่อชำระเงินผ่านพร้อมเพย์ จากนั้นระบุยอดเงินและแนบสลิปหลักฐานการโอน</div>
 
             <div class="qr-container">
                 <img src="https://promptpay.io/0658351446.png" alt="QR Code พร้อมเพย์">
                 <p style="font-size: 0.9rem; font-weight: 600; color: var(--dark);">พร้อมเพย์: 065-835-1446</p>
-                <small class="helper-text">ชื่อบัญชี: บริการสินเชื่อพะเยา</small>
+                <small class="helper-text">ชื่อบัญชี: คณิน มะลิวัน</small>
             </div>
 
             <form id="paymentForm" onsubmit="submitPayment(event)">
                 <div class="form-group">
-                    <label>อัปโหลดสลิปโอนเงิน</label>
+                    <label for="payAmount">ยอดเงินที่ชำระ (บาท)</label>
+                    <input type="number" id="payAmount" value="400" min="10" step="10" required>
+                </div>
+                <div class="form-group">
+                    <label>แนบสลิปโอนเงิน</label>
                     <input type="file" id="slipImage" accept="image/*" required>
                 </div>
 
@@ -265,7 +269,7 @@
         </div>
     </div>
 
-    <!-- ส่วนตารางทดลองคำนวณแบบพับเปิด-ปิดได้ (ย้ายมาล่างสุด) -->
+    <!-- ส่วนตารางทดลองคำนวณแบบพับเปิด-ปิดได้ -->
     <div class="calculator-section">
         <div class="accordion-header" onclick="toggleCalculator()">
             <span>🧮 ตารางทดลองคำนวณค่างวด</span>
@@ -293,29 +297,30 @@
     </div>
 </div>
 
-<!-- Popup Modal สมัครสำเร็จ / ส่งสลิปสำเร็จ -->
+<!-- Popup Modal แสดงผลลัพธ์ AI คัดกรอง -->
 <div class="modal" id="successModal">
     <div class="modal-content">
         <span class="close-x" onclick="closeModal()">&times;</span>
-        <h3 style="color: var(--green);" id="modalTitle">✅ ส่งข้อมูลสำเร็จ!</h3>
+        <h3 id="modalTitle">ผลการประเมิน</h3>
         <p style="color: #475569; font-size: 0.9rem; margin-bottom: 15px; margin-top: 10px;" id="modalDesc">
-            ระบบได้รับข้อมูลเรียบร้อยแล้ว เจ้าหน้าที่กำลังดำเนินการตรวจสอบครับ
+            กำลังประมวลผล...
         </p>
-        <a href="https://lin.ee/8YLly76" target="_blank" class="btn-line-direct">💬 ติดต่อเจ้าหน้าที่ผ่าน LINE</a>
+        <a href="https://lin.ee/8YLly76" target="_blank" class="btn-line-direct" id="modalLineBtn">💬 ติดต่อเจ้าหน้าที่ผ่าน LINE</a>
     </div>
 </div>
 
 <a href="https://lin.ee/8YLly76" target="_blank" class="floating-line">💬 ติดต่อผ่าน LINE</a>
 
 <script>
-    // ลงทะเบียน Service Worker เพื่อรองรับการติดตั้งแอป PWA บนมือถือ
+    // 🔗 ตั้งค่า Discord Webhook URL ของคุณที่นี่
+    const WEBHOOK_URL = "ใส่ลิงก์ Webhook ของคุณตรงนี้";
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js').catch(() => {});
         });
     }
 
-    // ตัวแปรเก็บเหตุการณ์ติดตั้งแอป
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -334,7 +339,6 @@
         }
     });
 
-    // สลับแท็บหน้าเว็บ
     function switchTab(tabName) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -348,7 +352,6 @@
         }
     }
 
-    // ฟังก์ชันเปิด/ปิดตารางคำนวณแบบ Accordion
     function toggleCalculator() {
         const body = document.getElementById('calcAccordionBody');
         const arrow = document.getElementById('arrowIcon');
@@ -356,7 +359,6 @@
         arrow.innerText = body.classList.contains('show') ? '▲' : '▼';
     }
 
-    // ฟังก์ชันคำนวณทดลองด้านล่าง
     function testCalculate() {
         const amount = parseFloat(document.getElementById('testAmount').value) || 0;
         const days = parseInt(document.getElementById('testDays').value);
@@ -383,7 +385,6 @@
     setInterval(updateStatus, 6000);
     updateStatus();
 
-    // ควบคุมสเต็ปฟอร์มสมัคร
     function nextStep(current) {
         if (current === 1) {
             const idCard = document.getElementById('idCardNumber').value;
@@ -409,19 +410,86 @@
         document.getElementById(`ind-${prev}`).classList.remove('completed');
     }
 
-    // ฟอร์มสมัครสมาชิก (สามารถใส่โค้ด Discord Webhook เดิมของคุณตรงนี้ได้ตามปกติ)
+    // ระบบ AI คัดกรองและส่งข้อมูลเข้า Discord Webhook
     document.getElementById('loanForm').onsubmit = function(e) {
         e.preventDefault();
-        document.getElementById('modalTitle').innerText = "✅ ส่งข้อมูลการสมัครสำเร็จ!";
-        document.getElementById('modalDesc').innerHTML = "ระบบได้รับข้อมูลแล้ว <strong>เจ้าหน้าที่ของเราจะติดต่อกลับไปทางโทรศัพท์หรือ LINE</strong> เพื่อแจ้งผลการอนุมัติวงเงินครับ";
+        
+        const fullname = document.getElementById('fullname').value;
+        const phone = document.getElementById('phone').value;
+        const amount = parseInt(document.getElementById('applyAmount').value);
+        const days = document.getElementById('applyDays').value;
+        const occupation = document.getElementById('occupation').value;
+
+        // --- เงื่อนไข AI คัดกรอง ---
+        let isPassed = true;
+        let reason = "ผ่านเกณฑ์การพิจารณาเบื้องต้น";
+
+        // เงื่อนไข 1: ว่างงาน ไม่ผ่านทันที
+        if (occupation === "ว่างงาน") {
+            isPassed = false;
+            reason = "ไม่ผ่านเกณฑ์: สถานะว่างงานไม่เข้าเงื่อนไขการอนุมัติ";
+        } 
+        // เงื่อนไข 2: กู้น้อย (1,000 - 3,000) แต่ผ่อนยาว (60 วัน) -> ไม่ผ่าน
+        else if ((amount <= 3000) && (days === "60 วัน")) {
+            isPassed = false;
+            reason = "ไม่ผ่านเกณฑ์: ยอดกู้น้อยเกินไปแต่เลือกผ่อนระยะยาวเกินกำหนด";
+        }
+
+        // ส่งข้อมูลเข้า Discord Webhook พร้อมสัญลักษณ์สถานะชัดเจน
+        const statusIcon = isPassed ? "🟢 **[ผ่านเกณฑ์เบื้องต้น]**" : "🔴 **[ไม่ผ่านเกณฑ์ / ตีกลับ]**";
+        
+        const payload = {
+            content: `🤖 **[AI ประเมินผลสินเชื่อ]**\n${statusIcon}\n👤 ชื่อ: ${fullname}\n📞 เบอร์โทร: ${phone}\n💼 อาชีพ: ${occupation}\n💰 วงเงิน: ${amount} บาท (${days})\n📝 ผลประเมิน: ${reason}`
+        };
+
+        if (WEBHOOK_URL && WEBHOOK_URL.startsWith("http")) {
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(err => console.error(err));
+        }
+
+        // แสดงผลลัพธ์บนหน้าจอผู้ใช้ให้ชัดเจน
+        const modalTitle = document.getElementById('modalTitle');
+        const modalDesc = document.getElementById('modalDesc');
+        const modalLineBtn = document.getElementById('modalLineBtn');
+
+        if (isPassed) {
+            modalTitle.innerHTML = "🟢 ผ่านการประเมินเบื้องต้น!";
+            modalTitle.style.color = "var(--green)";
+            modalDesc.innerHTML = `ระบบ AI ตรวจสอบข้อมูลแล้ว <strong>ผ่านเกณฑ์</strong> <br><br>ข้อมูลถูกส่งต่อไปยัง Discord เพื่อให้เจ้าหน้าที่ตรวจสอบและเตรียมติดต่อกลับครับ`;
+            modalLineBtn.style.display = "block";
+        } else {
+            modalTitle.innerHTML = "🔴 ไม่ผ่านการพิจารณาเบื้องต้น";
+            modalTitle.style.color = "var(--primary)";
+            modalDesc.innerHTML = `ขออภัยครับ ระบบ AI ประเมินแล้วพบว่าไม่ผ่านเกณฑ์เงื่อนไข: <br><em>${reason}</em><br><br>คำขอของคุณถูกบันทึกสถานะไม่ผ่านไว้ในระบบ`;
+            modalLineBtn.style.display = "none"; // คนที่ไม่ผ่าน จะค้างไว้แบบนั้นและไม่ต้องกดติดต่อไปทางไลน์หรือซ่อนปุ่ม
+        }
+
         document.getElementById('successModal').classList.add('show');
     };
 
-    // ฟอร์มส่งสลิปชำระเงิน
     function submitPayment(e) {
         e.preventDefault();
+        const payAmount = document.getElementById('payAmount').value;
+
+        const payload = {
+            content: `💳 **มีการแนบสลิปชำระเงินใหม่!**\n💵 ยอดโอน: ${payAmount} บาท (บัญชี: คณิน มะลิวัน)`
+        };
+
+        if (WEBHOOK_URL && WEBHOOK_URL.startsWith("http")) {
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(err => console.error(err));
+        }
+
         document.getElementById('modalTitle').innerText = "✅ แนบสลิปสำเร็จ!";
+        document.getElementById('modalTitle').style.color = "var(--green)";
         document.getElementById('modalDesc').innerHTML = "ระบบได้รับสลิปการโอนเงินเรียบร้อยแล้ว เจ้าหน้าที่กำลังตรวจสอบและอัปเดตยอดบัญชีให้ครับ";
+        document.getElementById('modalLineBtn').style.display = "block";
         document.getElementById('successModal').classList.add('show');
     }
 
