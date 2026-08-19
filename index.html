@@ -5,94 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบบริการสินเชื่อและชำระเงินออนไลน์ พะเยา</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4f46e5">
+    <meta name="theme-color" content="#6366f1">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Prompt', sans-serif; }
+        body { font-family: 'Prompt', sans-serif; background: #0f172a; color: #e2e8f0; }
         .float-line { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
-        .spinner { border: 4px solid rgba(255,255,255,0.3); width: 40px; height: 40px; border-radius: 50%; border-left-color: #ffffff; animation: spin 1s linear infinite; }
+        
+        /* Modern RGB & Spinner Effects */
+        .spinner { 
+            border: 4px solid rgba(99, 102, 241, 0.2); 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            border-left-color: #6366f1; 
+            border-right-color: #ec4899;
+            animation: spin 1s linear infinite, rgbGlow 2s ease infinite alternate; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes rgbGlow {
+            0% { filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.5)); }
+            50% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.7)); }
+            100% { filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.5)); }
+        }
+
+        /* RGB Border Animation for Cards */
+        .rgb-card-border {
+            position: relative;
+            border-radius: 1rem;
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+        }
+        .rgb-card-border::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 1.1rem;
+            background: linear-gradient(45deg, #6366f1, #ec4899, #10b981, #6366f1);
+            background-size: 400%;
+            z-index: -1;
+            animation: rgbBorder 8s linear infinite;
+            opacity: 0.6;
+        }
+        @keyframes rgbBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Money & Fireworks Animation */
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        .falling-money {
+            position: fixed;
+            top: -50px;
+            font-size: 24px;
+            z-index: 9999;
+            user-select: none;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen py-6 px-4 flex flex-col items-center justify-center">
+<body class="min-h-screen py-6 px-4 flex flex-col items-center justify-center">
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex flex-col items-center justify-center z-50 hidden">
-        <div class="spinner mb-3"></div>
-        <p id="loadingText" class="text-white font-medium text-sm">กำลังประมวลผลข้อมูล กรุณารอสักครู่...</p>
+    <!-- Loading Overlay with 0-100% Counter -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center z-50 hidden">
+        <div class="spinner mb-4"></div>
+        <div id="loadingPercent" class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-pink-500 to-emerald-400 mb-2 font-mono">0%</div>
+        <p id="loadingText" class="text-slate-300 font-medium text-sm tracking-wide">กำลังประมวลผลข้อมูล กรุณารอสักครู่...</p>
     </div>
 
     <!-- ปุ่มลอย LINE -->
-    <a href="https://lin.ee/8YLly76" target="_blank" class="float-line bg-emerald-500 text-white p-3.5 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:bg-emerald-600 transition-all transform hover:scale-105 flex items-center gap-2 border-2 border-white">
+    <a href="https://lin.ee/8YLly76" target="_blank" class="float-line bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-3.5 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-110 transition-all transform flex items-center gap-2 border-2 border-emerald-300/40">
         <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M19.365 9.863c0-3.37-3.414-6.108-7.616-6.108-4.204 0-7.619 2.738-7.619 6.108 0 3.012 2.593 5.534 6.113 5.998.239.052.563.161.646.368l.222 1.442c.026.171.111.666.195.666.079 0 .235-.126.326-.188l1.644-1.286c.264-.199.55-.262.86-.262h.016c3.277 0 5.94-2.58 5.94-5.73z"/></svg>
         <span class="text-xs font-bold hidden sm:inline">ติดต่อเจ้าหน้าที่ / สอบถาม</span>
     </a>
 
     <!-- Container หลัก -->
-    <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl max-w-xl w-full border border-slate-200">
+    <div class="rgb-card-border p-6 sm:p-8 shadow-2xl max-w-xl w-full border border-slate-800">
         
         <!-- PWA Install Bar -->
-        <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white p-4 rounded-xl mb-5 shadow-md flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-4 rounded-xl mb-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 border border-indigo-400/30">
             <div class="flex items-center gap-3 text-center sm:text-left">
-                <div class="bg-white/20 p-2.5 rounded-xl hidden sm:block">
+                <div class="bg-white/10 p-2.5 rounded-xl hidden sm:block backdrop-blur-sm">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                 </div>
                 <div>
                     <h4 class="font-bold text-sm">ติดตั้งแอปพลิเคชันลงบนมือถือ / PC</h4>
-                    <p class="text-xs text-indigo-100">ใช้งานสะดวกรวดเร็ว คลิกเดียวติดตั้งทันที</p>
+                    <p class="text-xs text-indigo-200">ใช้งานสะดวกรวดเร็ว คลิกเดียวติดตั้งทันที</p>
                 </div>
             </div>
-            <button id="installAppBtn" onclick="installApp()" class="w-full sm:w-auto bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs px-4 py-2.5 rounded-xl shadow transition whitespace-nowrap">
+            <button id="installAppBtn" onclick="installApp()" class="w-full sm:w-auto bg-white text-indigo-900 hover:bg-indigo-50 font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition whitespace-nowrap">
                 📥 ติดตั้งแอปทันที
             </button>
         </div>
 
-        <div class="bg-red-50 border-2 border-red-300 text-red-700 p-3.5 rounded-xl mb-5 text-center font-bold text-base shadow-sm animate-pulse">
+        <div class="bg-rose-950/40 border-2 border-rose-500/40 text-rose-300 p-3.5 rounded-xl mb-5 text-center font-bold text-base shadow-sm animate-pulse">
             ⚠️ กู้เท่าที่จำเป็นและชำระคืนไว ⚠️
         </div>
 
         <!-- Live Ticker -->
-        <div id="live-ticker" class="bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs px-4 py-3 rounded-xl mb-5 font-medium flex items-center gap-2 shadow-sm">
+        <div id="live-ticker" class="bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs px-4 py-3 rounded-xl mb-5 font-medium flex items-center gap-2 shadow-sm">
             <span class="animate-pulse">🟢</span> <span id="ticker-text">กำลังโหลดข้อมูลระบบ...</span>
         </div>
 
         <!-- ส่วนหัวเว็บ -->
-        <div class="text-center mb-6 border-b border-slate-100 pb-4">
-            <span class="bg-indigo-50 text-indigo-600 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Official Financial System</span>
-            <h2 class="text-2xl font-bold text-slate-800 mt-2">บริการสินเชื่อและชำระเงินออนไลน์</h2>
-            <p class="text-sm text-slate-500 mt-1">พะเยา - อนุมัติไว ปลอดภัย ได้มาตรฐาน</p>
+        <div class="text-center mb-6 border-b border-slate-800 pb-4">
+            <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Official Financial System</span>
+            <h2 class="text-2xl font-bold text-white mt-2">บริการสินเชื่อและชำระเงินออนไลน์</h2>
+            <p class="text-sm text-slate-400 mt-1">พะเยา - อนุมัติไว ปลอดภัย ได้มาตรฐาน</p>
         </div>
 
         <!-- เมนูสลับหน้า (Tabs) -->
-        <div class="flex bg-slate-100 p-1 rounded-xl mb-6">
-            <button onclick="switchTab('apply')" id="tabApplyBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition">📝 สมัครสินเชื่อใหม่</button>
-            <button onclick="switchTab('payment')" id="tabPaymentBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-700 transition">💳 ชำระเงินค่างวด</button>
-            <button onclick="switchTab('history')" id="tabHistoryBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-700 transition">📜 ประวัติของฉัน</button>
+        <div class="flex bg-slate-900/80 p-1 rounded-xl mb-6 border border-slate-800">
+            <button onclick="switchTab('apply')" id="tabApplyBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition">📝 สมัครสินเชื่อใหม่</button>
+            <button onclick="switchTab('payment')" id="tabPaymentBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition">💳 ชำระเงินค่างวด</button>
+            <button onclick="switchTab('history')" id="tabHistoryBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition">📜 ประวัติของฉัน</button>
         </div>
 
         <!-- 1. ส่วนสมัครสินเชื่อ -->
         <div id="tab-apply" class="space-y-4">
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 space-y-1">
-                <p class="font-bold text-amber-950 text-sm mb-1">📋 เงื่อนไขและอัตราดอกเบี้ยบริการสินเชื่อ:</p>
+            <div class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-4 text-xs text-amber-200 space-y-1">
+                <p class="font-bold text-amber-400 text-sm mb-1">📋 เงื่อนไขและอัตราดอกเบี้ยบริการสินเชื่อ:</p>
                 <p>• อัตราดอกเบี้ย: <b>ร้อยละ 20 คงที่ตลอดอายุสัญญา</b></p>
                 <p>• การชำระคืน: เลือกผ่อนชำระได้ (7, 15, 30 หรือ 60 วัน)</p>
             </div>
 
             <!-- Step Indicators -->
             <div class="flex justify-between items-center mb-6 px-4 relative">
-                <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-slate-200 z-0"></div>
-                <div id="ind-1" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">1</div><span class="text-[10px] text-slate-500 mt-1">วงเงินกู้</span></div>
-                <div id="ind-2" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">2</div><span class="text-[10px] text-slate-500 mt-1">ข้อมูล & อาชีพ</span></div>
-                <div id="ind-3" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">3</div><span class="text-[10px] text-slate-500 mt-1">ยืนยันตัวตน</span></div>
+                <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-slate-800 z-0"></div>
+                <div id="ind-1" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">1</div><span class="text-[10px] text-slate-400 mt-1">วงเงินกู้</span></div>
+                <div id="ind-2" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700">2</div><span class="text-[10px] text-slate-400 mt-1">ข้อมูล & อาชีพ</span></div>
+                <div id="ind-3" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700">3</div><span class="text-[10px] text-slate-400 mt-1">ยืนยันตัวตน</span></div>
             </div>
 
             <form id="loanForm" onsubmit="triggerConfirmation(event)">
                 <!-- Step 1 -->
                 <div class="form-step space-y-4" id="step-1">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">จำนวนเงินที่ต้องการขอกู้</label>
-                        <select id="applyAmount" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">จำนวนเงินที่ต้องการขอกู้</label>
+                        <select id="applyAmount" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
                             <option value="">-- กรุณาเลือกวงเงิน --</option>
                             <option value="1000">1,000 บาท</option>
                             <option value="3000">3,000 บาท</option>
@@ -104,8 +158,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">ระยะเวลาผ่อนชำระ</label>
-                        <select id="applyDays" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">ระยะเวลาผ่อนชำระ</label>
+                        <select id="applyDays" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
                             <option value="">-- เลือกระยะเวลา --</option>
                             <option value="7 วัน">7 วัน</option>
                             <option value="15 วัน">15 วัน</option>
@@ -114,25 +168,25 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อ - นามสกุลจริง</label>
-                        <input type="text" id="fullname" placeholder="ระบุชื่อและนามสกุล" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">ชื่อ - นามสกุลจริง</label>
+                        <input type="text" id="fullname" placeholder="ระบุชื่อและนามสกุล" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">เลขประจำตัวประชาชน (13 หลัก)</label>
-                        <input type="text" id="idCardNumber" placeholder="x-xxxx-xxxxx-xx-x" maxlength="17" oninput="formatIdCard(this)" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm tracking-wider font-mono">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">เลขประจำตัวประชาชน (13 หลัก)</label>
+                        <input type="text" id="idCardNumber" placeholder="x-xxxx-xxxxx-xx-x" maxlength="17" oninput="formatIdCard(this)" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm tracking-wider font-mono">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">เบอร์โทรศัพท์มือถือ (10 หลัก)</label>
-                        <input type="tel" id="phone" placeholder="0xx-xxx-xxxx" maxlength="12" oninput="formatPhone(this)" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm tracking-wider font-mono">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">เบอร์โทรศัพท์มือถือ (10 หลัก)</label>
+                        <input type="tel" id="phone" placeholder="0xx-xxx-xxxx" maxlength="12" oninput="formatPhone(this)" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm tracking-wider font-mono">
                     </div>
-                    <button type="button" onclick="nextStep(1)" class="w-full mt-2 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-lg transition">ดำเนินการต่อ ➔</button>
+                    <button type="button" onclick="nextStep(1)" class="w-full mt-2 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition">ดำเนินการต่อ ➔</button>
                 </div>
 
                 <!-- Step 2 -->
                 <div class="form-step space-y-4 hidden" id="step-2">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">อาชีพ / แหล่งรายได้</label>
-                        <select id="occupation" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">อาชีพ / แหล่งรายได้</label>
+                        <select id="occupation" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
                             <option value="">-- เลือกอาชีพ --</option>
                             <option value="ค้าขาย/ธุรกิจส่วนตัว">ค้าขาย / ธุรกิจส่วนตัว</option>
                             <option value="พนักงานประจำ/ลูกจ้าง">พนักงานประจำ / ลูกจ้าง</option>
@@ -142,16 +196,16 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อตลาด / ชุมชน</label>
-                        <input type="text" id="village" placeholder="เช่น ตลาดสดเทศบาล" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">ชื่อตลาด / ชุมชน</label>
+                        <input type="text" id="village" placeholder="เช่น ตลาดสดเทศบาล" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">รายละเอียดที่อยู่</label>
-                        <textarea id="address" rows="2" placeholder="บ้านเลขที่, ตำบล, อำเภอ" required class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"></textarea>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">รายละเอียดที่อยู่</label>
+                        <textarea id="address" rows="2" placeholder="บ้านเลขที่, ตำบล, อำเภอ" required class="w-full px-4 py-2 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"></textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">ธนาคารรับเงิน</label>
-                        <select id="bankName" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">ธนาคารรับเงิน</label>
+                        <select id="bankName" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
                             <option value="">-- เลือกธนาคาร --</option>
                             <option value="กสิกรไทย">ธนาคารกสิกรไทย (KBANK)</option>
                             <option value="ไทยพาณิชย์">ธนาคารไทยพาณิชย์ (SCB)</option>
@@ -160,34 +214,34 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">เลขที่บัญชีธนาคาร</label>
-                        <input type="text" id="accountNumber" placeholder="เลขบัญชีธนาคาร" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-mono">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">เลขที่บัญชีธนาคาร</label>
+                        <input type="text" id="accountNumber" placeholder="เลขบัญชีธนาคาร" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-mono">
                     </div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="prevStep(2)" class="w-1/3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition">⬅ ย้อนกลับ</button>
-                        <button type="button" onclick="nextStep(2)" class="w-2/3 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-lg transition">ดำเนินการต่อ ➔</button>
+                        <button type="button" onclick="prevStep(2)" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition border border-slate-700">⬅ ย้อนกลับ</button>
+                        <button type="button" onclick="nextStep(2)" class="w-2/3 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition">ดำเนินการต่อ ➔</button>
                     </div>
                 </div>
 
                 <!-- Step 3 -->
                 <div class="form-step space-y-4 hidden" id="step-3">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">รูปถ่ายหน้าบัตรประชาชน</label>
-                        <input type="file" id="idCardImage" accept="image/*" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 cursor-pointer border border-slate-300 rounded-xl p-1">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">รูปถ่ายหน้าบัตรประชาชน</label>
+                        <input type="file" id="idCardImage" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">รูปถ่ายถือบัตรประชาชนคู่ใบหน้า</label>
-                        <input type="file" id="selfieCardImage" accept="image/*" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 cursor-pointer border border-slate-300 rounded-xl p-1">
+                        <label class="block text-sm font-medium text-slate-300 mb-1">รูปถ่ายถือบัตรประชาชนคู่ใบหน้า</label>
+                        <input type="file" id="selfieCardImage" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
                     </div>
                     
-                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center gap-3">
-                        <input type="checkbox" id="robotCheck" required class="w-5 h-5 text-indigo-600 rounded border-slate-300 cursor-pointer">
-                        <label for="robotCheck" class="text-sm font-medium text-slate-700 cursor-pointer">ฉันไม่ใช่โปรแกรมอัตโนมัติ (ยืนยันตัวตน)</label>
+                    <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
+                        <input type="checkbox" id="robotCheck" required class="w-5 h-5 text-indigo-600 rounded border-slate-700 cursor-pointer bg-slate-800">
+                        <label for="robotCheck" class="text-sm font-medium text-slate-300 cursor-pointer">ฉันไม่ใช่โปรแกรมอัตโนมัติ (ยืนยันตัวตน)</label>
                     </div>
 
                     <div class="flex gap-2">
-                        <button type="button" onclick="prevStep(3)" class="w-1/3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition">⬅ ย้อนกลับ</button>
-                        <button type="submit" class="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-lg transition">🔒 ยืนยันและส่งข้อมูล</button>
+                        <button type="button" onclick="prevStep(3)" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition border border-slate-700">⬅ ย้อนกลับ</button>
+                        <button type="submit" class="w-2/3 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl shadow-lg transition">🔒 ยืนยันและส่งข้อมูล</button>
                     </div>
                 </div>
             </form>
@@ -196,44 +250,44 @@
         <!-- 2. ส่วนชำระเงินค่างวด -->
         <div id="tab-payment" class="space-y-4 hidden">
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">ยอดเงินที่ต้องการชำระ (บาท)</label>
+                <label class="block text-sm font-medium text-slate-300 mb-1">ยอดเงินที่ต้องการชำระ (บาท)</label>
                 <div class="relative">
                     <input type="number" id="mainAmountInput" value="400" min="10"
-                           class="w-full px-4 py-3 pl-9 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg font-semibold text-slate-700"
+                           class="w-full px-4 py-3 pl-9 border border-slate-700 bg-slate-900 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg font-semibold text-white"
                            placeholder="0.00">
-                    <span class="absolute left-3.5 top-3.5 text-slate-400 font-semibold">฿</span>
+                    <span class="absolute left-3.5 top-3.5 text-slate-500 font-semibold">฿</span>
                 </div>
-                <p class="text-xs text-slate-500 mt-1">💡 ระบบจะคำนวณและตัดยอดตามรอบชำระ (เช่น ยอด 1,200 บ. ผ่อนทุก 3 วัน วันละ 400 บาท)</p>
+                <p class="text-xs text-slate-400 mt-1">💡 ระบบจะคำนวณและตัดยอดตามรอบชำระ (เช่น ยอด 1,200 บ. ผ่อนทุก 3 วัน วันละ 400 บาท)</p>
             </div>
 
             <!-- ช่องทางการชำระเงินเลือกได้ 2 ช่องทาง -->
             <div class="space-y-3 pt-2">
-                <label class="block text-sm font-semibold text-slate-700">เลือกช่องทางการชำระเงิน:</label>
+                <label class="block text-sm font-semibold text-slate-300">เลือกช่องทางการชำระเงิน:</label>
                 
                 <!-- ช่องทางที่ 1: QR Code พร้อมเพย์ -->
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3">
                     <div class="flex items-center justify-between">
                         <div>
-                            <span class="font-bold text-slate-800 text-sm">ช่องทางที่ 1: สแกน QR Code พร้อมเพย์</span>
-                            <p class="text-xs text-slate-500">โอนผ่านแอปธนาคาร สะดวกและตรวจสอบไว</p>
+                            <span class="font-bold text-white text-sm">ช่องทางที่ 1: สแกน QR Code พร้อมเพย์</span>
+                            <p class="text-xs text-slate-400">โอนผ่านแอปธนาคาร สะดวกและตรวจสอบไว</p>
                         </div>
-                        <button onclick="openPaymentModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
+                        <button onclick="openPaymentModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md">
                             สร้าง QR Code
                         </button>
                     </div>
-                    <div class="flex items-center justify-between border-t border-slate-200 pt-2 text-xs">
-                        <span class="text-slate-600">พร้อมเพย์: <b id="pp-number" class="text-slate-800">065-835-1446</b> (คณิน มะลิวัน)</span>
-                        <button onclick="copyPhone()" class="text-indigo-600 font-bold hover:underline">📋 คัดลอกเบอร์</button>
+                    <div class="flex items-center justify-between border-t border-slate-800 pt-2 text-xs">
+                        <span class="text-slate-400">พร้อมเพย์: <b id="pp-number" class="text-white">065-835-1446</b> (คณิน มะลิวัน)</span>
+                        <button onclick="copyPhone()" class="text-indigo-400 font-bold hover:underline">📋 คัดลอกเบอร์</button>
                     </div>
                 </div>
 
                 <!-- ช่องทางที่ 2: ชำระเงินสดผ่าน Rider พร้อม PIN -->
-                <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-3">
+                <div class="bg-indigo-950/30 p-4 rounded-xl border border-indigo-900/50 space-y-3">
                     <div>
-                        <span class="font-bold text-slate-800 text-sm">ช่องทางที่ 2: ชำระเงินสดกับ Rider (Rider กรอก PIN)</span>
-                        <p class="text-xs text-slate-500">ให้ Rider ถือมือถือมากรอกยอดและ PIN ส่วนตัวหน้างาน</p>
+                        <span class="font-bold text-white text-sm">ช่องทางที่ 2: ชำระเงินสดกับ Rider (Rider กรอก PIN)</span>
+                        <p class="text-xs text-slate-400">ให้ Rider ถือมือถือมากรอกยอดและ PIN ส่วนตัวหน้างาน</p>
                     </div>
-                    <button onclick="openRiderModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-2">
+                    <button onclick="openRiderModal()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2">
                         🛵 เปิดหน้าจอให้ Rider กรอก PIN ยืนยัน
                     </button>
                 </div>
@@ -243,68 +297,68 @@
         <!-- 3. ส่วนประวัติของฉัน -->
         <div id="tab-history" class="space-y-4 hidden">
             <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-800 text-base">📜 ประวัติธุรกรรมและการชำระเงิน</h3>
-                <button onclick="clearHistory()" class="text-xs text-red-500 hover:underline">ล้างประวัติ</button>
+                <h3 class="font-bold text-white text-base">📜 ประวัติธุรกรรมและการชำระเงิน</h3>
+                <button onclick="clearHistory()" class="text-xs text-rose-400 hover:underline">ล้างประวัติ</button>
             </div>
-            <p class="text-xs text-slate-500">บันทึกประวัติการทำรายการย้อนหลังในเครื่องของคุณ พร้อมเลขอ้างอิงทำธุรกรรม (Transaction Reference)</p>
+            <p class="text-xs text-slate-400">บันทึกประวัติการทำรายการย้อนหลังในเครื่องของคุณ พร้อมเลขอ้างอิงทำธุรกรรม (Transaction Reference)</p>
             
             <div id="historyListContainer" class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-                <div class="text-center py-8 text-slate-400 text-xs">ยังไม่มีประวัติการทำรายการในเครื่องนี้</div>
+                <div class="text-center py-8 text-slate-500 text-xs">ยังไม่มีประวัติการทำรายการในเครื่องนี้</div>
             </div>
         </div>
 
     </div>
 
     <!-- Modal ยืนยันสมัคร -->
-    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
-            <h3 class="text-xl font-bold text-slate-800 mb-2 text-center">📌 ทวนสอบเงื่อนไขสินเชื่อ</h3>
-            <p class="text-xs text-slate-500 text-center mb-4">โปรดตรวจสอบรายละเอียดก่อนยืนยัน</p>
+    <div id="confirmModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="rgb-card-border shadow-2xl max-w-md w-full p-6 relative border border-slate-800">
+            <h3 class="text-xl font-bold text-white mb-2 text-center">📌 ทวนสอบเงื่อนไขสินเชื่อ</h3>
+            <p class="text-xs text-slate-400 text-center mb-4">โปรดตรวจสอบรายละเอียดก่อนยืนยัน</p>
             
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm space-y-2 mb-5">
-                <div class="flex justify-between"><span class="text-slate-600">ยอดเงินต้น:</span><span id="confPrincipal" class="font-bold text-slate-800">0 บาท</span></div>
-                <div class="flex justify-between"><span class="text-slate-600">ดอกเบี้ย (คงที่ 20%):</span><span id="confInterest" class="font-bold text-slate-800">0 บาท</span></div>
-                <div class="flex justify-between border-t border-slate-200 pt-2"><span class="text-slate-700 font-semibold">ยอดรวมสุทธิ:</span><span id="confTotal" class="font-bold text-indigo-600 text-base">0 บาท</span></div>
-                <div class="flex justify-between"><span class="text-slate-600">กำหนดชำระคืนภายใน:</span><span id="confDays" class="font-bold text-slate-800">- วัน</span></div>
-                <div class="border-t border-slate-200 pt-2 space-y-1 text-xs">
-                    <div class="flex justify-between text-slate-700"><span>ชำระเป็นรายวัน:</span><span id="confDaily" class="font-bold">0 บาท / วัน</span></div>
-                    <div class="flex justify-between text-indigo-700 font-medium"><span>ชำระทุกๆ 3 วัน (รวม x3):</span><span id="confEvery3Days" class="font-bold">0 บาท</span></div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-sm space-y-2 mb-5">
+                <div class="flex justify-between"><span class="text-slate-400">ยอดเงินต้น:</span><span id="confPrincipal" class="font-bold text-white">0 บาท</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">ดอกเบี้ย (คงที่ 20%):</span><span id="confInterest" class="font-bold text-white">0 บาท</span></div>
+                <div class="flex justify-between border-t border-slate-800 pt-2"><span class="text-slate-300 font-semibold">ยอดรวมสุทธิ:</span><span id="confTotal" class="font-bold text-indigo-400 text-base">0 บาท</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">กำหนดชำระคืนภายใน:</span><span id="confDays" class="font-bold text-white">- วัน</span></div>
+                <div class="border-t border-slate-800 pt-2 space-y-1 text-xs">
+                    <div class="flex justify-between text-slate-400"><span>ชำระเป็นรายวัน:</span><span id="confDaily" class="font-bold text-white">0 บาท / วัน</span></div>
+                    <div class="flex justify-between text-indigo-300 font-medium"><span>ชำระทุกๆ 3 วัน (รวม x3):</span><span id="confEvery3Days" class="font-bold">0 บาท</span></div>
                 </div>
             </div>
 
             <div class="flex gap-2">
-                <button type="button" onclick="closeConfirmModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition text-sm">แก้ไขข้อมูล</button>
-                <button type="button" onclick="executeFinalSubmit()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-md transition text-sm">ยืนยันสมัครทันที</button>
+                <button type="button" onclick="closeConfirmModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition text-sm border border-slate-700">แก้ไขข้อมูล</button>
+                <button type="button" onclick="executeFinalSubmit()" class="w-1/2 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl shadow-md transition text-sm">ยืนยันสมัครทันที</button>
             </div>
         </div>
     </div>
 
     <!-- Modal QR Code ชำระเงิน -->
-    <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition">
+    <div id="paymentModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="rgb-card-border shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto border border-slate-800">
+            <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-800 transition">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
             <div class="text-center mb-4">
-                <h3 class="text-xl font-bold text-slate-800">สแกนเพื่อชำระเงินค่างวด</h3>
-                <p class="text-xs text-slate-500 mt-0.5">พร้อมเพย์: 065-835-1446 (คณิน มะลิวัน)</p>
+                <h3 class="text-xl font-bold text-white">สแกนเพื่อชำระเงินค่างวด</h3>
+                <p class="text-xs text-slate-400 mt-0.5">พร้อมเพย์: 065-835-1446 (คณิน มะลิวัน)</p>
             </div>
-            <div class="flex flex-col items-center bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-4">
-                <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 mb-2">
+            <div class="flex flex-col items-center bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-4">
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-700 mb-2">
                     <img id="modalQrCodeImage" src="" alt="PromptPay QR Code" class="w-44 h-44 object-contain">
                 </div>
-                <p class="text-sm font-semibold text-slate-600">ยอดชำระ: <span id="modalDisplayAmount" class="text-emerald-600 text-lg font-bold">0.00</span> บาท</p>
+                <p class="text-sm font-semibold text-slate-300">ยอดชำระ: <span id="modalDisplayAmount" class="text-emerald-400 text-lg font-bold">0.00</span> บาท</p>
             </div>
-            <button onclick="downloadQRCode()" class="w-full mb-4 py-2 px-4 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-medium rounded-xl transition flex items-center justify-center gap-2 text-sm">
+            <button onclick="downloadQRCode()" class="w-full mb-4 py-2 px-4 border border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 font-medium rounded-xl transition flex items-center justify-center gap-2 text-sm">
                 📥 บันทึกรูป QR Code
             </button>
-            <div class="border-t border-slate-100 my-4"></div>
+            <div class="border-t border-slate-800 my-4"></div>
             <form id="paymentSubmitForm" onsubmit="submitPaymentData(event)">
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-slate-700 mb-1">แนบหลักฐานสลิปการโอนเงิน</label>
-                    <input type="file" id="slipFileInput" accept="image/*" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-600 cursor-pointer border border-slate-300 rounded-xl p-1">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">แนบหลักฐานสลิปการโอนเงิน</label>
+                    <input type="file" id="slipFileInput" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/20 file:text-emerald-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
                 </div>
-                <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow-lg transition">
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl shadow-lg transition">
                     ยืนยันการชำระเงินและส่งสลิป
                 </button>
             </form>
@@ -312,36 +366,36 @@
     </div>
 
     <!-- Modal ชำระเงินสดผ่าน Rider (Rider กรอก PIN และยอดเงินเอง + ถ่ายรูป) -->
-    <div id="riderModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeRiderModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition">
+    <div id="riderModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="rgb-card-border shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto border border-slate-800">
+            <button onclick="closeRiderModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-800 transition">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
             <div class="text-center mb-4">
-                <h3 class="text-xl font-bold text-slate-800">🛵 ช่องทาง Rider รับเงินสดหน้างาน</h3>
-                <p class="text-xs text-slate-500 mt-0.5">ให้ Rider เป็นผู้กรอกจำนวนเงิน, รหัส PIN (ซ่อน) และถ่ายรูปยืนยัน</p>
+                <h3 class="text-xl font-bold text-white">🛵 ช่องทาง Rider รับเงินสดหน้างาน</h3>
+                <p class="text-xs text-slate-400 mt-0.5">ให้ Rider เป็นผู้กรอกจำนวนเงิน, รหัส PIN (ซ่อน) และถ่ายรูปยืนยัน</p>
             </div>
             
             <form id="riderSubmitForm" onsubmit="submitRiderCashPayment(event)" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">ยอดเงินสดที่เก็บจริง (ให้ Rider พิมพ์)</label>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">ยอดเงินสดที่เก็บจริง (ให้ Rider พิมพ์)</label>
                     <div class="relative">
                         <input type="number" id="riderActualAmountInput" min="10" required
-                               class="w-full px-4 py-3 pl-9 border border-indigo-300 bg-indigo-50/30 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg font-bold text-indigo-700"
+                               class="w-full px-4 py-3 pl-9 border border-indigo-500/40 bg-indigo-950/40 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg font-bold text-indigo-300"
                                placeholder="ระบุยอดเงินสด">
                         <span class="absolute left-3.5 top-3.5 text-indigo-400 font-semibold">฿</span>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">PIN 6 หลักประจำตัว Rider (ห้ามให้ลูกค้าเห็น)</label>
-                    <input type="password" id="riderPinInput" placeholder="******" maxlength="6" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-center text-xl tracking-widest font-mono">
-                    <p class="text-[11px] text-slate-400 mt-1 text-center">Rider กรอกรหัสส่วนตัวเพื่อตัดยอด</p>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">PIN 6 หลักประจำตัว Rider (ห้ามให้ลูกค้าเห็น)</label>
+                    <input type="password" id="riderPinInput" placeholder="******" maxlength="6" required class="w-full px-4 py-3 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-center text-xl tracking-widest font-mono">
+                    <p class="text-[11px] text-slate-500 mt-1 text-center">Rider กรอกรหัสส่วนตัวเพื่อตัดยอด</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">ถ่ายรูปยืนยันรับยอดเงินสด (หน้างาน)</label>
-                    <input type="file" id="riderProofFile" accept="image/*" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 cursor-pointer border border-slate-300 rounded-xl p-1">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">ถ่ายรูปยืนยันรับยอดเงินสด (หน้างาน)</label>
+                    <input type="file" id="riderProofFile" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
                 </div>
-                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-lg transition">
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition">
                     🔓 ยืนยันยอดและส่งเข้า Discord
                 </button>
             </form>
@@ -349,14 +403,14 @@
     </div>
 
     <!-- Modal ผลลัพธ์ -->
-    <div id="successModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center relative">
-            <h3 id="modalTitle" class="text-xl font-bold text-slate-800 mb-2">ผลการประเมิน</h3>
-            <p id="modalDesc" class="text-sm text-slate-600 mb-5">กำลังประมวลผล...</p>
-            <a href="https://lin.ee/8YLly76" target="_blank" class="block w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition shadow-md mb-2">
+    <div id="successModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="rgb-card-border shadow-2xl max-w-sm w-full p-6 text-center relative border border-slate-800">
+            <h3 id="modalTitle" class="text-xl font-bold text-white mb-2">ผลการประเมิน</h3>
+            <p id="modalDesc" class="text-sm text-slate-300 mb-5">กำลังประมวลผล...</p>
+            <a href="https://lin.ee/8YLly76" target="_blank" class="block w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl transition shadow-md mb-2">
                 💬 ติดต่อเจ้าหน้าที่ผ่าน LINE
             </a>
-            <button onclick="closeModal()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl transition">ปิดหน้าต่างนี้</button>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition border border-slate-700">ปิดหน้าต่างนี้</button>
         </div>
     </div>
 
@@ -364,6 +418,22 @@
         const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1475367009700282379/3LerCdbu5Kc1TuCl19NWjozyVCFy8rcQdIJKrVN5LkebFotPTZo8LX4eBvDEdZgwx0g0";
         const PROMPTPAY_NUMBER = "0658351446";
         const RIDER_CORRECT_PIN = "711455"; // PIN 6 หลักของ Rider
+
+        // ระบบเอฟเฟกต์เงินลอยและพลุเมื่อผ่านเงื่อนไข
+        function triggerSuccessCelebration() {
+            // สร้างเอฟเฟกต์เงินลอย
+            for (let i = 0; i < 35; i++) {
+                setTimeout(() => {
+                    const money = document.createElement('div');
+                    money.classList.add('falling-money');
+                    money.innerHTML = ['💵', '💰', '💸', '✨', '🎉'][Math.floor(Math.random() * 5)];
+                    money.style.left = Math.random() * 100 + 'vw';
+                    money.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    document.body.appendChild(money);
+                    setTimeout(() => money.remove(), 4000);
+                }, i * 80);
+            }
+        }
 
         function generateTxnRef() {
             const now = new Date();
@@ -400,10 +470,8 @@
             }
         }
 
-        // ดึงข้อมูลโปรไฟล์ลูกค้าล่าสุดจากประวัติหรือฟอร์ม
         function getLatestCustomerInfo() {
             let history = JSON.parse(localStorage.getItem('user_txn_history') || '[]');
-            // ค้นหาข้อมูลโปรไฟล์ที่เคยสมัครไว้ในเครื่องถ้ามี
             let savedProfile = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
             return {
                 fullname: savedProfile.fullname || 'ไม่ระบุชื่อ (ลูกค้ายืนยันหน้างาน)',
@@ -429,19 +497,19 @@
             const container = document.getElementById('historyListContainer');
             let history = JSON.parse(localStorage.getItem('user_txn_history') || '[]');
             if (history.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">ยังไม่มีประวัติการทำรายการในเครื่องนี้</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">ยังไม่มีประวัติการทำรายการในเครื่องนี้</div>`;
                 return;
             }
             let html = '';
             history.forEach(item => {
                 html += `
-                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1 text-xs">
+                    <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 space-y-1 text-xs">
                         <div class="flex justify-between items-center">
-                            <span class="font-bold text-indigo-600">${item.type}</span>
-                            <span class="text-[10px] text-slate-400 font-mono">${item.txnRef}</span>
+                            <span class="font-bold text-indigo-400">${item.type}</span>
+                            <span class="text-[10px] text-slate-500 font-mono">${item.txnRef}</span>
                         </div>
-                        <p class="text-slate-700">${item.details}</p>
-                        <p class="text-[10px] text-slate-400 text-right">${item.date}</p>
+                        <p class="text-slate-300">${item.details}</p>
+                        <p class="text-[10px] text-slate-500 text-right">${item.date}</p>
                     </div>
                 `;
             });
@@ -457,12 +525,29 @@
         }
         renderHistory();
 
+        // ฟังก์ชันโหลดพร้อมตัวเลข 0-100%
         function showLoading(text) {
             document.getElementById('loadingText').innerText = text || 'กำลังประมวลผล กรุณารอสักครู่...';
+            const percentEl = document.getElementById('loadingPercent');
             document.getElementById('loadingOverlay').classList.remove('hidden');
+            
+            let currentPercent = 0;
+            percentEl.innerText = "0%";
+            window.loadingInterval = setInterval(() => {
+                currentPercent += Math.floor(Math.random() * 12) + 5;
+                if (currentPercent >= 100) {
+                    currentPercent = 100;
+                    clearInterval(window.loadingInterval);
+                }
+                percentEl.innerText = currentPercent + "%";
+            }, 120);
         }
         function hideLoading() {
-            document.getElementById('loadingOverlay').classList.add('hidden');
+            if (window.loadingInterval) clearInterval(window.loadingInterval);
+            document.getElementById('loadingPercent').innerText = "100%";
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 300);
         }
 
         function copyPhone() {
@@ -472,7 +557,6 @@
             });
         }
 
-        // PWA Install
         let deferredPrompt;
         const installBtn = document.getElementById('installAppBtn');
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -498,19 +582,19 @@
             applySec.classList.add('hidden');
             paymentSec.classList.add('hidden');
             historySec.classList.add('hidden');
-            applyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-700 transition";
-            paymentBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-700 transition";
-            historyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-700 transition";
+            applyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition";
+            paymentBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition";
+            historyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition";
 
             if (tab === 'apply') {
                 applySec.classList.remove('hidden');
-                applyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition";
+                applyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition";
             } else if (tab === 'payment') {
                 paymentSec.classList.remove('hidden');
-                paymentBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition";
+                paymentBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition";
             } else {
                 historySec.classList.remove('hidden');
-                historyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition";
+                historyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition";
                 renderHistory();
             }
         }
@@ -524,7 +608,6 @@
         }
         function closePaymentModal() { document.getElementById('paymentModal').classList.add('hidden'); }
         
-        // เปิด Modal Rider เพื่อให้ Rider คีย์ยอดและ PIN เอง
         function openRiderModal() {
             let amount = document.getElementById('mainAmountInput').value;
             document.getElementById('riderActualAmountInput').value = amount || '';
@@ -542,7 +625,6 @@
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
         }
 
-        // Live Ticker
         const tickerMessages = [
             "คุณวิภา (ตลาดแม่ใจ) ทำรายการกู้เงินสำเร็จ 3,000 บาท",
             "คุณมานะ (ตลาดสดเทศบาล) ชำระเงินค่างวดสำเร็จ 400 บาท",
@@ -563,17 +645,17 @@
                 if (document.getElementById('phone').value.replace(/-/g, '').length !== 10) { alert('กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก'); return; }
             }
             document.getElementById(`step-${current}`).classList.add('hidden');
-            document.getElementById(`ind-${current}`).querySelector('div').className = "w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs";
+            document.getElementById(`ind-${current}`).querySelector('div').className = "w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-md";
             const next = current + 1;
             document.getElementById(`step-${next}`).classList.remove('hidden');
-            document.getElementById(`ind-${next}`).querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm";
+            document.getElementById(`ind-${next}`).querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md";
         }
 
         function prevStep(current) {
             document.getElementById(`step-${current}`).classList.add('hidden');
             const prev = current - 1;
             document.getElementById(`step-${prev}`).classList.remove('hidden');
-            document.getElementById(`ind-${prev}`).querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm";
+            document.getElementById(`ind-${prev}`).querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md";
         }
 
         function triggerConfirmation(e) {
@@ -612,7 +694,6 @@
             const selfieCardFile = document.getElementById('selfieCardImage').files[0];
             const txnRef = generateTxnRef();
 
-            // บันทึกโปรไฟล์ลง LocalStorage ไว้ใช้อ้างอิงตอนชำระเงินสด
             localStorage.setItem('user_profile_data', JSON.stringify({ fullname, idCard, phone }));
 
             let isPassed = true;
@@ -645,6 +726,7 @@
             if (isPassed) {
                 modalTitle.innerText = "🎉 ผ่านเกณฑ์การพิจารณาเบื้องต้น!";
                 modalDesc.innerHTML = `เลขอ้างอิง: <b>${txnRef}</b><br>วงเงินขออนุมัติ: <b>${amount.toLocaleString()} บาท</b><br>กรุณากดติดต่อเจ้าหน้าที่ผ่าน LINE เพื่อรับเงินสด`;
+                triggerSuccessCelebration(); // เรียกใช้งานพลุและเงินลอยเมื่อผ่านเงื่อนไข
             } else {
                 modalTitle.innerText = "❌ ไม่ผ่านเกณฑ์การพิจารณา";
                 modalDesc.innerHTML = `เลขอ้างอิง: <b>${txnRef}</b><br>ไม่ผ่านเกณฑ์เบื้องต้น ติดต่อเจ้าหน้าที่ผ่านไลน์`;
@@ -654,19 +736,17 @@
             document.getElementById('loanForm').reset();
             document.getElementById('step-3').classList.add('hidden');
             document.getElementById('step-1').classList.remove('hidden');
-            document.getElementById('ind-1').querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm";
-            document.getElementById('ind-2').querySelector('div').className = "w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs";
-            document.getElementById('ind-3').querySelector('div').className = "w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs";
+            document.getElementById('ind-1').querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md";
+            document.getElementById('ind-2').querySelector('div').className = "w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700";
+            document.getElementById('ind-3').querySelector('div').className = "w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700";
         }
 
         function closeModal() { document.getElementById('successModal').classList.add('hidden'); }
 
-        // ยืนยันชำระเงินสดผ่าน Rider (Rider คีย์ยอดเอง, เช็ค PIN 6 หลัก, แนบรูป และส่งชื่อ-เบอร์-บัตรไป Discord)
         async function submitRiderCashPayment(e) {
             e.preventDefault();
             const inputPin = document.getElementById('riderPinInput').value;
             
-            // ตรวจสอบ PIN 6 หลักของ Rider
             if (inputPin !== RIDER_CORRECT_PIN) {
                 alert('❌ PIN ไม่ถูกต้อง! กรุณาตรวจสอบรหัส 6 หลักใหม่อีกครั้ง');
                 document.getElementById('riderPinInput').focus();
@@ -694,11 +774,11 @@
             hideLoading();
             saveToLocalHistory('ชำระเงินสด (Rider กรอก)', `เก็บเงินสด ${parseFloat(actualAmount).toLocaleString()} บาท (PIN ยืนยัน)`, txnRef);
             
+            triggerSuccessCelebration();
             alert(`✅ บันทึกยอดเงินสดสำเร็จ!\nเลขอ้างอิงธุรกรรม: ${txnRef}\nระบบได้ส่งข้อมูลชื่อ, เลขบัตร, ยอดเงิน และรูปหลักฐานเข้า Discord เรียบร้อยแล้ว`);
             document.getElementById('riderSubmitForm').reset();
         }
 
-        // ชำระผ่าน QR Code พร้อมสลิป
         async function submitPaymentData(e) {
             e.preventDefault();
             const amount = document.getElementById('mainAmountInput').value;
@@ -720,6 +800,7 @@
 
             hideLoading();
             saveToLocalHistory('ชำระเงิน QR Code', `ยอดโอน ${parseFloat(amount).toLocaleString()} บาท`, txnRef);
+            triggerSuccessCelebration();
             alert(`ส่งสลิปชำระเงินเรียบร้อยแล้ว!\nเลขอ้างอิงธุรกรรม: ${txnRef}`);
             closePaymentModal();
             document.getElementById('paymentSubmitForm').reset();
