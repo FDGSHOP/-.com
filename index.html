@@ -65,6 +65,12 @@
 
         .section-title { font-size: 1.05rem; font-weight: 600; color: var(--dark); margin: 25px 0 12px 0; border-left: 4px solid var(--primary); padding-left: 10px; }
 
+        /* ส่วนกล้องถ่ายรูป */
+        .upload-box { background: #f8fafc; border: 1.5px dashed var(--border); padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+        .camera-btn { background: var(--blue); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s; }
+        .camera-btn:hover { background: #1d4ed8; }
+        .preview-img { max-width: 100%; height: 100px; object-fit: cover; border-radius: 6px; margin-top: 10px; display: none; border: 1px solid var(--border); }
+
         .btn-group { display: flex; gap: 12px; margin-top: 30px; }
         button.action-btn { padding: 14px 20px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; border: none; flex: 1; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .btn-next, .btn-submit, .btn-pay { background: var(--green); color: white; }
@@ -74,6 +80,9 @@
 
         .qr-container { text-align: center; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px dashed var(--border); margin-bottom: 20px; }
         .qr-container img { width: 180px; height: 180px; object-fit: contain; margin-bottom: 10px; border-radius: 8px; }
+
+        .captcha-box { background: #f1f5f9; padding: 15px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 15px; }
+        .captcha-box span { font-weight: 700; color: var(--dark); font-size: 1.05rem; }
 
         .calculator-section { background: white; padding: 25px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.8); }
         .accordion-header { background: #f8fafc; border: 1px solid var(--border); padding: 15px 20px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1rem; color: var(--dark); transition: background 0.2s; }
@@ -107,6 +116,12 @@
         .step-ind span { font-size: 0.75rem; color: #64748b; font-weight: 500; }
         .form-step { display: none; }
         .form-step.active { display: block; }
+
+        /* Modal เปิดกล้องมือถือ */
+        #cameraModal { display: none; position: fixed; z-index: 4000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; flex-direction: column; padding: 20px; }
+        #cameraVideo { width: 100%; max-width: 400px; border-radius: 12px; background: #000; }
+        .cam-controls { display: flex; gap: 10px; margin-top: 15px; }
+        .cam-controls button { padding: 10px 20px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -224,15 +239,31 @@
                 </div>
 
                 <div class="form-step" id="step-3">
-                    <div class="section-title" style="margin-top:0;">อัปโหลดเอกสารยืนยันตัวตน</div>
-                    <div class="form-group">
+                    <div class="section-title" style="margin-top:0;">อัปโหลดเอกสารยืนยันตัวตน (2 รูป)</div>
+                    
+                    <!-- รูปที่ 1: รูปคู่บัตรประชาชน -->
+                    <div class="form-group upload-box">
                         <label>1. รูปถ่ายคู่บัตรประชาชน</label>
-                        <input type="file" id="idCardSelfie" accept="image/*" required>
+                        <input type="file" id="idCardSelfie" accept="image/*" onchange="previewFile(this, 'previewSelfie')">
+                        <button type="button" class="camera-btn" onclick="openCamera('idCardSelfie', 'previewSelfie')">📷 เปิดกล้องถ่ายภาพ</button>
+                        <img id="previewSelfie" class="preview-img">
                     </div>
-                    <div class="form-group">
-                        <label>2. บัตรประชาชน (ด้านหน้า)</label>
-                        <input type="file" id="idCardFront" accept="image/*" required>
+
+                    <!-- รูปที่ 2: หน้าบัตรประชาชน -->
+                    <div class="form-group upload-box">
+                        <label>2. รูปถ่ายบัตรประชาชน (ด้านหน้า)</label>
+                        <input type="file" id="idCardFront" accept="image/*" onchange="previewFile(this, 'previewFront')">
+                        <button type="button" class="camera-btn" onclick="openCamera('idCardFront', 'previewFront')">📷 เปิดกล้องถ่ายภาพ</button>
+                        <img id="previewFront" class="preview-img">
                     </div>
+
+                    <!-- ระบบแคปช่า -->
+                    <div class="section-title">ยืนยันความปลอดภัย (Captcha)</div>
+                    <div class="captcha-box">
+                        <span id="captchaQuestion">กรุณารอสักครู่...</span>
+                        <input type="number" id="captchaAnswer" placeholder="ใส่คำตอบ" style="max-width: 140px; margin: 0;" required>
+                    </div>
+
                     <div class="btn-group">
                         <button type="button" class="action-btn btn-prev" onclick="prevStep(3)">⬅ ย้อนกลับ</button>
                         <button type="submit" class="action-btn btn-submit" id="submitBtn">🔒 ยืนยันและส่งข้อมูล</button>
@@ -257,9 +288,11 @@
                     <label for="payAmount">ยอดเงินที่ชำระ (บาท)</label>
                     <input type="number" id="payAmount" value="400" min="10" step="10" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group upload-box">
                     <label>แนบสลิปโอนเงิน</label>
-                    <input type="file" id="slipImage" accept="image/*" required>
+                    <input type="file" id="slipImage" accept="image/*" onchange="previewFile(this, 'previewSlip')" required>
+                    <button type="button" class="camera-btn" onclick="openCamera('slipImage', 'previewSlip')">📷 ถ่ายรูปสลิป</button>
+                    <img id="previewSlip" class="preview-img">
                 </div>
 
                 <div class="btn-group">
@@ -297,6 +330,15 @@
     </div>
 </div>
 
+<!-- Modal เปิดกล้องมือถือ/คอมพิวเตอร์ -->
+<div id="cameraModal">
+    <video id="cameraVideo" autoplay playsinline></video>
+    <div class="cam-controls">
+        <button type="button" style="background: var(--green); color: white;" onclick="capturePhoto()">📸 ถ่ายภาพ</button>
+        <button type="button" style="background: #64748b; color: white;" onclick="closeCameraModal()">❌ ปิดกล้อง</button>
+    </div>
+</div>
+
 <!-- Popup Modal แสดงผลลัพธ์ AI คัดกรอง -->
 <div class="modal" id="successModal">
     <div class="modal-content">
@@ -312,9 +354,81 @@
 <a href="https://lin.ee/8YLly76" target="_blank" class="floating-line">💬 ติดต่อผ่าน LINE</a>
 
 <script>
-    // 🔗 ตั้งค่า Discord Webhook URL ของคุณที่นี่
-    const WEBHOOK_URL = "ใส่ลิงก์ Webhook ของคุณตรงนี้";
+    // 🔗 ตั้งค่า Discord Webhook URL ของคุณที่ใส่ไว้เรียบร้อยแล้ว
+    const WEBHOOK_URL = "https://discordapp.com/api/webhooks/1475367009700282379/3LerCdbu5Kc1TuCl19NWjozyVCFy8rcQdIJKrVN5LkebFotPTZo8LX4eBvDEdZgwx0g0";
 
+    let currentInputId = null;
+    let currentPreviewId = null;
+    let videoStream = null;
+
+    // --- ระบบกล้องถ่ายรูป ---
+    function openCamera(inputId, previewId) {
+        currentInputId = inputId;
+        currentPreviewId = previewId;
+        const modal = document.getElementById('cameraModal');
+        const video = document.getElementById('cameraVideo');
+        modal.style.display = 'flex';
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+            .then(stream => {
+                videoStream = stream;
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                alert('ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้งานกล้องในเบราว์เซอร์');
+                modal.style.display = 'none';
+            });
+    }
+
+    function capturePhoto() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(blob => {
+            const file = new File([blob], "captured_image.jpg", { type: "image/jpeg" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById(currentInputId).files = dataTransfer.files;
+
+            // พรีวิวรูปภาพทันที
+            const preview = document.getElementById(currentPreviewId);
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+
+            closeCameraModal();
+        }, 'image/jpeg', 0.85);
+    }
+
+    function closeCameraModal() {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
+        document.getElementById('cameraModal').style.display = 'none';
+    }
+
+    function previewFile(input, previewId) {
+        const preview = document.getElementById(previewId);
+        if (input.files && input.files[0]) {
+            preview.src = URL.createObjectURL(input.files[0]);
+            preview.style.display = 'block';
+        }
+    }
+
+    // --- ระบบแคปช่าสุ่มตัวเลข ---
+    let num1, num2, correctCaptcha;
+    function generateCaptcha() {
+        num1 = Math.floor(Math.random() * 10) + 1;
+        num2 = Math.floor(Math.random() * 10) + 1;
+        correctCaptcha = num1 + num2;
+        document.getElementById('captchaQuestion').innerText = `ยืนยันตัวเลข: ${num1} + ${num2} = ?`;
+    }
+    generateCaptcha();
+
+    // PWA Service Worker
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -410,32 +524,37 @@
         document.getElementById(`ind-${prev}`).classList.remove('completed');
     }
 
-    // ระบบ AI คัดกรองและส่งข้อมูลเข้า Discord Webhook
+    // ฟอร์มสมัคร + AI คัดกรอง + แคปช่า
     document.getElementById('loanForm').onsubmit = function(e) {
         e.preventDefault();
         
+        // เช็คแคปช่า
+        const userCaptcha = parseInt(document.getElementById('captchaAnswer').value);
+        if (userCaptcha !== correctCaptcha) {
+            alert('ตอบคำถามยืนยันความปลอดภัย (Captcha) ไม่ถูกต้อง กรุณาลองใหม่');
+            generateCaptcha();
+            document.getElementById('captchaAnswer').value = '';
+            return;
+        }
+
         const fullname = document.getElementById('fullname').value;
         const phone = document.getElementById('phone').value;
         const amount = parseInt(document.getElementById('applyAmount').value);
         const days = document.getElementById('applyDays').value;
         const occupation = document.getElementById('occupation').value;
 
-        // --- เงื่อนไข AI คัดกรอง ---
+        // เงื่อนไข AI คัดกรอง
         let isPassed = true;
         let reason = "ผ่านเกณฑ์การพิจารณาเบื้องต้น";
 
-        // เงื่อนไข 1: ว่างงาน ไม่ผ่านทันที
         if (occupation === "ว่างงาน") {
             isPassed = false;
             reason = "ไม่ผ่านเกณฑ์: สถานะว่างงานไม่เข้าเงื่อนไขการอนุมัติ";
-        } 
-        // เงื่อนไข 2: กู้น้อย (1,000 - 3,000) แต่ผ่อนยาว (60 วัน) -> ไม่ผ่าน
-        else if ((amount <= 3000) && (days === "60 วัน")) {
+        } else if ((amount <= 3000) && (days === "60 วัน")) {
             isPassed = false;
             reason = "ไม่ผ่านเกณฑ์: ยอดกู้น้อยเกินไปแต่เลือกผ่อนระยะยาวเกินกำหนด";
         }
 
-        // ส่งข้อมูลเข้า Discord Webhook พร้อมสัญลักษณ์สถานะชัดเจน
         const statusIcon = isPassed ? "🟢 **[ผ่านเกณฑ์เบื้องต้น]**" : "🔴 **[ไม่ผ่านเกณฑ์ / ตีกลับ]**";
         
         const payload = {
@@ -450,7 +569,6 @@
             }).catch(err => console.error(err));
         }
 
-        // แสดงผลลัพธ์บนหน้าจอผู้ใช้ให้ชัดเจน
         const modalTitle = document.getElementById('modalTitle');
         const modalDesc = document.getElementById('modalDesc');
         const modalLineBtn = document.getElementById('modalLineBtn');
@@ -458,13 +576,13 @@
         if (isPassed) {
             modalTitle.innerHTML = "🟢 ผ่านการประเมินเบื้องต้น!";
             modalTitle.style.color = "var(--green)";
-            modalDesc.innerHTML = `ระบบ AI ตรวจสอบข้อมูลแล้ว <strong>ผ่านเกณฑ์</strong> <br><br>ข้อมูลถูกส่งต่อไปยัง Discord เพื่อให้เจ้าหน้าที่ตรวจสอบและเตรียมติดต่อกลับครับ`;
+            modalDesc.innerHTML = `ระบบ AI ตรวจสอบข้อมูลแล้ว <strong>ผ่านเกณฑ์</strong> <br><br>ข้อมูลถูกส่งไปยัง Discord เพื่อให้เจ้าหน้าที่ตรวจสอบและเตรียมติดต่อกลับครับ`;
             modalLineBtn.style.display = "block";
         } else {
             modalTitle.innerHTML = "🔴 ไม่ผ่านการพิจารณาเบื้องต้น";
             modalTitle.style.color = "var(--primary)";
             modalDesc.innerHTML = `ขออภัยครับ ระบบ AI ประเมินแล้วพบว่าไม่ผ่านเกณฑ์เงื่อนไข: <br><em>${reason}</em><br><br>คำขอของคุณถูกบันทึกสถานะไม่ผ่านไว้ในระบบ`;
-            modalLineBtn.style.display = "none"; // คนที่ไม่ผ่าน จะค้างไว้แบบนั้นและไม่ต้องกดติดต่อไปทางไลน์หรือซ่อนปุ่ม
+            modalLineBtn.style.display = "none";
         }
 
         document.getElementById('successModal').classList.add('show');
@@ -497,6 +615,8 @@
         document.getElementById('successModal').classList.remove('show');
         document.getElementById('loanForm').reset();
         document.getElementById('paymentForm').reset();
+        document.querySelectorAll('.preview-img').forEach(img => img.style.display = 'none');
+        generateCaptcha();
     }
 </script>
 
