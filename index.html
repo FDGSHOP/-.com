@@ -3,244 +3,456 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบไรเดอร์รับเงินสด - ครบวงจร</title>
+    <title>ระบบบริการสินเชื่อและชำระเงินออนไลน์ พะเยา</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        body { font-family: 'Prompt', sans-serif; background: #0f172a; color: #e2e8f0; }
+        .float-line { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        
+        /* Modern RGB & Spinner Effects */
+        .spinner { 
+            border: 4px solid rgba(99, 102, 241, 0.2); 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            border-left-color: #6366f1; 
+            border-right-color: #ec4899;
+            animation: spin 1s linear infinite, rgbGlow 2s ease infinite alternate; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes rgbGlow {
+            0% { filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.5)); }
+            50% { filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.7)); }
+            100% { filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.5)); }
         }
 
-        .container {
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        /* --- Loading Screen Styles --- */
-        #loading-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
-        }
-
-        .spinner-container {
+        /* RGB Border Animation for Cards */
+        .rgb-card-border {
             position: relative;
-            width: 80px;
-            height: 80px;
+            border-radius: 1rem;
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
         }
-
-        .loading-text {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            margin-top: 15px;
-        }
-
-        /* Success Checkmark Animation */
-        .success-checkmark {
-            display: none;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: #4CAF50;
-            position: relative;
-            animation: scaleIn 0.3s ease-in-out forwards;
-        }
-
-        .success-checkmark::after {
+        .rgb-card-border::before {
             content: '';
             position: absolute;
-            left: 28px;
-            top: 13px;
-            width: 20px;
-            height: 40px;
-            border: solid white;
-            border-width: 0 6px 6px 0;
-            transform: rotate(45deg);
+            inset: -2px;
+            border-radius: 1.1rem;
+            background: linear-gradient(45deg, #6366f1, #ec4899, #10b981, #6366f1);
+            background-size: 400%;
+            z-index: -1;
+            animation: rgbBorder 8s linear infinite;
+            opacity: 0.6;
+        }
+        @keyframes rgbBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
-        @keyframes scaleIn {
-            0% { transform: scale(0); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        /* Money & Fireworks Animation */
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
         }
-
-        /* --- Form & Camera Styles --- */
-        .form-group {
-            margin-bottom: 12px;
-            text-align: left;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            color: #555;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        .camera-box {
-            position: relative;
-            width: 100%;
-            height: 250px;
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-
-        video, canvas, #preview-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .btn {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 5px;
-        }
-
-        .btn-secondary {
-            background-color: #ff9800;
-        }
-
-        .action-buttons {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .btn-check { background-color: #4CAF50; flex: 1; font-size: 20px; }
-        .btn-cross { background-color: #f44336; flex: 1; font-size: 20px; }
-
-        .hidden { display: none !important; }
-        
-        #time-badge {
-            background: #333;
-            color: #ffeb3b;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 13px;
-            margin-bottom: 15px;
-            display: block;
-            text-align: center;
+        .falling-money {
+            position: fixed;
+            top: -50px;
+            font-size: 24px;
+            z-index: 9999;
+            user-select: none;
+            pointer-events: none;
+            animation: fall linear forwards;
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen py-6 px-4 flex flex-col items-center justify-center">
 
-    <!-- 1. หน้าโหลด 0 ถึง 100% พร้อมอนิเมชั่นติ๊กถูก -->
-    <div id="loading-overlay">
-        <div class="spinner-container">
-            <div id="loader-number" class="loading-text" style="position: absolute; width: 100%; text-align: center; top: 25px; font-size: 18px;">0%</div>
-        </div>
-        <div class="success-checkmark" id="success-icon"></div>
-        <div class="loading-text" id="loading-label">กำลังโหลดระบบ...</div>
+    <!-- Loading Overlay with 0-100% Counter -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center z-50 hidden">
+        <div class="spinner mb-4"></div>
+        <div id="loadingPercent" class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-pink-500 to-emerald-400 mb-2 font-mono">0%</div>
+        <p id="loadingText" class="text-slate-300 font-medium text-sm tracking-wide">กำลังประมวลผลข้อมูล กรุณารอสักครู่...</p>
     </div>
 
-    <!-- 2. ส่วนของระบบไรเดอร์รับเงินสด (ครบวงจร) -->
-    <div class="container">
-        <h2>ส่งยอดเงินสดรายวัน</h2>
-        <div id="time-badge">⏳ กำลังซิงค์เวลาประเทศไทย...</div>
+    <!-- ปุ่มลอย LINE -->
+    <a href="https://lin.ee/8YLly76" target="_blank" class="float-line bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-3.5 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-110 transition-all transform flex items-center gap-2 border-2 border-emerald-300/40">
+        <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M19.365 9.863c0-3.37-3.414-6.108-7.616-6.108-4.204 0-7.619 2.738-7.619 6.108 0 3.012 2.593 5.534 6.113 5.998.239.052.563.161.646.368l.222 1.442c.026.171.111.666.195.666.079 0 .235-.126.326-.188l1.644-1.286c.264-.199.55-.262.86-.262h.016c3.277 0 5.94-2.58 5.94-5.73z"/></svg>
+        <span class="text-xs font-bold hidden sm:inline">ติดต่อเจ้าหน้าที่ / สอบถาม</span>
+    </a>
+
+    <!-- Container หลัก -->
+    <div class="rgb-card-border p-6 sm:p-8 shadow-2xl max-w-xl w-full border border-slate-800">
         
-        <!-- ฟอร์มกรอกข้อมูลเพิ่มเติม (ที่เพิ่มเข้ามาให้ครบถ้วน) -->
-        <div class="form-group">
-            <label>ชื่อไรเดอร์ / รหัสพนักงาน</label>
-            <input type="text" id="rider-name" class="form-control" placeholder="ระบุชื่อหรือรหัสของคุณ">
+        <!-- PWA Install Bar -->
+        <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-4 rounded-xl mb-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 border border-indigo-400/30">
+            <div class="flex items-center gap-3 text-center sm:text-left">
+                <div class="bg-white/10 p-2.5 rounded-xl hidden sm:block backdrop-blur-sm">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm">ติดตั้งแอปพลิเคชันลงบนมือถือ / PC</h4>
+                    <p class="text-xs text-indigo-200">ใช้งานสะดวกรวดเร็ว คลิกเดียวติดตั้งทันที</p>
+                </div>
+            </div>
+            <button id="installAppBtn" onclick="installApp()" class="w-full sm:w-auto bg-white text-indigo-900 hover:bg-indigo-50 font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition whitespace-nowrap">
+                📥 ติดตั้งแอปทันที
+            </button>
         </div>
 
-        <div class="form-group">
-            <label>ยอดเงินสดที่รับ (บาท)</label>
-            <input type="number" id="cash-amount" class="form-control" placeholder="0.00">
+        <div class="bg-rose-950/40 border-2 border-rose-500/40 text-rose-300 p-3.5 rounded-xl mb-5 text-center font-bold text-base shadow-sm animate-pulse">
+            ⚠️ กู้เท่าที่จำเป็นและชำระคืนไว ⚠️
         </div>
 
-        <div class="form-group">
-            <label>หลักฐานรูปถ่าย</label>
+        <!-- Live Ticker -->
+        <div id="live-ticker" class="bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs px-4 py-3 rounded-xl mb-5 font-medium flex items-center gap-2 shadow-sm">
+            <span class="animate-pulse">🟢</span> <span id="ticker-text">กำลังโหลดข้อมูลระบบ...</span>
         </div>
 
-        <div class="camera-box">
-            <video id="video" autoplay playsinline></video>
-            <img id="preview-img" class="hidden" alt="Preview">
-            <canvas id="canvas" class="hidden"></canvas>
+        <!-- ส่วนหัวเว็บ -->
+        <div class="text-center mb-6 border-b border-slate-800 pb-4">
+            <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Official Financial System</span>
+            <h2 class="text-2xl font-bold text-white mt-2">บริการสินเชื่อและชำระเงินออนไลน์</h2>
+            <p class="text-sm text-slate-400 mt-1">พะเยา - อนุมัติไว ปลอดภัย ได้มาตรฐาน</p>
         </div>
 
-        <!-- ปุ่มควบคุมกล้องปกติ -->
-        <div id="camera-controls">
-            <button class="btn btn-secondary" id="switch-camera-btn" type="button">🔄 สลับกล้องหน้า/หลัง</button>
-            <button class="btn" id="capture-btn" type="button">📸 ถ่ายรูปหลักฐาน</button>
+        <!-- เมนูสลับหน้า (Tabs) -->
+        <div class="flex bg-slate-900/80 p-1 rounded-xl mb-6 border border-slate-800">
+            <button onclick="switchTab('apply')" id="tabApplyBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition">📝 สมัครสินเชื่อใหม่</button>
+            <button onclick="switchTab('payment')" id="tabPaymentBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition">💳 ชำระเงินค่างวด</button>
+            <button onclick="switchTab('history')" id="tabHistoryBtn" class="flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition">📜 ประวัติของฉัน</button>
         </div>
 
-        <!-- ปุ่มยืนยัน (ติ๊กถูก / กากบาท) หลังจากถ่ายรูปแล้ว -->
-        <div id="confirm-controls" class="action-buttons hidden">
-            <button class="btn btn-cross" id="retake-btn" type="button" title="ถ่ายใหม่">❌ ถ่ายใหม่</button>
-            <button class="btn btn-check" id="send-btn" type="button" title="ยืนยันส่งข้อมูล">✔️ ยืนยันส่ง</button>
+        <!-- 1. ส่วนสมัครสินเชื่อ -->
+        <div id="tab-apply" class="space-y-4">
+            <div class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-4 text-xs text-amber-200 space-y-1">
+                <p class="font-bold text-amber-400 text-sm mb-1">📋 เงื่อนไขและอัตราดอกเบี้ยบริการสินเชื่อ:</p>
+                <p>• อัตราดอกเบี้ย: <b>ร้อยละ 20 คงที่ตลอดอายุสัญญา</b></p>
+                <p>• การชำระคืน: เลือกผ่อนชำระได้ (7, 15, 30 หรือ 60 วัน)</p>
+            </div>
+
+            <!-- Step Indicators -->
+            <div class="flex justify-between items-center mb-6 px-4 relative">
+                <div class="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-slate-800 z-0"></div>
+                <div id="ind-1" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">1</div><span class="text-[10px] text-slate-400 mt-1">วงเงินกู้</span></div>
+                <div id="ind-2" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700">2</div><span class="text-[10px] text-slate-400 mt-1">ข้อมูล & อาชีพ</span></div>
+                <div id="ind-3" class="relative z-10 flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700">3</div><span class="text-[10px] text-slate-400 mt-1">ยืนยันตัวตน</span></div>
+            </div>
+
+            <form id="loanForm" onsubmit="triggerConfirmation(event)">
+                <!-- Step 1 -->
+                <div class="form-step space-y-4" id="step-1">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">จำนวนเงินที่ต้องการขอกู้</label>
+                        <select id="applyAmount" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
+                            <option value="">-- กรุณาเลือกวงเงิน --</option>
+                            <option value="1000">1,000 บาท</option>
+                            <option value="3000">3,000 บาท</option>
+                            <option value="5000">5,000 บาท</option>
+                            <option value="10000">10,000 บาท</option>
+                            <option value="20000">20,000 บาท</option>
+                            <option value="30000">30,000 บาท</option>
+                            <option value="50000">50,000 บาท</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">ระยะเวลาผ่อนชำระ</label>
+                        <select id="applyDays" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
+                            <option value="">-- เลือกระยะเวลา --</option>
+                            <option value="7 วัน">7 วัน</option>
+                            <option value="15 วัน">15 วัน</option>
+                            <option value="30 วัน">30 วัน</option>
+                            <option value="60 วัน">60 วัน</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">ชื่อ - นามสกุลจริง</label>
+                        <input type="text" id="fullname" placeholder="ระบุชื่อและนามสกุล" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">เลขประจำตัวประชาชน (13 หลัก)</label>
+                        <input type="text" id="idCardNumber" placeholder="x-xxxx-xxxxx-xx-x" maxlength="17" oninput="formatIdCard(this)" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm tracking-wider font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">เบอร์โทรศัพท์มือถือ (10 หลัก)</label>
+                        <input type="tel" id="phone" placeholder="0xx-xxx-xxxx" maxlength="12" oninput="formatPhone(this)" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm tracking-wider font-mono">
+                    </div>
+                    <button type="button" onclick="nextStep(1)" class="w-full mt-2 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition">ดำเนินการต่อ ➔</button>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="form-step space-y-4 hidden" id="step-2">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">อาชีพ / แหล่งรายได้</label>
+                        <select id="occupation" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
+                            <option value="">-- เลือกอาชีพ --</option>
+                            <option value="ค้าขาย/ธุรกิจส่วนตัว">ค้าขาย / ธุรกิจส่วนตัว</option>
+                            <option value="พนักงานประจำ/ลูกจ้าง">พนักงานประจำ / ลูกจ้าง</option>
+                            <option value="เกษตรกร">เกษตรกร</option>
+                            <option value="รับจ้างทั่วไป">รับจ้างทั่วไป</option>
+                            <option value="ว่างงาน">ว่างงาน</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">ชื่อตลาด / ชุมชน</label>
+                        <input type="text" id="village" placeholder="เช่น ตลาดสดเทศบาล" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">รายละเอียดที่อยู่</label>
+                        <textarea id="address" rows="2" placeholder="บ้านเลขที่, ตำบล, อำเภอ" required class="w-full px-4 py-2 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">ธนาคารรับเงิน</label>
+                        <select id="bankName" required class="w-full px-4 py-2.5 border border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-slate-900 text-white">
+                            <option value="">-- เลือกธนาคาร --</option>
+                            <option value="กสิกรไทย">ธนาคารกสิกรไทย (KBANK)</option>
+                            <option value="ไทยพาณิชย์">ธนาคารไทยพาณิชย์ (SCB)</option>
+                            <option value="กรุงไทย">ธนาคารกรุงไทย (KTB)</option>
+                            <option value="ออมสิน">ธนาคารออมสิน (GSB)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">เลขที่บัญชีธนาคาร</label>
+                        <input type="text" id="accountNumber" placeholder="เลขบัญชีธนาคาร" required class="w-full px-4 py-2.5 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-mono">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="prevStep(2)" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition border border-slate-700">⬅ ย้อนกลับ</button>
+                        <button type="button" onclick="nextStep(2)" class="w-2/3 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition">ดำเนินการต่อ ➔</button>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="form-step space-y-4 hidden" id="step-3">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">รูปถ่ายหน้าบัตรประชาชน</label>
+                        <input type="file" id="idCardImage" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">รูปถ่ายถือบัตรประชาชนคู่ใบหน้า</label>
+                        <input type="file" id="selfieCardImage" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
+                    </div>
+                    
+                    <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
+                        <input type="checkbox" id="robotCheck" required class="w-5 h-5 text-indigo-600 rounded border-slate-700 cursor-pointer bg-slate-800">
+                        <label for="robotCheck" class="text-sm font-medium text-slate-300 cursor-pointer">ฉันไม่ใช่โปรแกรมอัตโนมัติ (ยืนยันตัวตน)</label>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button type="button" onclick="prevStep(3)" class="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition border border-slate-700">⬅ ย้อนกลับ</button>
+                        <button type="submit" class="w-2/3 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl shadow-lg transition">🔒 ยืนยันและส่งข้อมูล</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- 2. ส่วนชำระเงินค่างวด -->
+        <div id="tab-payment" class="space-y-4 hidden">
+            <!-- แสดงป้ายสถานะเครื่องว่าเคยลงทะเบียนหรือยัง -->
+            <div id="deviceStatusBanner" class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                <div>
+                    <span class="text-slate-400">สถานะกุญแจอุปกรณ์ (UID):</span>
+                    <p id="deviceUidText" class="font-mono text-indigo-400 font-bold mt-0.5">กำลังตรวจสอบ...</p>
+                </div>
+                <span id="deviceVerifiedBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">ยังไม่ลงทะเบียนเครื่อง</span>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1">ยอดเงินที่ต้องการชำระ (บาท)</label>
+                <div class="relative">
+                    <input type="number" id="mainAmountInput" value="400" min="10"
+                           class="w-full px-4 py-3 pl-9 border border-slate-700 bg-slate-900 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg font-semibold text-white"
+                           placeholder="0.00">
+                    <span class="absolute left-3.5 top-3.5 text-slate-500 font-semibold">฿</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1">💡 ระบบจะคำนวณและตัดยอดตามรอบชำระ (เช่น ยอด 1,200 บ. ผ่อนทุก 3 วัน วันละ 400 บาท)</p>
+            </div>
+
+            <!-- ช่องทางการชำระเงินเลือกได้ 2 ช่องทาง -->
+            <div class="space-y-3 pt-2">
+                <label class="block text-sm font-semibold text-slate-300">เลือกช่องทางการชำระเงิน:</label>
+                
+                <!-- ช่องทางที่ 1: QR Code พร้อมเพย์ -->
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-bold text-white text-sm">ช่องทางที่ 1: สแกน QR Code พร้อมเพย์</span>
+                            <p class="text-xs text-slate-400">โอนผ่านแอปธนาคาร สะดวกและตรวจสอบไว</p>
+                        </div>
+                        <button onclick="openPaymentModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md">
+                            สร้าง QR Code
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between border-t border-slate-800 pt-2 text-xs">
+                        <span class="text-slate-400">พร้อมเพย์: <b id="pp-number" class="text-white">065-835-1446</b> (คณิน มะลิวัน)</span>
+                        <button onclick="copyPhone()" class="text-indigo-400 font-bold hover:underline">📋 คัดลอกเบอร์</button>
+                    </div>
+                </div>
+
+                <!-- ช่องทางที่ 2: ชำระเงินสดผ่าน Rider พร้อม PIN และกล้องประทับเวลาจริง -->
+                <div class="bg-indigo-950/30 p-4 rounded-xl border border-indigo-900/50 space-y-3">
+                    <div>
+                        <span class="font-bold text-white text-sm">ช่องทางที่ 2: ชำระเงินสดกับ Rider (ถ่ายรูปสด+ประทับเวลา)</span>
+                        <p class="text-xs text-slate-400">ให้ Rider เปิดกล้องถ่ายภาพหน้างาน ล็อกเวลาจริงไทยป้องกันการแก้เวลา</p>
+                    </div>
+                    <button onclick="openRiderModal()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2">
+                        🛵 เปิดกล้องและหน้าจอ Rider กรอก PIN ยืนยัน
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. ส่วนประวัติของฉัน -->
+        <div id="tab-history" class="space-y-4 hidden">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-white text-base">📜 ประวัติธุรกรรมและการชำระเงิน</h3>
+                <button onclick="clearHistory()" class="text-xs text-rose-400 hover:underline">ล้างประวัติ</button>
+            </div>
+            <p class="text-xs text-slate-400">บันทึกประวัติการทำรายการย้อนหลังในเครื่องของคุณ พร้อมเลขอ้างอิงทำธุรกรรม (Transaction Reference)</p>
+            
+            <div id="historyListContainer" class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                <div class="text-center py-8 text-slate-500 text-xs">ยังไม่มีประวัติการทำรายการในเครื่องนี้</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal ยืนยันสมัคร -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="rgb-card-border shadow-2xl max-w-md w-full p-6 relative border border-slate-800">
+            <h3 class="text-xl font-bold text-white mb-2 text-center">📌 ทวนสอบเงื่อนไขสินเชื่อ</h3>
+            <p class="text-xs text-slate-400 text-center mb-4">โปรดตรวจสอบรายละเอียดก่อนยืนยัน</p>
+            
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-sm space-y-2 mb-5">
+                <div class="flex justify-between"><span class="text-slate-400">ยอดเงินต้น:</span><span id="confPrincipal" class="font-bold text-white">0 บาท</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">ดอกเบี้ย (คงที่ 20%):</span><span id="confInterest" class="font-bold text-white">0 บาท</span></div>
+                <div class="flex justify-between border-t border-slate-800 pt-2"><span class="text-slate-300 font-semibold">ยอดรวมสุทธิ:</span><span id="confTotal" class="font-bold text-indigo-400 text-base">0 บาท</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">กำหนดชำระคืนภายใน:</span><span id="confDays" class="font-bold text-white">- วัน</span></div>
+                <div class="border-t border-slate-800 pt-2 space-y-1 text-xs">
+                    <div class="flex justify-between text-slate-400"><span>ชำระเป็นรายวัน:</span><span id="confDaily" class="font-bold text-white">0 บาท / วัน</span></div>
+                    <div class="flex justify-between text-indigo-300 font-medium"><span>ชำระทุกๆ 3 วัน (รวม x3):</span><span id="confEvery3Days" class="font-bold">0 บาท</span></div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="button" onclick="closeConfirmModal()" class="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition text-sm border border-slate-700">แก้ไขข้อมูล</button>
+                <button type="button" onclick="executeFinalSubmit()" class="w-1/2 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl shadow-md transition text-sm">ยืนยันสมัครทันที</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal QR Code ชำระเงิน -->
+    <div id="paymentModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="rgb-card-border shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto border border-slate-800">
+            <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-800 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="text-center mb-4">
+                <h3 class="text-xl font-bold text-white">สแกนเพื่อชำระเงินค่างวด</h3>
+                <p class="text-xs text-slate-400 mt-0.5">พร้อมเพย์: 065-835-1446 (คณิน มะลิวัน)</p>
+            </div>
+            <div class="flex flex-col items-center bg-slate-900 p-4 rounded-2xl border border-slate-800 mb-4">
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-700 mb-2">
+                    <img id="modalQrCodeImage" src="" alt="PromptPay QR Code" class="w-44 h-44 object-contain">
+                </div>
+                <p class="text-sm font-semibold text-slate-300">ยอดชำระ: <span id="modalDisplayAmount" class="text-emerald-400 text-lg font-bold">0.00</span> บาท</p>
+            </div>
+            <button onclick="downloadQRCode()" class="w-full mb-4 py-2 px-4 border border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 font-medium rounded-xl transition flex items-center justify-center gap-2 text-sm">
+                📥 บันทึกรูป QR Code
+            </button>
+            <div class="border-t border-slate-800 my-4"></div>
+            <form id="paymentSubmitForm" onsubmit="submitPaymentData(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-300 mb-1">แนบหลักฐานสลิปการโอนเงิน</label>
+                    <input type="file" id="slipFileInput" accept="image/*" required class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-500/20 file:text-emerald-400 cursor-pointer border border-slate-700 bg-slate-900 rounded-xl p-1">
+                </div>
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl shadow-lg transition">
+                    ยืนยันการชำระเงินและส่งสลิป
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal ชำระเงินสดผ่าน Rider (เพิ่มระบบกล้องถ่ายภาพสด + ปั๊มเวลามาตรฐานไทยจริง) -->
+    <div id="riderModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="rgb-card-border shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto border border-slate-800">
+            <button onclick="closeRiderModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-800 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="text-center mb-4">
+                <h3 class="text-xl font-bold text-white">🛵 ช่องทาง Rider รับเงินสดหน้างาน</h3>
+                <p id="verified-time-badge" class="text-xs text-amber-400 font-mono mt-1">🕒 กำลังซิงค์เวลาจริงประเทศไทย...</p>
+            </div>
+            
+            <form id="riderSubmitForm" onsubmit="submitRiderCashPayment(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">ยอดเงินสดที่เก็บจริง (ให้ Rider พิมพ์)</label>
+                    <div class="relative">
+                        <input type="number" id="riderActualAmountInput" min="10" required
+                               class="w-full px-4 py-3 pl-9 border border-indigo-500/40 bg-indigo-950/40 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg font-bold text-indigo-300"
+                               placeholder="ระบุยอดเงินสด">
+                        <span class="absolute left-3.5 top-3.5 text-indigo-400 font-semibold">฿</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">PIN 6 หลักประจำตัว Rider</label>
+                    <input type="password" id="riderPinInput" placeholder="******" maxlength="6" required class="w-full px-4 py-3 border border-slate-700 bg-slate-900 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-center text-xl tracking-widest font-mono">
+                </div>
+
+                <!-- ส่วนกล้องถ่ายรูปสดและปั๊มเวลา -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">ถ่ายรูปหลักฐานรับเงินสด (พร้อมประทับเวลาจริง)</label>
+                    
+                    <div class="relative w-full h-64 bg-black rounded-xl overflow-hidden border border-slate-700 mb-2">
+                        <video id="rider-video" autoplay playsinline class="w-full h-full object-cover"></video>
+                        <img id="rider-preview-img" class="hidden w-full h-full object-cover" alt="Preview">
+                        <canvas id="rider-canvas" class="hidden"></canvas>
+                    </div>
+
+                    <div id="rider-camera-controls" class="flex gap-2">
+                        <button type="button" id="switch-camera-btn" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition">🔄 สลับกล้อง</button>
+                        <button type="button" id="capture-btn" class="w-1/2 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md transition">📸 ถ่ายรูปหลักฐาน</button>
+                    </div>
+
+                    <div id="rider-confirm-controls" class="flex gap-2 hidden">
+                        <button type="button" id="retake-btn" class="w-1/2 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition">❌ ถ่ายใหม่</button>
+                        <button type="button" id="accept-photo-btn" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition">✔️ ใช้รูปนี้</button>
+                    </div>
+                    <p id="photo-status-text" class="text-[11px] text-slate-400 mt-1 text-center">สถานะ: ยังไม่ได้ถ่ายภาพหลักฐาน</p>
+                </div>
+
+                <button type="submit" id="riderSubmitBtn" disabled class="w-full py-3 bg-slate-800 text-slate-500 font-medium rounded-xl shadow-lg transition cursor-not-allowed">
+                    🔒 กรุณาถ่ายรูปและยืนยัน PIN ก่อนส่ง
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal ผลลัพธ์ -->
+    <div id="successModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="rgb-card-border shadow-2xl max-w-sm w-full p-6 text-center relative border border-slate-800">
+            <h3 id="modalTitle" class="text-xl font-bold text-white mb-2">ผลการประเมิน</h3>
+            <p id="modalDesc" class="text-sm text-slate-300 mb-5">กำลังประมวลผล...</p>
+            <a href="https://lin.ee/8YLly76" target="_blank" class="block w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl transition shadow-md mb-2">
+                💬 ติดต่อเจ้าหน้าที่ผ่าน LINE
+            </a>
+            <button onclick="closeModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition border border-slate-700">ปิดหน้าต่างนี้</button>
         </div>
     </div>
 
     <script>
-        // --- 1. หน้าโหลด (Loading & Success State) ---
-        let currentProgress = 0;
-        const numberEl = document.getElementById('loader-number');
-        const labelEl = document.getElementById('loading-label');
-        const successIcon = document.getElementById('success-icon');
-        const loadingOverlay = document.getElementById('loading-overlay');
+        const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1475367009700282379/3LerCdbu5Kc1TuCl19NWjozyVCFy8rcQdIJKrVN5LkebFotPTZo8LX4eBvDEdZgwx0g0";
+        const PROMPTPAY_NUMBER = "0658351446";
+        const RIDER_CORRECT_PIN = "711455"; // PIN 6 หลักของ Rider
 
-        const loadingInterval = setInterval(() => {
-            currentProgress += Math.floor(Math.random() * 15) + 5; 
-            if (currentProgress >= 100) {
-                currentProgress = 100;
-                clearInterval(loadingInterval);
-                
-                numberEl.style.display = 'none';
-                labelEl.style.display = 'none';
-                successIcon.style.display = 'block';
-
-                setTimeout(() => {
-                    loadingOverlay.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingOverlay.style.display = 'none';
-                    }, 500);
-                }, 1200);
-            }
-            numberEl.innerText = currentProgress + '%';
-        }, 150);
-
-
-        // --- 2. ดึงเวลาประเทศไทยจาก Network API ---
+        // ตัวแปรเก็บเวลาจริงไทยและรูปภาพหลักฐานสด
         let verifiedThaiTimeStr = "";
+        let capturedRiderBlob = null;
+        let useFrontCamera = false;
+        let currentRiderStream = null;
 
+        // ดึงเวลาจริงประเทศไทยจาก Network API ป้องกันการโกงเปลี่ยนเวลาในเครื่อง
         async function fetchThaiTime() {
             try {
                 const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Bangkok');
@@ -255,134 +467,553 @@
                 const seconds = String(datetime.getSeconds()).padStart(2, '0');
 
                 verifiedThaiTimeStr = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-                document.getElementById('time-badge').innerText = `🕒 เวลาจริง (ไทย): ${verifiedThaiTimeStr}`;
+                const badge = document.getElementById('verified-time-badge');
+                if(badge) badge.innerText = `🕒 เวลาจริงมาตรฐานไทย: ${verifiedThaiTimeStr}`;
             } catch (error) {
                 const fallbackDate = new Date();
                 verifiedThaiTimeStr = fallbackDate.toLocaleString('th-TH');
-                document.getElementById('time-badge').innerText = `⚠️ เวลาท้องถิ่น: ${verifiedThaiTimeStr}`;
+                const badge = document.getElementById('verified-time-badge');
+                if(badge) badge.innerText = `⚠️ เวลาท้องถิ่น: ${verifiedThaiTimeStr}`;
             }
         }
 
-        fetchThaiTime();
-
-
-        // --- 3. ระบบกล้องและการถ่ายรูป + ประทับเวลาลงรูป ---
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const previewImg = document.getElementById('preview-img');
-        const captureBtn = document.getElementById('capture-btn');
-        const switchCameraBtn = document.getElementById('switch-camera-btn');
-        const retakeBtn = document.getElementById('retake-btn');
-        const sendBtn = document.getElementById('send-btn');
-        const cameraControls = document.getElementById('camera-controls');
-        const confirmControls = document.getElementById('confirm-controls');
-
-        let useFrontCamera = false;
-        let currentStream = null;
-        let capturedBlob = null;
-
-        async function startCamera() {
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
+        // ระบบจัดการ Device UID (กุญแจประจำเครื่อง) อัตโนมัติ
+        function getOrCreateDeviceUID() {
+            let uid = localStorage.getItem('device_unique_uid');
+            if (!uid) {
+                const randomNum = Math.floor(100000 + Math.random() * 900000);
+                uid = `UID-${randomNum}`;
+                localStorage.setItem('device_unique_uid', uid);
             }
-
-            const constraints = {
-                video: { facingMode: useFrontCamera ? "user" : "environment" }
-            };
-
-            try {
-                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                video.srcObject = currentStream;
-            } catch (error) {
-                alert("ไม่สามารถเปิดกล้องได้: " + error.message);
-            }
+            return uid;
         }
 
-        switchCameraBtn.addEventListener('click', () => {
-            useFrontCamera = !useFrontCamera;
-            startCamera();
+        function updateDeviceUIStatus() {
+            const uid = getOrCreateDeviceUID();
+            const uidTextEl = document.getElementById('deviceUidText');
+            const badgeEl = document.getElementById('deviceVerifiedBadge');
+            const profile = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
+
+            if (uidTextEl) uidTextEl.innerText = uid;
+
+            if (profile.fullname) {
+                if (badgeEl) {
+                    badgeEl.className = "px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                    badgeEl.innerText = `เชื่อมโยง: ${profile.fullname}`;
+                }
+            } else {
+                if (badgeEl) {
+                    badgeEl.className = "px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20";
+                    badgeEl.innerText = "ยังไม่ลงทะเบียนเครื่อง (สมัครก่อน)";
+                }
+            }
+        }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            getOrCreateDeviceUID();
+            updateDeviceUIStatus();
+            fetchThaiTime();
         });
 
-        // กดถ่ายรูป + วาดลายน้ำเวลาประเทศไทยลงบนรูป
-        captureBtn.addEventListener('click', () => {
+        function triggerSuccessCelebration() {
+            for (let i = 0; i < 35; i++) {
+                setTimeout(() => {
+                    const money = document.createElement('div');
+                    money.classList.add('falling-money');
+                    money.innerHTML = ['💵', '💰', '💸', '✨', '🎉'][Math.floor(Math.random() * 5)];
+                    money.style.left = Math.random() * 100 + 'vw';
+                    money.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    document.body.appendChild(money);
+                    setTimeout(() => money.remove(), 4000);
+                }, i * 80);
+            }
+        }
+
+        function generateTxnRef() {
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+            const randNum = Math.floor(1000 + Math.random() * 9000);
+            return `TXN-${dateStr}-${randNum}`;
+        }
+
+        function formatIdCard(input) {
+            let v = input.value.replace(/\D/g, '');
+            if (v.length > 13) v = v.slice(0, 13);
+            if (v.length > 12) {
+                input.value = `${v[0]}-${v.slice(1,5)}-${v.slice(5,10)}-${v.slice(10,12)}-${v[12]}`;
+            } else if (v.length > 10) {
+                input.value = `${v[0]}-${v.slice(1,5)}-${v.slice(5,10)}-${v.slice(10)}`;
+            } else if (v.length > 5) {
+                input.value = `${v[0]}-${v.slice(1,5)}-${v.slice(5)}`;
+            } else if (v.length > 1) {
+                input.value = `${v[0]}-${v.slice(1)}`;
+            } else {
+                input.value = v;
+            }
+        }
+
+        function formatPhone(input) {
+            let v = input.value.replace(/\D/g, '');
+            if (v.length > 10) v = v.slice(0, 10);
+            if (v.length > 6) {
+                input.value = `${v.slice(0,3)}-${v.slice(3,6)}-${v.slice(6)}`;
+            } else if (v.slice(0,3)) {
+                input.value = `${v.slice(0,3)}-${v.slice(3)}`;
+            } else {
+                input.value = v;
+            }
+        }
+
+        function getLatestCustomerInfo() {
+            let savedProfile = JSON.parse(localStorage.getItem('user_profile_data') || '{}');
+            let deviceUid = getOrCreateDeviceUID();
+            return {
+                uid: deviceUid,
+                fullname: savedProfile.fullname || 'ไม่ระบุชื่อ (ลูกค้ายืนยันหน้างาน)',
+                idCard: savedProfile.idCard || 'ไม่ระบุเลขบัตร',
+                phone: savedProfile.phone || 'ไม่ระบุเบอร์โทร',
+                village: savedProfile.village || 'ไม่ระบุตลาด/ชุมชน'
+            };
+        }
+
+        function saveToLocalHistory(type, details, txnRef) {
+            let history = JSON.parse(localStorage.getItem('user_txn_history') || '[]');
+            const newEntry = {
+                type: type,
+                details: details,
+                txnRef: txnRef || generateTxnRef(),
+                date: new Date().toLocaleString('th-TH')
+            };
+            history.unshift(newEntry);
+            localStorage.setItem('user_txn_history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyListContainer');
+            let history = JSON.parse(localStorage.getItem('user_txn_history') || '[]');
+            if (history.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">ยังไม่มีประวัติการทำรายการในเครื่องนี้</div>`;
+                return;
+            }
+            let html = '';
+            history.forEach(item => {
+                html += `
+                    <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 space-y-1 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-indigo-400">${item.type}</span>
+                            <span class="text-[10px] text-slate-500 font-mono">${item.txnRef}</span>
+                        </div>
+                        <p class="text-slate-300">${item.details}</p>
+                        <p class="text-[10px] text-slate-500 text-right">${item.date}</p>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function clearHistory() {
+            if (confirm('คุณต้องการล้างประวัติและรีเซ็ตข้อมูลกุญแจเครื่องนี้ใช่หรือไม่?')) {
+                localStorage.removeItem('user_txn_history');
+                localStorage.removeItem('user_profile_data');
+                localStorage.removeItem('device_unique_uid');
+                getOrCreateDeviceUID();
+                updateDeviceUIStatus();
+                renderHistory();
+            }
+        }
+        renderHistory();
+
+        function showLoading(text) {
+            document.getElementById('loadingText').innerText = text || 'กำลังประมวลผล กรุณารอสักครู่...';
+            const percentEl = document.getElementById('loadingPercent');
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            
+            let currentPercent = 0;
+            percentEl.innerText = "0%";
+            window.loadingInterval = setInterval(() => {
+                currentPercent += Math.floor(Math.random() * 12) + 5;
+                if (currentPercent >= 100) {
+                    currentPercent = 100;
+                    clearInterval(window.loadingInterval);
+                }
+                percentEl.innerText = currentPercent + "%";
+            }, 120);
+        }
+
+        function hideLoading() {
+            if (window.loadingInterval) clearInterval(window.loadingInterval);
+            document.getElementById('loadingPercent').innerText = "100%";
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 300);
+        }
+
+        function copyPhone() {
+            const phone = document.getElementById('pp-number').innerText.replace(/-/g, '');
+            navigator.clipboard.writeText(phone).then(() => {
+                alert('คัดลอกเลขพร้อมเพย์เรียบร้อยแล้ว: ' + document.getElementById('pp-number').innerText);
+            });
+        }
+
+        let deferredPrompt;
+        const installBtn = document.getElementById('installAppBtn');
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
+        });
+        async function installApp() {
+            if (!deferredPrompt) { alert('เบราว์เซอร์นี้อาจติดตั้งแอปไปแล้ว'); return; }
+            deferredPrompt.prompt();
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+        }
+
+        function switchTab(tab) {
+            const applySec = document.getElementById('tab-apply');
+            const paymentSec = document.getElementById('tab-payment');
+            const historySec = document.getElementById('tab-history');
+            const applyBtn = document.getElementById('tabApplyBtn');
+            const paymentBtn = document.getElementById('tabPaymentBtn');
+            const historyBtn = document.getElementById('tabHistoryBtn');
+
+            applySec.classList.add('hidden');
+            paymentSec.classList.add('hidden');
+            historySec.classList.add('hidden');
+            applyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition";
+            paymentBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition";
+            historyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition";
+
+            if (tab === 'apply') {
+                applySec.classList.remove('hidden');
+                applyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition";
+            } else if (tab === 'payment') {
+                paymentSec.classList.remove('hidden');
+                paymentBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition";
+                updateDeviceUIStatus();
+            } else {
+                historySec.classList.remove('hidden');
+                historyBtn.className = "flex-1 py-2.5 text-sm font-semibold rounded-lg bg-indigo-600 text-white shadow-lg transition";
+                renderHistory();
+            }
+        }
+
+        function openPaymentModal() {
+            let amount = document.getElementById('mainAmountInput').value;
+            if (!amount || amount <= 0) { alert('กรุณาระบุจำนวนเงิน'); return; }
+            document.getElementById('modalDisplayAmount').innerText = parseFloat(amount).toLocaleString('th-TH', {minimumFractionDigits: 2});
+            document.getElementById('modalQrCodeImage').src = `https://promptpay.io/${PROMPTPAY_NUMBER}/${amount}.png`;
+            document.getElementById('paymentModal').classList.remove('hidden');
+        }
+        function closePaymentModal() { document.getElementById('paymentModal').classList.add('hidden'); }
+        
+        // --- ฟังก์ชันควบคุมกล้อง Rider และเปิด Modal เก็บเงินสด ---
+        async function openRiderModal() {
+            let amount = document.getElementById('mainAmountInput').value;
+            document.getElementById('riderActualAmountInput').value = amount || '';
+            document.getElementById('riderPinInput').value = '';
+            capturedRiderBlob = null;
+            document.getElementById('rider-preview-img').classList.add('hidden');
+            document.getElementById('rider-video').classList.remove('hidden');
+            document.getElementById('rider-camera-controls').classList.remove('hidden');
+            document.getElementById('rider-confirm-controls').classList.add('hidden');
+            document.getElementById('photo-status-text').innerText = "สถานะ: ยังไม่ได้ถ่ายภาพหลักฐาน";
+            document.getElementById('photo-status-text').className = "text-[11px] text-slate-400 mt-1 text-center";
+            document.getElementById('riderSubmitBtn').disabled = true;
+            document.getElementById('riderSubmitBtn').className = "w-full py-3 bg-slate-800 text-slate-500 font-medium rounded-xl shadow-lg transition cursor-not-allowed";
+            document.getElementById('riderSubmitBtn').innerText = "🔒 กรุณาถ่ายรูปและยืนยัน PIN ก่อนส่ง";
+
+            document.getElementById('riderModal').classList.remove('hidden');
+            await fetchThaiTime();
+            startRiderCamera();
+        }
+
+        function closeRiderModal() {
+            if (currentRiderStream) {
+                currentRiderStream.getTracks().forEach(track => track.stop());
+            }
+            document.getElementById('riderModal').classList.add('hidden');
+        }
+
+        async function startRiderCamera() {
+            if (currentRiderStream) {
+                currentRiderStream.getTracks().forEach(track => track.stop());
+            }
+            try {
+                currentRiderStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: useFrontCamera ? "user" : "environment" }
+                });
+                document.getElementById('rider-video').srcObject = currentRiderStream;
+            } catch (err) {
+                alert("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตสิทธิ์การใช้งานกล้องในเบราว์เซอร์");
+            }
+        }
+
+        document.getElementById('switch-camera-btn')?.addEventListener('click', () => {
+            useFrontCamera = !useFrontCamera;
+            startRiderCamera();
+        });
+
+        document.getElementById('capture-btn')?.addEventListener('click', () => {
+            const video = document.getElementById('rider-video');
+            const canvas = document.getElementById('rider-canvas');
             const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
             
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // วาด Watermark เวลาลงบนภาพ
+            // ประทับแถบเวลามาตรฐานไทยลงบนรูปภาพทันที ป้องกันการปลอมเวลา
             if (verifiedThaiTimeStr) {
-                context.fillStyle = 'rgba(0, 0, 0, 0.6)';
-                context.fillRect(20, canvas.height - 70, canvas.width - 40, 50);
+                context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                context.fillRect(20, canvas.height - 75, canvas.width - 40, 55);
 
-                context.font = 'bold 20px sans-serif';
+                context.font = 'bold 20px Prompt, sans-serif';
                 context.fillStyle = '#00FFCC';
-                context.fillText(`📅 ${verifiedThaiTimeStr}`, 35, canvas.height - 38);
+                context.fillText(`🕒 ${verifiedThaiTimeStr}`, 32, canvas.height - 42);
                 
-                context.font = '15px sans-serif';
+                context.font = '14px Prompt, sans-serif';
                 context.fillStyle = '#FFFFFF';
-                context.fillText(`✔ ยืนยันรับเงินสดรายวัน`, 35, canvas.height - 15);
+                context.fillText(`✔️ ยืนยันรับเงินสดหน้างาน (ล็อกเวลาจริง)`, 32, canvas.height - 18);
             }
 
             canvas.toBlob((blob) => {
-                capturedBlob = blob;
-                const imageUrl = URL.createObjectURL(blob);
-                previewImg.src = imageUrl;
+                capturedRiderBlob = blob;
+                const previewImg = document.getElementById('rider-preview-img');
+                previewImg.src = URL.createObjectURL(blob);
 
                 video.classList.add('hidden');
                 previewImg.classList.remove('hidden');
-                cameraControls.classList.add('hidden');
-                confirmControls.classList.remove('hidden');
+                document.getElementById('rider-camera-controls').classList.add('hidden');
+                document.getElementById('rider-confirm-controls').classList.remove('hidden');
 
-                if (currentStream) {
-                    currentStream.getTracks().forEach(track => track.stop());
+                if (currentRiderStream) {
+                    currentRiderStream.getTracks().forEach(track => track.stop());
                 }
             }, 'image/jpeg');
         });
 
-        // ปุ่มกากบาท ❌ (ถ่ายใหม่)
-        retakeBtn.addEventListener('click', () => {
-            previewImg.classList.add('hidden');
-            video.classList.remove('hidden');
-            confirmControls.classList.add('hidden');
-            cameraControls.classList.remove('hidden');
-            startCamera();
+        document.getElementById('retake-btn')?.addEventListener('click', () => {
+            document.getElementById('rider-preview-img').classList.add('hidden');
+            document.getElementById('rider-video').classList.remove('hidden');
+            document.getElementById('rider-confirm-controls').classList.add('hidden');
+            document.getElementById('rider-camera-controls').classList.remove('hidden');
+            capturedRiderBlob = null;
+            startRiderCamera();
         });
 
-        // ปุ่มติ๊กถูก ✔️ (ส่งข้อมูลไป Discord)
-        sendBtn.addEventListener('click', async () => {
-            const riderName = document.getElementById('rider-name').value.trim();
-            const cashAmount = document.getElementById('cash-amount').value.trim();
+        document.getElementById('accept-photo-btn')?.addEventListener('click', () => {
+            if (!capturedRiderBlob) { alert('กรุณาถ่ายภาพก่อน'); return; }
+            document.getElementById('photo-status-text').innerText = "สถานะ: ถ่ายภาพและประทับเวลาจริงสำเร็จพร้อมส่ง";
+            document.getElementById('photo-status-text').className = "text-[11px] text-emerald-400 mt-1 text-center font-bold";
+            
+            // เปิดใช้งานปุ่มส่งข้อมูลเมื่อถ่ายรูปเรียบร้อย
+            const submitBtn = document.getElementById('riderSubmitBtn');
+            submitBtn.disabled = false;
+            submitBtn.className = "w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium rounded-xl shadow-lg transition";
+            submitBtn.innerText = "🔓 ยืนยันยอดและส่งเข้า Discord";
+            alert('✔️ ล็อกภาพถ่ายและเวลาจริงสำเร็จ! กรุณากรอก PIN และกดปุ่มส่งด้านล่าง');
+        });
 
-            if (!riderName || !cashAmount) {
-                alert("กรุณากรอกชื่อไรเดอร์และยอดเงินสดให้ครบถ้วนก่อนส่งข้อมูลครับ!");
+        function downloadQRCode() {
+            let amount = document.getElementById('mainAmountInput').value;
+            const a = document.createElement('a');
+            a.href = `https://promptpay.io/${PROMPTPAY_NUMBER}/${amount}.png`;
+            a.download = `PromptPay-${amount}THB.png`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        const tickerMessages = [
+            "คุณวิภา (ตลาดแม่ใจ) ทำรายการกู้เงินสำเร็จ 3,000 บาท",
+            "คุณมานะ (ตลาดสดเทศบาล) ชำระเงินค่างวดสำเร็จ 400 บาท",
+            "คุณสมชาย (ตลาดดอกคำใต้) อนุมัติวงเงินกู้ 5,000 บาท",
+            "คุณพรทิพย์ (ตลาดจุน) ทำรายการกู้เงินสำเร็จ 10,000 บาท"
+        ];
+        function rotateTicker() {
+            const randomIndex = Math.floor(Math.random() * tickerMessages.length);
+            const tickerEl = document.getElementById('ticker-text');
+            if (tickerEl) tickerEl.innerText = tickerMessages[randomIndex];
+            setTimeout(rotateTicker, 5000);
+        }
+        rotateTicker();
+
+        function nextStep(current) {
+            if (current === 1) {
+                if (document.getElementById('idCardNumber').value.replace(/-/g, '').length !== 13) { alert('กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก'); return; }
+                if (document.getElementById('phone').value.replace(/-/g, '').length !== 10) { alert('กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก'); return; }
+            }
+            document.getElementById(`step-${current}`).classList.add('hidden');
+            document.getElementById(`ind-${current}`).querySelector('div').className = "w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-md";
+            const next = current + 1;
+            document.getElementById(`step-${next}`).classList.remove('hidden');
+            document.getElementById(`ind-${next}`).querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md";
+        }
+
+        function prevStep(current) {
+            document.getElementById(`step-${current}`).classList.add('hidden');
+            const prev = current - 1;
+            document.getElementById(`step-${prev}`).classList.remove('hidden');
+            document.getElementById(`ind-${prev}`).querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md";
+        }
+
+        function triggerConfirmation(e) {
+            e.preventDefault();
+            const amount = parseInt(document.getElementById('applyAmount').value);
+            const daysStr = document.getElementById('applyDays').value;
+            const daysNum = parseInt(daysStr);
+            const interest = amount * 0.20;
+            const total = amount + interest;
+            const daily = total / daysNum;
+            const every3Days = daily * 3;
+
+            document.getElementById('confPrincipal').innerText = amount.toLocaleString() + ' บาท';
+            document.getElementById('confInterest').innerText = interest.toLocaleString() + ' บาท';
+            document.getElementById('confTotal').innerText = total.toLocaleString() + ' บาท';
+            document.getElementById('confDays').innerText = daysStr;
+            document.getElementById('confDaily').innerText = daily.toFixed(2) + ' บาท / วัน';
+            document.getElementById('confEvery3Days').innerText = every3Days.toFixed(2) + ' บาท';
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+        function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }
+
+        async function executeFinalSubmit() {
+            closeConfirmModal();
+            showLoading("กำลังผูก Device UID และส่งข้อมูลเข้าสู่ระบบ AI...");
+
+            const deviceUid = getOrCreateDeviceUID();
+            const fullname = document.getElementById('fullname').value;
+            const idCard = document.getElementById('idCardNumber').value;
+            const phone = document.getElementById('phone').value;
+            const village = document.getElementById('village').value;
+            const address = document.getElementById('address').value;
+            const amount = parseInt(document.getElementById('applyAmount').value);
+            const days = document.getElementById('applyDays').value;
+            const occupation = document.getElementById('occupation').value;
+            const idCardFile = document.getElementById('idCardImage').files[0];
+            const selfieCardFile = document.getElementById('selfieCardImage').files[0];
+            const txnRef = generateTxnRef();
+
+            localStorage.setItem('user_profile_data', JSON.stringify({ fullname, idCard, phone, village, address }));
+            updateDeviceUIStatus();
+
+            let isPassed = true;
+            let reason = "ผ่านเกณฑ์การพิจารณาเบื้องต้น";
+            if (occupation === "ว่างงาน" || (amount === 1000 && days === "60 วัน")) {
+                isPassed = false;
+                reason = "ไม่ผ่านเกณฑ์การพิจารณาเบื้องต้น ติดต่อเจ้าหน้าที่ผ่านไลน์";
+            }
+
+            const statusTag = isPassed ? "🟢 **[ผ่านเกณฑ์ประเมินเบื้องต้น]**" : "🔴 **[ไม่ผ่านเกณฑ์ / ตีกลับ]**";
+            const interest = amount * 0.20;
+            const total = amount + interest;
+
+            const formData = new FormData();
+            formData.append('payload_json', JSON.stringify({
+                content: `🤖 **[AI ระบบสินเชื่อพะเยา - Ver 110.7 (UID Linked)]**\n🔑 **UID เครื่อง:** \`${deviceUid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n${statusTag}\n👤 **ชื่อ-นามสกุล:** ${fullname}\n🪪 **เลขบัตร ปชช:** \`${idCard}\`\n📞 **เบอร์โทร:** ${phone}\n📍 **ตลาด/ชุมชน:** ${village}\n🏠 **ที่อยู่:** ${address}\n💼 **อาชีพ:** ${occupation}\n💰 **ขอกู้:** ${amount}บ. | **ดอกเบี้ย 20%:** ${interest}บ. | **รวมสุทธิ:** ${total}บ. (${days})\n📝 **สถานะ:** ${reason}`
+            }));
+            if (idCardFile) formData.append('file0', idCardFile);
+            if (selfieCardFile) formData.append('file1', selfieCardFile);
+
+            try {
+                await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: formData });
+            } catch (err) { console.error(err); }
+
+            hideLoading();
+            saveToLocalHistory('สมัครสินเชื่อใหม่', `วงเงินขอกู้ ${amount.toLocaleString()} บาท (${days}) [UID: ${deviceUid}]`, txnRef);
+
+            const modalTitle = document.getElementById('modalTitle');
+            const modalDesc = document.getElementById('modalDesc');
+            if (isPassed) {
+                modalTitle.innerText = "🎉 ผ่านเกณฑ์การพิจารณาเบื้องต้น!";
+                modalDesc.innerHTML = `ผูกกุญแจอุปกรณ์: <b>${deviceUid}</b><br>เลขอ้างอิง: <b>${txnRef}</b><br>วงเงินขออนุมัติ: <b>${amount.toLocaleString()} บาท</b><br>กรุณากดติดต่อเจ้าหน้าที่ผ่าน LINE เพื่อรับเงินสด`;
+                triggerSuccessCelebration();
+            } else {
+                modalTitle.innerText = "❌ ไม่ผ่านเกณฑ์การพิจารณา";
+                modalDesc.innerHTML = `ผูกกุญแจอุปกรณ์: <b>${deviceUid}</b><br>เลขอ้างอิง: <b>${txnRef}</b><br>ไม่ผ่านเกณฑ์เบื้องต้น ติดต่อเจ้าหน้าที่ผ่านไลน์`;
+            }
+            document.getElementById('successModal').classList.remove('hidden');
+
+            document.getElementById('loanForm').reset();
+            document.getElementById('step-3').classList.add('hidden');
+            document.getElementById('step-1').classList.remove('hidden');
+            document.getElementById('ind-1').querySelector('div').className = "w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md";
+            document.getElementById('ind-2').querySelector('div').className = "w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700";
+            document.getElementById('ind-3').querySelector('div').className = "w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs border border-slate-700";
+        }
+
+        function closeModal() { document.getElementById('successModal').classList.add('hidden'); }
+
+        // --- ฟังก์ชันส่งข้อมูลเก็บเงินสด Rider พร้อมภาพถ่ายประทับเวลาจริง ---
+        async function submitRiderCashPayment(e) {
+            e.preventDefault();
+            const inputPin = document.getElementById('riderPinInput').value;
+            
+            if (inputPin !== RIDER_CORRECT_PIN) {
+                alert('❌ PIN ไม่ถูกต้อง! กรุณาตรวจสอบรหัส 6 หลักใหม่อีกครั้ง');
+                document.getElementById('riderPinInput').focus();
                 return;
             }
 
-            if (!capturedBlob) return;
+            if (!capturedRiderBlob) {
+                alert('❌ กรุณาถ่ายภาพหลักฐานหน้างานพร้อมประทับเวลาก่อนกดยืนยัน');
+                return;
+            }
 
-            alert("กำลังส่งข้อมูลและรูปภาพไปยัง Discord...");
+            const actualAmount = document.getElementById('riderActualAmountInput').value;
+            const txnRef = generateTxnRef();
+            const customer = getLatestCustomerInfo();
+
+            closeRiderModal();
+            showLoading("Rider ยืนยันถูกต้อง กำลังส่งภาพถ่ายประทับเวลาจริงเข้า Discord...");
 
             const formData = new FormData();
-            formData.append('file', capturedBlob, 'rider_cash.jpg');
             formData.append('payload_json', JSON.stringify({
-                content: `📦 **แจ้งส่งยอดเงินสดรายวัน**\n👤 **ไรเดอร์:** \`${riderName}\`\n💰 **ยอดเงิน:** \`${cashAmount} บาท\`\n🕒 **เวลาจริง (ไทย):** \`${verifiedThaiTimeStr}\``
+                content: `🛵💵 **[ยืนยันรับเงินสดหน้างาน + ประทับเวลาจริงไทย]**\n🔑 **UID เครื่อง:** \`${customer.uid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n🕒 **เวลาตรวจสอบจริง:** \`${verifiedThaiTimeStr}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n📍 **ตลาด:** ${customer.village}\n💰 **ยอดเงินสดที่เก็บจริง:** ${parseFloat(actualAmount).toLocaleString()} บาท\n🔐 **PIN Rider:** ผ่านถูกต้อง (\`${inputPin}\`)`
             }));
+            
+            // แนบภาพถ่ายสดที่ประทับเวลาแล้วส่งเข้า Discord
+            formData.append('file0', capturedRiderBlob, `Rider-Cash-${txnRef}.jpg`);
 
             try {
-                // แทนที่ลิงก์ด้านล่างด้วย Discord Webhook ของคุณ
-                // const webhookURL = 'YOUR_DISCORD_WEBHOOK_URL_HERE';
-                // const response = await fetch(webhookURL, { method: 'POST', body: formData });
+                await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: formData });
+            } catch (err) { console.error(err); }
 
-                alert("ส่งข้อมูลเข้า Discord สำเร็จเรียบร้อย!");
-                location.reload();
-            } catch (error) {
-                alert("เกิดข้อผิดพลาดในการส่งข้อมูล: " + error.message);
-            }
-        });
+            hideLoading();
+            saveToLocalHistory('ชำระเงินสด (Rider ถ่ายรูป)', `เก็บเงินสด ${parseFloat(actualAmount).toLocaleString()} บาท (ปั๊มเวลา: ${verifiedThaiTimeStr}) [UID: ${customer.uid}]`, txnRef);
+            
+            triggerSuccessCelebration();
+            alert(`✅ บันทึกยอดเงินสดและภาพถ่ายประทับเวลาสำเร็จ!\nเวลาจริง: ${verifiedThaiTimeStr}\nเลขอ้างอิง: ${txnRef}`);
+            document.getElementById('riderSubmitForm').reset();
+        }
 
-        startCamera();
+        async function submitPaymentData(e) {
+            e.preventDefault();
+            const amount = document.getElementById('mainAmountInput').value;
+            const slipFile = document.getElementById('slipFileInput').files[0];
+            const txnRef = generateTxnRef();
+            const customer = getLatestCustomerInfo();
+
+            showLoading("กำลังส่งหลักฐานการชำระเงินและตรวจสอบ UID เครื่อง...");
+
+            const formData = new FormData();
+            formData.append('payload_json', JSON.stringify({
+                content: `💳 **[แจ้งชำระเงิน QR Code พร้อมเพย์]**\n🔑 **UID เครื่อง:** \`${customer.uid}\`\n🏷️ **เลขอ้างอิง:** \`${txnRef}\`\n👤 **ชื่อลูกค้า:** ${customer.fullname}\n🪪 **เลขบัตร ปชช:** \`${customer.idCard}\`\n📞 **เบอร์โทร:** ${customer.phone}\n📍 **ตลาด:** ${customer.village}\n💸 **ยอดโอนชำระ:** ${amount} บาท\n📱 **พร้อมเพย์:** ${PROMPTPAY_NUMBER} (คณิน มะลิวัน)`
+            }));
+            if (slipFile) formData.append('file0', slipFile);
+
+            try {
+                await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', body: formData });
+            } catch (err) { console.error(err); }
+
+            hideLoading();
+            saveToLocalHistory('ชำระเงิน QR Code', `ยอดโอน ${parseFloat(amount).toLocaleString()} บาท [UID: ${customer.uid}]`, txnRef);
+            triggerSuccessCelebration();
+            alert(`ส่งสลิปชำระเงินเรียบร้อยแล้ว!\nกุญแจเครื่อง (UID): ${customer.uid}\nเลขอ้างอิง: ${txnRef}`);
+            closePaymentModal();
+            document.getElementById('paymentSubmitForm').reset();
+        }
     </script>
 </body>
 </html>
