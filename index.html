@@ -3,91 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบลงทะเบียนและจัดการการชำระเงิน</title>
-    <!-- FontAwesome & Google Fonts -->
+    <title>ระบบจัดการสมาชิกและการชำระเงินเต็มรูปแบบ</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
-            --success-color: #059669;
-            --warning-color: #d97706;
-            --danger-color: #dc2626;
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
             --text-main: #0f172a;
-            --text-sub: #475569;
-            --border-color: #e2e8f0;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --sidebar-width: 260px;
         }
 
         * {
             box-sizing: border-box;
-            font-family: 'Kanit', sans-serif;
             margin: 0;
             padding: 0;
+            font-family: 'Kanit', sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-body);
             color: var(--text-main);
-            padding: 20px 10px;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
             min-height: 100vh;
         }
 
-        .main-container {
-            width: 100%;
-            max-width: 600px;
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #1e293b;
+            color: #ffffff;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            transition: all 0.3s ease;
         }
 
-        /* Card Component */
-        .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-            border: 1px solid var(--border-color);
+        .sidebar-header {
+            padding: 20px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #38bdf8;
         }
 
-        .card-header {
+        .sidebar-menu {
+            list-style: none;
+            padding: 20px 0;
+            flex: 1;
+        }
+
+        .sidebar-menu li a {
             display: flex;
             align-items: center;
             gap: 12px;
-            border-bottom: 2px solid var(--bg-color);
-            padding-bottom: 12px;
-            margin-bottom: 20px;
+            padding: 12px 24px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 400;
+            transition: 0.2s;
         }
 
-        .card-header i {
-            font-size: 1.4rem;
-            color: var(--primary-color);
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: #334155;
+            color: #ffffff;
+            border-left: 4px solid var(--primary);
         }
 
-        .card-header h2 {
-            font-size: 1.25rem;
+        /* Main Content Area */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            height: 65px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Content Body */
+        .content-body {
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 18px 24px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header-title {
+            font-size: 1.1rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             color: var(--text-main);
         }
 
-        /* 1. Camera Section */
-        .camera-container {
-            position: relative;
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Form Layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="password"],
+        select,
+        textarea {
             width: 100%;
-            height: 280px;
-            background-color: #0f172a;
-            border-radius: 12px;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Camera Box Area */
+        .camera-wrapper {
+            background: #0f172a;
+            border-radius: 10px;
+            height: 300px;
+            position: relative;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px dashed #94a3b8;
+            border: 2px dashed #475569;
+            margin-top: 10px;
         }
 
         video, #photo-preview {
@@ -96,387 +232,444 @@
             object-fit: cover;
         }
 
-        .btn-group {
+        .btn-container {
             display: flex;
-            flex-direction: column;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 12px;
         }
 
         .btn {
-            width: 100%;
-            padding: 12px 20px;
+            padding: 10px 20px;
+            border-radius: 8px;
             border: none;
-            border-radius: 10px;
-            font-size: 1rem;
             font-weight: 500;
+            font-size: 0.95rem;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: all 0.2s ease;
+            transition: 0.2s;
         }
 
-        .btn-primary { background-color: var(--primary-color); color: white; }
-        .btn-primary:hover { background-color: var(--primary-hover); }
-        .btn-warning { background-color: var(--warning-color); color: white; }
-        .btn-success { background-color: var(--success-color); color: white; }
-        .btn-outline { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-sub); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-secondary { background: var(--secondary); color: white; }
 
-        .upload-divider {
-            text-align: center;
-            position: relative;
-            margin: 15px 0;
-            color: var(--text-sub);
-            font-size: 0.875rem;
-        }
-
-        .upload-divider::before, .upload-divider::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            width: 42%;
-            height: 1px;
-            background-color: var(--border-color);
-        }
-
-        .upload-divider::before { left: 0; }
-        .upload-divider::after { right: 0; }
-
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-        }
-
-        .file-input-wrapper input[type=file] {
-            font-size: 100px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        /* 2. Inbox Section */
-        .inbox-card {
+        /* Inbox Card Style */
+        .inbox-alert {
             background: #fffbeb;
             border: 1px solid #fde68a;
-        }
-
-        .inbox-card .card-header i { color: var(--warning-color); }
-
-        .notice-box {
-            padding: 12px 16px;
-            background-color: #ffffff;
+            border-left: 5px solid var(--warning);
+            padding: 16px;
             border-radius: 8px;
-            border-left: 4px solid var(--warning-color);
-            font-size: 0.95rem;
-            line-height: 1.5;
+            color: #92400e;
         }
 
-        /* 3. Payment History Section */
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .info-item {
-            background-color: var(--bg-color);
-            padding: 12px;
-            border-radius: 8px;
-        }
-
-        .info-label {
+        /* Status Badges */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
             font-size: 0.85rem;
-            color: var(--text-sub);
-            margin-bottom: 4px;
-        }
-
-        .info-value {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .status-badge {
+            font-weight: 500;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 500;
+            gap: 5px;
         }
 
-        .status-pending { background-color: #fef3c7; color: #92400e; }
-        .status-success { background-color: #d1fae5; color: #065f46; }
+        .badge-pending { background: #fef3c7; color: #b45309; }
+        .badge-success { background: #d1fae5; color: #047857; }
 
-        .qr-section {
+        /* Payment Details */
+        .payment-info-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            background: #f1f5f9;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-title { font-size: 0.8rem; color: var(--text-muted); }
+        .info-value { font-size: 1.1rem; font-weight: 600; }
+
+        .qr-display-box {
             text-align: center;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed var(--border-color);
-        }
-
-        .qr-image-wrapper {
-            margin-top: 12px;
-            display: inline-block;
-            padding: 12px;
-            background: white;
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid var(--border);
             border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-            border: 1px solid var(--border-color);
+            margin-top: 15px;
         }
 
-        .qr-image-wrapper img {
-            width: 180px;
-            height: 180px;
+        .qr-display-box img {
+            width: 200px;
+            height: 200px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
         }
 
-        /* Utility */
         .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-wrapper { margin-left: 0; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+            .payment-info-box { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-<div class="main-container">
-
-    <!-- Section 1: กล้องสมัครสมาชิก / อัปโหลดเอกสาร -->
-    <div class="card">
-        <div class="card-header">
-            <i class="fa-solid fa-id-card"></i>
-            <h2 id="step-title">สมัครสมาชิก (1/2): ถ่ายรูปหน้าบัตรประชาชน</h2>
+    <!-- 1. Sidebar เมนูหลัก -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>SYSTEM PORTAL</span>
         </div>
-
-        <div class="camera-container">
-            <video id="webcam" autoplay playsinline></video>
-            <img id="photo-preview" class="hidden" alt="ภาพตัวอย่าง">
-        </div>
-        <canvas id="canvas" class="hidden"></canvas>
-
-        <div class="btn-group">
-            <button id="btn-capture" class="btn btn-primary" onclick="takeSnapshot()">
-                <i class="fa-solid fa-camera"></i> ถ่ายภาพ
-            </button>
-            <button id="btn-retake" class="btn btn-warning hidden" onclick="resetCamera()">
-                <i class="fa-solid fa-rotate-left"></i> ถ่ายใหม่ (หากภาพไม่ชัด)
-            </button>
-            <button id="btn-confirm" class="btn btn-success hidden" onclick="confirmPhoto()">
-                <i class="fa-solid fa-circle-check"></i> ยืนยันภาพชัดเจน - ขั้นตอนถัดไป
-            </button>
-        </div>
-
-        <div class="upload-divider">หรือใช้วิธี</div>
-
-        <div class="file-input-wrapper">
-            <button class="btn btn-outline">
-                <i class="fa-solid fa-file-arrow-up"></i> อัปโหลดรูปภาพจากอุปกรณ์
-            </button>
-            <input type="file" id="file-upload" accept="image/*" onchange="uploadFromFile(event)">
-        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="active"><i class="fa-solid fa-user-plus"></i> สมัครสมาชิก</a></li>
+            <li><a href="#inbox-section"><i class="fa-solid fa-envelope"></i> กล่องจดหมาย</a></li>
+            <li><a href="#payment-section"><i class="fa-solid fa-receipt"></i> ประวัติการชำระเงิน</a></li>
+            <li><a href="#"><i class="fa-solid fa-gear"></i> ตั้งค่าระบบ</a></li>
+        </ul>
     </div>
 
-    <!-- Section 2: กล่องแจ้งเตือน / ค่าปรับ -->
-    <div class="card inbox-card">
-        <div class="card-header">
-            <i class="fa-solid fa-envelope-open-text"></i>
-            <h2>กล่องจดหมาย / แจ้งเตือน</h2>
-        </div>
-        <div id="inbox-content">
-            <div class="notice-box">
-                <i class="fa-solid fa-circle-info"></i> ไม่มีรายการแจ้งเตือนใหม่ในขณะนี้
-            </div>
-        </div>
-    </div>
-
-    <!-- Section 3: ประวัติการชำระเงิน และ QR Pay -->
-    <div class="card">
-        <div class="card-header">
-            <i class="fa-solid fa-receipt"></i>
-            <h2>ประวัติการชำระเงิน</h2>
-        </div>
-
-        <div class="info-grid">
-            <div class="info-item">
-                <div class="info-label">รหัสผู้ใช้ (UID)</div>
-                <div class="info-value" id="user-uid">UID123456</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">สถานะปัจจุบัน</div>
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        
+        <!-- Navbar -->
+        <div class="top-navbar">
+            <div style="font-weight: 600; font-size: 1.1rem;">ระบบจัดการข้อมูล และยืนยันตัวตน</div>
+            <div class="user-profile">
+                <div class="avatar">US</div>
                 <div>
-                    <span id="payment-status" class="status-badge status-pending">
-                        <i class="fa-solid fa-clock"></i> รอตรวจสอบ (ℹ️)
-                    </span>
+                    <div style="font-weight: 600; font-size: 0.9rem;">USER CLIENT</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);" id="top-uid-display">UID: UID123456</div>
                 </div>
             </div>
         </div>
 
-        <div class="info-item" style="margin-bottom: 15px;">
-            <div class="info-label">ยอดหนี้คงค้างสุทธิ</div>
-            <div class="info-value" style="color: var(--danger-color); font-size: 1.4rem;">
-                <span id="debt-amount">1000</span> บาท
-            </div>
-        </div>
-
-        <div class="qr-section">
-            <button class="btn btn-success" onclick="generatePromptPayQR()">
-                <i class="fa-solid fa-qrcode"></i> ชำระเงินด้วย QR Pay
-            </button>
+        <!-- Content Body -->
+        <div class="content-body">
             
-            <div id="qr-display" class="qr-image-wrapper hidden">
-                <!-- QR Code แสดงผลที่นี่ -->
+            <!-- SECTION 1: ฟอร์มสมัครสมาชิกแบบเต็ม + ระบบกล้องถ่ายภาพ 2 ขั้นตอน -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-title">
+                        <i class="fa-solid fa-address-card" style="color: var(--primary);"></i>
+                        <span id="reg-step-title">ลงทะเบียนสมาชิกใหม่ (ขั้นตอนที่ 1/2: กรอกข้อมูลและถ่ายรูปบัตรประชาชน)</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="main-register-form" onsubmit="event.preventDefault();">
+                        
+                        <!-- ข้อมูลส่วนตัวพื้นฐาน -->
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>ชื่อจริง-นามสกุล <span style="color:red;">*</span></label>
+                                <input type="text" id="reg-fullname" placeholder="นาย สมชาย ใจดี" required>
+                            </div>
+                            <div class="form-group">
+                                <label>เลขบัตรประจำตัวประชาชน <span style="color:red;">*</span></label>
+                                <input type="text" id="reg-idcard" placeholder="1100200300400" maxlength="13" required>
+                            </div>
+                            <div class="form-group">
+                                <label>เบอร์โทรศัพท์ติดต่อ <span style="color:red;">*</span></label>
+                                <input type="tel" id="reg-phone" placeholder="0812345678" required>
+                            </div>
+                            <div class="form-group">
+                                <label>อีเมล <span style="color:red;">*</span></label>
+                                <input type="email" id="reg-email" placeholder="example@mail.com" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>ที่อยู่ตามสำเนาทะเบียนบ้าน</label>
+                                <textarea rows="2" placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด"></textarea>
+                            </div>
+                        </div>
+
+                        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border);">
+
+                        <!-- ส่วนกล้องถ่ายภาพเอกสารยืนยันตัวตน -->
+                        <div class="form-group full-width">
+                            <label style="font-weight: 600; font-size: 1rem;" id="camera-label-text">
+                                📷 ถ่ายภาพยืนยันตัวตน (รูปที่ 1: หน้าบัตรประชาชน)
+                            </label>
+                            
+                            <div class="camera-wrapper">
+                                <video id="cam-video" autoplay playsinline></video>
+                                <img id="cam-preview" class="hidden" alt="ภาพพรีวิว">
+                            </div>
+                            <canvas id="cam-canvas" class="hidden"></canvas>
+
+                            <!-- ปุ่มควบคุมการถ่ายภาพ -->
+                            <div class="btn-container">
+                                <button type="button" id="btn-snap" class="btn btn-primary" onclick="takePhoto()">
+                                    <i class="fa-solid fa-camera"></i> ถ่ายภาพ
+                                </button>
+                                <button type="button" id="btn-retake" class="btn btn-warning hidden" onclick="retakePhoto()">
+                                    <i class="fa-solid fa-rotate-left"></i> ถ่ายใหม่ (หากภาพไม่ชัด)
+                                </button>
+                                <button type="button" id="btn-next-step" class="btn btn-success hidden" onclick="confirmAndProceed()">
+                                    <i class="fa-solid fa-arrow-right"></i> ยืนยันภาพชัดเจน - ขั้นตอนถัดไป
+                                </button>
+                            </div>
+
+                            <div style="text-align: center; margin: 15px 0 5px 0; color: var(--text-muted); font-size: 0.85rem;">
+                                — หรือหากไม่สะดวกเปิดกล้อง สามารถเลือกอัปโหลดไฟล์จากเครื่องได้ —
+                            </div>
+                            
+                            <input type="file" accept="image/*" onchange="handleFileSelect(event)" style="margin-top: 5px;">
+                        </div>
+
+                        <!-- Hidden Inputs สำหรับเก็บรูปภาพเป็น Base64 -->
+                        <input type="hidden" id="card-photo-data">
+                        <input type="hidden" id="face-photo-data">
+
+                        <hr style="margin: 25px 0; border: 0; border-top: 1px solid var(--border);">
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem;" onclick="submitRegistration()">
+                            <i class="fa-solid fa-paper-plane"></i> ยืนยันการส่งข้อมูลสมัครสมาชิก
+                        </button>
+                    </form>
+                </div>
             </div>
+
+            <!-- SECTION 2: กล่องจดหมาย / แจ้งเตือนค่าปรับ -->
+            <div class="card" id="inbox-section">
+                <div class="card-header">
+                    <div class="card-header-title">
+                        <i class="fa-solid fa-envelope-open-text" style="color: var(--warning);"></i>
+                        <span>กล่องจดหมาย / แจ้งเตือนระบบ</span>
+                    </div>
+                </div>
+                <div class="card-body" id="inbox-content-area">
+                    <div style="color: var(--text-muted); font-size: 0.95rem;">
+                        <i class="fa-solid fa-circle-info"></i> ไม่มีรายการแจ้งเตือนใหม่ในขณะนี้
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: ประวัติการชำระเงิน + ระบบหักลบยอดคงเหลือ & QR Pay -->
+            <div class="card" id="payment-section">
+                <div class="card-header">
+                    <div class="card-header-title">
+                        <i class="fa-solid fa-receipt" style="color: var(--success);"></i>
+                        <span>ประวัติการชำระเงิน และสถานะคงค้าง</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="payment-info-box">
+                        <div class="info-block">
+                            <span class="info-title">รหัสบัญชีผู้ใช้ (UID)</span>
+                            <span class="info-value" id="disp-uid">UID123456</span>
+                        </div>
+                        <div class="info-block">
+                            <span class="info-title">สถานะรายการล่าสุด</span>
+                            <div>
+                                <span id="disp-status-badge" class="badge badge-pending">
+                                    <i class="fa-solid fa-clock"></i> รอตรวจสอบ (ℹ️)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="info-block">
+                            <span class="info-title">ยอดหนี้คงค้างสุทธิ</span>
+                            <span class="info-value" style="color: var(--danger);" id="disp-debt-amount">1000.00 บาท</span>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <button class="btn btn-success" style="padding: 12px 24px; font-size: 1rem;" onclick="generateQR()">
+                            <i class="fa-solid fa-qrcode"></i> ชำระเงินด้วย QR Pay (PromptPay)
+                        </button>
+                    </div>
+
+                    <div id="qr-output-wrapper" class="qr-display-box hidden">
+                        <!-- รูป QR Code จะเด้งขึ้นมาตรงนี้ -->
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </div>
 
-</div>
-
-<script>
-    // Config ตั้งค่าหลัก
-    const currentUID = "UID123456"; // UID ประจำตัวลูกค้า
-    let baseDebt = 1000;             // ยอดหนี้ตั้งต้น
-    let registrationStep = 1;       // ขั้นตอนการถ่ายภาพ (1 = หน้าบัตร, 2 = คู่กับใบหน้า)
-    let cardImage = null;
-    let faceImage = null;
-
-    const video = document.getElementById('webcam');
-    const preview = document.getElementById('photo-preview');
-    const canvas = document.getElementById('canvas');
-
-    // --- LOGIC 1: ระบบกล้องถ่ายรูป 2 ขั้นตอน ---
-    async function startCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
-            });
-            video.srcObject = stream;
-        } catch (e) {
-            console.warn("ไม่สามารถเปิดใช้งานกล้องได้ หรือเบราว์เซอร์ไม่ได้รับสิทธิ์เข้าถึง");
-        }
-    }
-
-    function takeSnapshot() {
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    <!-- JavaScript Logic เต็มรูปแบบ -->
+    <script>
+        // CONFIG GLOBAL VARIABLES
+        const userUID = "UID123456";
+        let baseDebtAmount = 1000;
+        let currentCamStep = 1; // 1 = หน้าบัตร, 2 = คู่กับใบหน้า
         
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        preview.src = dataUrl;
-        
-        video.classList.add('hidden');
-        preview.classList.remove('hidden');
+        const videoElem = document.getElementById('cam-video');
+        const previewElem = document.getElementById('cam-preview');
+        const canvasElem = document.getElementById('cam-canvas');
 
-        document.getElementById('btn-capture').classList.add('hidden');
-        document.getElementById('btn-retake').classList.remove('hidden');
-        document.getElementById('btn-confirm').classList.remove('hidden');
-
-        if (registrationStep === 1) cardImage = dataUrl;
-        else faceImage = dataUrl;
-    }
-
-    function resetCamera() {
-        video.classList.remove('hidden');
-        preview.classList.add('hidden');
-        document.getElementById('btn-capture').classList.remove('hidden');
-        document.getElementById('btn-retake').classList.add('hidden');
-        document.getElementById('btn-confirm').classList.add('hidden');
-    }
-
-    function confirmPhoto() {
-        if (registrationStep === 1) {
-            registrationStep = 2;
-            document.getElementById('step-title').innerText = "สมัครสมาชิก (2/2): ถ่ายรูปคู่กับบัตรประชาชน";
-            resetCamera();
-        } else {
-            alert("อัปโหลดรูปถ่ายลงทะเบียนครบทั้ง 2 ขั้นตอนเรียบร้อยแล้ว!");
+        // 1. ระบบจัดการกล้องถ่ายรูป
+        async function initWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
+                });
+                videoElem.srcObject = stream;
+            } catch (err) {
+                console.warn("ไม่สามารถเปิดใช้งานกล้องได้ หรือผู้ใช้ปฏิเสธสิทธิ์");
+            }
         }
-    }
 
-    function uploadFromFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            if (registrationStep === 1) {
-                cardImage = e.target.result;
-                alert("อัปโหลดรูปหน้าบัตรเรียบร้อยแล้ว! กรุณาอัปโหลดรูปคู่กับบัตรประชาชนต่อ");
-                registrationStep = 2;
-                document.getElementById('step-title').innerText = "สมัครสมาชิก (2/2): ถ่ายรูปคู่กับบัตรประชาชน";
+        function takePhoto() {
+            canvasElem.width = videoElem.videoWidth || 640;
+            canvasElem.height = videoElem.videoHeight || 480;
+            const ctx = canvasElem.getContext('2d');
+            ctx.drawImage(videoElem, 0, 0, canvasElem.width, canvasElem.height);
+
+            const base64Img = canvasElem.toDataURL('image/jpeg');
+            previewElem.src = base64Img;
+
+            videoElem.classList.add('hidden');
+            previewElem.classList.remove('hidden');
+
+            document.getElementById('btn-snap').classList.add('hidden');
+            document.getElementById('btn-retake').classList.remove('hidden');
+            document.getElementById('btn-next-step').classList.remove('hidden');
+
+            if (currentCamStep === 1) {
+                document.getElementById('card-photo-data').value = base64Img;
             } else {
-                faceImage = e.target.result;
-                alert("อัปโหลดไฟล์รูปภาพครบถ้วนแล้ว!");
+                document.getElementById('face-photo-data').value = base64Img;
             }
-        };
-        reader.readAsDataURL(file);
-    }
-
-    // --- LOGIC 2 & 3: ดึงข้อมูลการตัดยอด/ค่าปรับ จาก GitHub (data.json) ---
-    async function fetchSystemData() {
-        try {
-            // ดึงข้อมูลแบบไม่ค้าง Cache เพื่ออัปเดต Real-time
-            const res = await fetch('./data.json?cache=' + Date.now());
-            if (!res.ok) return;
-            const data = await res.json();
-
-            // 1. ตรวจสอบค่าปรับ
-            const penalty = data.penalties?.find(p => p.uid === currentUID);
-            let totalPenalty = 0;
-            if (penalty) {
-                totalPenalty = penalty.amount;
-                document.getElementById('inbox-content').innerHTML = `
-                    <div class="notice-box">
-                        <b style="color: var(--danger-color);"><i class="fa-solid fa-triangle-exclamation"></i> แจ้งเตือนค่าปรับชำระล่าช้า:</b><br>
-                        ${penalty.reason}<br>
-                        ยอดค่าปรับเพิ่มเติม: <b>${penalty.amount}</b> บาท
-                    </div>
-                `;
-            }
-
-            // 2. ตรวจสอบการหักลบยอดเงินอนุมัติ
-            const approval = data.approved_payments?.find(a => a.uid === currentUID);
-            let finalBalance = baseDebt + totalPenalty;
-
-            if (approval) {
-                finalBalance -= approval.amount;
-                if (finalBalance <= 0) {
-                    finalBalance = 0;
-                    const statusTag = document.getElementById('payment-status');
-                    statusTag.innerHTML = `<i class="fa-solid fa-circle-check"></i> ชำระเงินสำเร็จแล้ว`;
-                    statusTag.className = "status-badge status-success";
-                }
-            }
-
-            document.getElementById('debt-amount').innerText = finalBalance;
-
-        } catch (err) {
-            console.log("อยู่ในโหมดออฟไลน์ หรือยังไม่ได้สร้างไฟล์ data.json");
         }
-    }
 
-    // --- LOGIC 4: เจน QR Code PromptPay ตามยอดคงค้างสด ---
-    function generatePromptPayQR() {
-        const amount = document.getElementById('debt-amount').innerText;
-        const qrDisplay = document.getElementById('qr-display');
-        const promptPayID = "0812345678"; // <--- เปลี่ยนเป็นเบอร์พร้อมเพย์ของคุณที่นี่
+        function retakePhoto() {
+            videoElem.classList.remove('hidden');
+            previewElem.classList.add('hidden');
 
-        qrDisplay.innerHTML = `
-            <p style="font-size: 0.875rem; color: var(--text-sub); margin-bottom: 8px;">สแกนชำระยอดสุทธิ <b>${amount}</b> บาท</p>
-            <img src="https://promptpay.io/${promptPayID}/${amount}.png" alt="PromptPay QR Code">
-        `;
-        qrDisplay.classList.remove('hidden');
-    }
+            document.getElementById('btn-snap').classList.remove('hidden');
+            document.getElementById('btn-retake').classList.add('hidden');
+            document.getElementById('btn-next-step').classList.add('hidden');
+        }
 
-    // เรียกทำงานระบบอัตโนมัติเมื่อเปิดหน้าเว็บ
-    window.addEventListener('DOMContentLoaded', () => {
-        startCamera();
-        fetchSystemData();
-    });
-</script>
+        function confirmAndProceed() {
+            if (currentCamStep === 1) {
+                currentCamStep = 2;
+                document.getElementById('reg-step-title').innerText = "ลงทะเบียนสมาชิกใหม่ (ขั้นตอนที่ 2/2: ถ่ายรูปคู่กับบัตรประชาชน)";
+                document.getElementById('camera-label-text').innerText = "📷 ถ่ายภาพยืนยันตัวตน (รูปที่ 2: ถ่ายรูปหน้าตรงคู่กับบัตรประชาชน)";
+                retakePhoto();
+            } else {
+                alert("ถ่ายภาพยืนยันตัวตนครบทั้ง 2 ขั้นตอนเรียบร้อยแล้ว กรุณากรอกข้อมูลส่วนอื่นให้ครบถ้วนแล้วกดส่งสมัคร");
+            }
+        }
 
+        function handleFileSelect(evt) {
+            const file = evt.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (currentCamStep === 1) {
+                    document.getElementById('card-photo-data').value = e.target.result;
+                    alert("อัปโหลดรูปหน้าบัตรเรียบร้อยแล้ว กรุณาอัปโหลดหรือถ่ายรูปคู่กับบัตรเป็นขั้นตอนถัดไป");
+                    currentCamStep = 2;
+                    document.getElementById('reg-step-title').innerText = "ลงทะเบียนสมาชิกใหม่ (ขั้นตอนที่ 2/2: อัปโหลดรูปคู่กับบัตรประชาชน)";
+                    document.getElementById('camera-label-text').innerText = "📷 อัปโหลดรูปคู่กับบัตรประชาชน";
+                } else {
+                    document.getElementById('face-photo-data').value = e.target.result;
+                    alert("อัปโหลดเอกสารครบถ้วนเรียบร้อยแล้ว");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function submitRegistration() {
+            const cardData = document.getElementById('card-photo-data').value;
+            const faceData = document.getElementById('face-photo-data').value;
+
+            if (!cardData || !faceData) {
+                alert("กรุณาถ่ายภาพหรืออัปโหลดเอกสารยืนยันตัวตนให้ครบทั้ง 2 รูปก่อนส่งสมัคร");
+                return;
+            }
+
+            alert("ส่งข้อมูลสมัครสมาชิกเข้าสู่ระบบเรียบร้อยแล้ว สถานะอยู่ระหว่าง 'รอตรวจสอบ'");
+        }
+
+        // 2. ระบบดึงข้อมูลอนุมัติการชำระเงิน และ ค่าปรับ จาก GitHub (data.json)
+        async function fetchGitHubData() {
+            try {
+                const res = await fetch('./data.json?t=' + new Date().getTime());
+                if (!res.ok) return;
+                const data = await res.json();
+
+                // ตรวจสอบค่าปรับ
+                const penaltyData = data.penalties?.find(item => item.uid === userUID);
+                let penaltyValue = 0;
+                
+                if (penaltyData) {
+                    penaltyValue = penaltyData.amount;
+                    document.getElementById('inbox-content-area').innerHTML = `
+                        <div class="inbox-alert">
+                            <i class="fa-solid fa-triangle-exclamation"></i> <b>แจ้งเตือนค่าปรับ:</b> ${penaltyData.reason}<br>
+                            จำนวนเงินค่าปรับที่ต้องชำระเพิ่ม: <b>${penaltyData.amount}</b> บาท
+                        </div>
+                    `;
+                }
+
+                // ตรวจสอบการหักอนุมัติเงินจากแอดมิน
+                const approvedData = data.approved_payments?.find(item => item.uid === userUID);
+                let netDebt = baseDebtAmount + penaltyValue;
+
+                if (approvedData) {
+                    netDebt -= approvedData.amount;
+                    if (netDebt <= 0) {
+                        netDebt = 0;
+                        const badgeEl = document.getElementById('disp-status-badge');
+                        badgeEl.className = "badge badge-success";
+                        badgeEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ชำระเงินสำเร็จแล้ว`;
+                    }
+                }
+
+                document.getElementById('disp-debt-amount').innerText = netDebt.toFixed(2) + " บาท";
+
+            } catch (error) {
+                console.log("ยังไม่ได้อัปโหลดไฟล์ data.json บน GitHub หรือเกิดข้อผิดพลาดในการโหลด");
+            }
+        }
+
+        // 3. ระบบสร้าง QR Code PromptPay ตามยอดคงเหลือจริง
+        function generateQR() {
+            const debtText = document.getElementById('disp-debt-amount').innerText;
+            const parseAmount = parseFloat(debtText);
+            const promptPayNumber = "0812345678"; // <--- แก้ไขเป็นเบอร์พร้อมเพย์ของคุณตรงนี้
+            const wrapper = document.getElementById('qr-output-wrapper');
+
+            if (parseAmount <= 0) {
+                alert("ยอดหนี้คงค้างเป็น 0 บาท ไม่จำเป็นต้องชำระเงินเพิ่ม");
+                return;
+            }
+
+            wrapper.innerHTML = `
+                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">
+                    สแกน QR Code PromptPay เพื่อชำระยอดสุทธิ <b>${parseAmount.toFixed(2)}</b> บาท
+                </div>
+                <img src="https://promptpay.io/${promptPayNumber}/${parseAmount}.png" alt="PromptPay QR Code">
+            `;
+            wrapper.classList.remove('hidden');
+        }
+
+        // เริ่มการทำงานระบบทันทีเมื่อโหลดหน้าเว็บ
+        window.addEventListener('DOMContentLoaded', () => {
+            initWebcam();
+            fetchGitHubData();
+        });
+    </script>
 </body>
 </html>
