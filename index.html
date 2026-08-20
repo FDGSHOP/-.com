@@ -1,223 +1,386 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบยื่นคำขอสินเชื่อออนไลน์</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; font-family: 'Sarabun', sans-serif; }
-        body { background: #f1f5f9; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; max-width: 600px; width: 100%; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 30px; }
-        .header { text-align: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 25px; }
-        .header h2 { color: #0f172a; margin: 0; font-size: 22px; }
-        .header p { color: #64748b; font-size: 14px; margin-top: 5px; }
-        
-        /* Stepper */
-        .stepper { display: flex; justify-content: space-between; margin-bottom: 30px; position: relative; }
-        .step { width: 30%; text-align: center; position: relative; z-index: 1; }
-        .step-number { width: 35px; height: 35px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: bold; }
-        .step.active .step-number { background: #2563eb; color: white; }
-        .step-title { font-size: 12px; color: #64748b; font-weight: 600; }
-        
-        .form-section { display: none; }
-        .form-section.active { display: block; }
-        .form-group { margin-bottom: 16px; }
-        label { display: block; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 6px; }
-        input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
-        input:focus, select:focus { border-color: #2563eb; }
-        
-        .btn-group { display: flex; justify-content: space-between; margin-top: 25px; }
-        .btn { padding: 10px 20px; border-radius: 6px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-        .btn-primary { background: #2563eb; color: white; }
-        .btn-secondary { background: #94a3b8; color: white; }
-        
-        /* Status Card */
-        .status-card { text-align: center; padding: 25px; border-radius: 8px; margin-top: 20px; }
-        .pending-box { background: #fef9c3; border: 1px solid #fde047; color: #854d0e; }
-        .approved-box { background: #dcfce7; border: 1px solid #86efac; color: #166534; }
-        .rejected-box { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; }
-        
-        /* Modal */
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:99; }
-        .modal-content { background:white; padding:25px; border-radius:10px; text-align:center; max-width:320px; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="header">
-        <h2>สถาบันการเงินออนไลน์</h2>
-        <p>แบบฟอร์มยื่นคำขออนุมัติสินเชื่อเพื่อการพาณิชย์และบุคคล</p>
-    </div>
-
-    <!-- Stepper Indicator -->
-    <div class="stepper" id="stepper">
-        <div class="step active" id="st-1"><div class="step-number">1</div><div class="step-title">ข้อมูลส่วนตัว</div></div>
-        <div class="step" id="st-2"><div class="step-number">2</div><div class="step-title">อาชีพ/เอกสาร</div></div>
-        <div class="step" id="st-3"><div class="step-number">3</div><div class="step-title">ข้อมูลสินเชื่อ</div></div>
-    </div>
-
-    <!-- Main Form -->
-    <form id="loanForm" onsubmit="return false;">
-        <!-- ขั้นตอนที่ 1 -->
-        <div class="form-section active" id="sec-1">
-            <div class="form-group"><label>เลข UID อ้างอิงระบบ:</label><input type="text" id="uid" placeholder="เช่น 1001" required></div>
-            <div class="form-group"><label>ชื่อ-นามสกุล (ตามบัตรประชาชน):</label><input type="text" id="name" placeholder="นาย สมชาย ใจดี" required></div>
-            <div class="form-group"><label>เลขบัตรประจำตัวประชาชน 13 หลัก:</label><input type="text" id="idCard" maxlength="13" placeholder="1234567890123" required></div>
-            <div class="form-group"><label>เบอร์โทรศัพท์ติดต่อ:</label><input type="tel" id="phone" placeholder="0812345678" required></div>
-            <div class="btn-group">
-                <div></div>
-                <button class="btn btn-primary" onclick="nextStep(2)">ถัดไป: ข้อมูลอาชีพ &rarr;</button>
-            </div>
-        </div>
-
-        <!-- ขั้นตอนที่ 2 -->
-        <div class="form-section" id="sec-2">
-            <div class="form-group">
-                <label>อาชีพปัจจุบัน:</label>
-                <select id="occupation" required>
-                    <option value="">-- โปรดระบุอาชีพ --</option>
-                    <option value="พนักงานบริษัทเอกชน">พนักงานบริษัทเอกชน</option>
-                    <option value="รับราชการ / รัฐวิสาหกิจ">รับราชการ / รัฐวิสาหกิจ</option>
-                    <option value="เจ้าของธุรกิจ / ค้าขาย">เจ้าของธุรกิจ / ค้าขาย</option>
-                    <option value="อาชีพอิสระ (Freelance)">อาชีพอิสระ (Freelance)</option>
-                </select>
-            </div>
-            <div class="form-group"><label>รายได้เฉลี่ยต่อเดือน (บาท):</label><input type="number" id="income" placeholder="25000" required></div>
-            <div class="form-group"><label>วัตถุประสงค์การขอสินเชื่อ:</label><input type="text" id="purpose" placeholder="เพื่อหมุนเวียนในธุรกิจ / ใช้จ่ายส่วนตัว" required></div>
-            <div class="form-group"><label>ลิงก์แนบแนบแนบไฟล์เอกสาร/สลิปเงินเดือน (Drive/Cloud):</label><input type="url" id="docUrl" placeholder="https://drive.google.com/..." required></div>
-            <div class="btn-group">
-                <button class="btn btn-secondary" onclick="nextStep(1)">&larr; ย้อนกลับ</button>
-                <button class="btn btn-primary" onclick="nextStep(3)">ถัดไป: ข้อมูลสินเชื่อ &rarr;</button>
-            </div>
-        </div>
-
-        <!-- ขั้นตอนที่ 3 -->
-        <div class="form-section" id="sec-3">
-            <div class="form-group"><label>วงเงินสินเชื่อที่ต้องการยื่นขอ (บาท):</label><input type="number" id="amount" placeholder="10000" required></div>
-            <div class="form-group">
-                <label>ระยะเวลาผ่อนชำระที่ต้องการ:</label>
-                <select id="days" required>
-                    <option value="7">7 วัน</option>
-                    <option value="15">15 วัน</option>
-                    <option value="30" selected>30 วัน</option>
-                    <option value="60">60 วัน</option>
-                </select>
-            </div>
-            <div style="background: #f8fafc; padding: 15px; border-radius:6px; font-size:12px; color:#475569; margin-bottom:15px;">
-                * ข้อมูลคำขอจะถูกนำเข้าสู่ระบบเพื่อตรวจสอบคุณสมบัติในขั้นตอนถัดไป การยื่นคำขอไม่มีผลต่อการเรียกเก็บค่าธรรมเนียมใดๆ ทั้งสิ้น
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-secondary" onclick="nextStep(2)">&larr; ย้อนกลับ</button>
-                <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">ยืนยันการส่งคำขอสินเชื่อ</button>
-            </div>
-        </div>
-    </form>
-
-    <!-- Tracking Section -->
-    <div id="trackingSection" style="display:none;">
-        <h3 style="text-align:center; color:#0f172a; margin-top:0;">ติดตามสถานะคำขอสินเชื่อ</h3>
-        <p style="text-align:center; font-size:14px; color:#64748b;">รหัสติดตามคำขอ (UID): <b id="displayUid"></b></p>
-        <div id="statusBox" class="status-card pending-box">กำลังตรวจสอบข้อมูล...</div>
-        <p style="font-size:11px; text-align:center; color:#94a3b8; margin-top:20px;">* ระบบซิงค์ข้อมูลสถานะการพิจารณาจากฝ่ายอนุมัติให้อัตโนมัติทุกๆ 20 วินาที</p>
-    </div>
-</div>
-
-<!-- Modal Pop-up -->
-<div id="successModal" class="modal">
-    <div class="modal-content">
-        <h3 style="color:#10b981; margin:0 0 10px;">ยื่นคำขอสำเร็จ!</h3>
-        <p style="font-size:14px; color:#475569; margin-bottom:20px;">ระบบได้รับการยืนยันข้อมูลของคุณเรียบร้อยแล้ว คำขอจะถูกส่งเข้าสู่ศูนย์พิจารณาอนุมัติทันที</p>
-        <button class="btn btn-primary" style="width:100%;" onclick="closeModal()">รับทราบ & ตรวจสอบสถานะ</button>
-    </div>
-</div>
-
-<script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbze1aTsgVwkV6yLR0iRPN7hC7T4xc0z_MRCfs5MvJ0GCcQKno8_bx1EtTlo-QcdIgDE7Q/exec";
-    let myUID = "";
-
-    function nextStep(step) {
-        document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-        
-        document.getElementById(`sec-${step}`).classList.add('active');
-        for(let i=1; i<=step; i++) {
-            document.getElementById(`st-${i}`).classList.add('active');
-        }
-    }
-
-    async function submitForm() {
-        myUID = document.getElementById('uid').value.trim();
-        if(!myUID || !document.getElementById('name').value || !document.getElementById('amount').value) {
-            return alert("กรุณากรอกข้อมูลสำคัญให้ครบถ้วนก่อนส่งคำขอ");
-        }
-
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true;
-        btn.innerText = "กำลังนำส่งข้อมูลเข้าสู่ระบบ...";
-
-        const payload = {
-            action: "register",
-            uid: myUID,
-            name: document.getElementById('name').value,
-            idCard: document.getElementById('idCard').value,
-            phone: document.getElementById('phone').value,
-            occupation: document.getElementById('occupation').value,
-            income: Number(document.getElementById('income').value),
-            purpose: document.getElementById('purpose').value,
-            docUrl: document.getElementById('docUrl').value,
-            amount: Number(document.getElementById('amount').value),
-            days: Number(document.getElementById('days').value)
-        };
-
-        try {
-            await fetch(GAS_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify(payload)
-            });
-            document.getElementById('successModal').style.display = 'flex';
-        } catch(e) {
-            alert("เกิดข้อผิดพลาดในการส่งข้อมูล โปรดตรวจสอบการเชื่อมต่อ");
-            btn.disabled = false;
-            btn.innerText = "ยืนยันการส่งคำขอสินเชื่อ";
-        }
-    }
-
-    function closeModal() {
-        document.getElementById('successModal').style.display = 'none';
-        document.getElementById('loanForm').style.display = 'none';
-        document.getElementById('stepper').style.display = 'none';
-        document.getElementById('trackingSection').style.display = 'block';
-        document.getElementById('displayUid').innerText = myUID;
-
-        checkStatus();
-        setInterval(checkStatus, 20000);
-    }
-
-    async function checkStatus() {
-        try {
-            const res = await fetch(GAS_URL);
-            const data = await res.json();
-            const myData = data.find(item => item.uid.toString() === myUID.toString());
-            const box = document.getElementById('statusBox');
-
-            if(myData) {
-                if(myData.status === 'approved') {
-                    box.className = "status-card approved-box";
-                    box.innerHTML = `<h3>ผลการพิจารณา: อนุมัติสินเชื่อ</h3><p>วงเงินอนุมัติ: <b>${Number(myData.amount).toLocaleString()} บาท</b> | ระยะเวลา: <b>${myData.days} วัน</b></p><span style="font-size:12px;">เจ้าหน้าที่จะทำการโอนเงินเข้าบัญชีตามขั้นตอน</span>`;
-                } else if(myData.status === 'rejected') {
-                    box.className = "status-card rejected-box";
-                    box.innerHTML = `<h3>ผลการพิจารณา: ไม่อนุมัติ</h3><p>คำขอของคุณไม่ผ่านเกณฑ์การพิจารณาเบื้องต้นของสถาบัน</p>`;
-                } else {
-                    box.className = "status-card pending-box";
-                    box.innerHTML = `<h3>อยู่ระหว่างการพิจารณาเอกสาร (Pending)</h3><p>วงเงินที่ขอ: ${Number(myData.amount).toLocaleString()} บาท (${myData.days} วัน)</p><span style="font-size:12px;">เจ้าหน้าที่กำลังดำเนินการตรวจสอบความถูกต้องของข้อมูล</span>`;
+    <title>ระบบขอสินเชื่อและชำระเงิน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { bg: '#0f172a', card: '#1e293b', text: '#f8fafc', border: '#334155' }
+                    }
                 }
             }
-        } catch(e) { console.error(e); }
-    }
-</script>
+        }
+    </script>
+    <style>
+        .rgb-border {
+            position: relative;
+            background: #1e293b;
+            border-radius: 1rem;
+        }
+        .rgb-border::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bfd, #7a00ff, #ff00c8, #ff0000);
+            border-radius: 1.1rem;
+            z-index: -1;
+            background-size: 400%;
+            animation: glowing 20s linear infinite;
+        }
+        @keyframes glowing {
+            0% { background-position: 0 0; }
+            50% { background-position: 400% 0; }
+            100% { background-position: 0 0; }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-20">
+
+    <!-- Header -->
+    <header class="p-4 bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-50 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-indigo-400"><i class="fa-solid fa-hand-holding-dollar mr-2"></i>ระบบขอสินเชื่อ</h1>
+        <button onclick="openAdminModal()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-slate-600 transition">
+            <i class="fa-solid fa-user-shield mr-1"></i> Admin Override
+        </button>
+    </header>
+
+    <main class="max-w-md mx-auto p-4 space-y-6">
+
+        <!-- Banner / Status Card -->
+        <div id="activeLoanCard" class="hidden rgb-border p-5 text-white shadow-xl">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <span class="text-xs text-indigo-300 font-semibold uppercase tracking-wider">สถานะสัญญาปัจจุบัน</span>
+                    <h2 class="text-2xl font-bold text-emerald-400 mt-1" id="activeLoanAmount">0 ฿</h2>
+                </div>
+                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs px-2.5 py-1 rounded-full">กำลังผ่อนชำระ</span>
+            </div>
+            <p class="text-xs text-slate-300 mb-4">คุณมีรายการสินเชื่อที่อยู่ระหว่างการผ่อนชำระ กรุณาชำระหนี้ให้ครบถ้วนก่อนยื่นขอสินเชื่อใหม่</p>
+            <button onclick="switchTab('payment')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-lg text-sm transition">
+                <i class="fa-solid fa-qrcode mr-1.5"></i>ไปที่หน้าชำระเงิน
+            </button>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
+            <button id="tabBtnApply" onclick="switchTab('apply')" class="flex-1 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white transition">สมัครสินเชื่อ</button>
+            <button id="tabBtnPay" onclick="switchTab('payment')" class="flex-1 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white transition">ชำระเงิน</button>
+            <button id="tabBtnLog" onclick="switchTab('log')" class="flex-1 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white transition">ประวัติ</button>
+        </div>
+
+        <!-- 1. APPLY TAB (ยื่นขอสินเชื่อ) -->
+        <section id="tabApply" class="space-y-4">
+            <div id="applyFormContainer" class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                <h3 class="text-lg font-semibold text-slate-200 border-b border-slate-700 pb-2">ยื่นคำขอสินเชื่อ</h3>
+                
+                <!-- Step 1: วงเงิน -->
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">ระบุวงเงินที่ต้องการกู้ (บาท)</label>
+                    <input type="number" id="loanAmount" placeholder="เช่น 5000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white">
+                </div>
+
+                <!-- Step 2: ข้อมูลผู้สมัคร -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">ชื่อ-นามสกุล</label>
+                        <input type="text" id="custName" placeholder="ชื่อ นามสกุล" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">เบอร์โทรศัพท์</label>
+                        <input type="tel" id="custPhone" placeholder="08X-XXX-XXXX" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white">
+                    </div>
+                </div>
+
+                <!-- Step 3: แนบไฟล์รูปภาพ (แทนการใช้กล้อง) -->
+                <div class="space-y-3 pt-2">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1"><i class="fa-solid fa-id-card mr-1"></i>แนบรูปภาพบัตรประชาชน</label>
+                        <input type="file" id="fileIdCard" accept="image/*" onchange="previewImage(this, 'previewIdCard')" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-slate-900 rounded-lg border border-slate-700">
+                        <img id="previewIdCard" class="hidden mt-2 rounded-lg max-h-40 mx-auto border border-slate-700">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1"><i class="fa-solid fa-user-tag mr-1"></i>แนบรูปถ่ายคู่กับบัตรประชาชน (Selfie)</label>
+                        <input type="file" id="fileSelfie" accept="image/*" onchange="previewImage(this, 'previewSelfie')" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-slate-900 rounded-lg border border-slate-700">
+                        <img id="previewSelfie" class="hidden mt-2 rounded-lg max-h-40 mx-auto border border-slate-700">
+                    </div>
+                </div>
+
+                <button onclick="submitApplication()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-lg text-sm transition mt-4">
+                    ส่งข้อมูลขอสินเชื่อ
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. PAYMENT TAB (ชำระเงินผ่าน QR Code) -->
+        <section id="tabPayment" class="hidden space-y-4">
+            <div id="noLoanPayMsg" class="bg-slate-800 p-6 rounded-xl border border-slate-700 text-center text-slate-400">
+                <i class="fa-solid fa-circle-info text-3xl text-slate-500 mb-2"></i>
+                <p class="text-sm">คุณยังไม่มียอดที่ต้องชำระ หรือยังไม่มีสัญญาเงินกู้ที่อนุมัติ</p>
+            </div>
+
+            <div id="payContainer" class="hidden bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                <h3 class="text-lg font-semibold text-slate-200 border-b border-slate-700 pb-2">ชำระค่างวด / คืนสินเชื่อ</h3>
+                
+                <!-- Dynamic QR PromptPay -->
+                <div class="text-center bg-white p-4 rounded-xl text-slate-900 space-y-2">
+                    <p class="text-xs text-slate-500 font-semibold">สแกน QR Code เพื่อชำระเงินผ่าน PromptPay</p>
+                    <img id="qrCodeImg" src="" alt="PromptPay QR" class="mx-auto w-48 h-48 border">
+                    <p class="text-lg font-bold text-slate-800" id="qrPayAmount">0.00 ฿</p>
+                    <a id="downloadQrBtn" href="#" download="promptpay-qr.png" class="inline-block bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700 transition">
+                        <i class="fa-solid fa-download mr-1"></i>บันทึกรูป QR Code
+                    </a>
+                </div>
+
+                <!-- แนบสลิปโอนเงิน -->
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1"><i class="fa-solid fa-file-invoice-dollar mr-1"></i>แนบหลักฐานการโอนเงิน (สลิป)</label>
+                    <input type="file" id="fileSlip" accept="image/*" onchange="previewImage(this, 'previewSlip')" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer bg-slate-900 rounded-lg border border-slate-700">
+                    <img id="previewSlip" class="hidden mt-2 rounded-lg max-h-40 mx-auto border border-slate-700">
+                </div>
+
+                <button onclick="submitPayment()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-lg text-sm transition">
+                    แจ้งชำระเงิน (รอแอนมินตรวจสอบ)
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. LOG TAB (ประวัติรายการ) -->
+        <section id="tabLog" class="hidden space-y-3">
+            <h3 class="text-sm font-semibold text-slate-400">ประวัติการทำรายการในเครื่องนี้</h3>
+            <div id="logList" class="space-y-2">
+                <!-- Data Rendered by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Admin Modal Override -->
+    <div id="adminModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 w-full max-w-sm space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-white"><i class="fa-solid fa-lock text-indigo-400 mr-2"></i>Admin Override</h3>
+                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">กรอก Master PIN เพื่อปลดล็อก</label>
+                <input type="password" id="adminPinInput" maxlength="6" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-center text-xl font-bold tracking-widest text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="verifyAdminPin('clear_active')" class="bg-amber-600 hover:bg-amber-500 text-white text-xs py-2 rounded-lg font-medium">ล้างสถานะสัญญาค้าง</button>
+                <button onclick="verifyAdminPin('clear_all')" class="bg-rose-600 hover:bg-rose-500 text-white text-xs py-2 rounded-lg font-medium">ล้างประวัติทั้งหมด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating LINE Button -->
+    <a href="https://line.me" target="_blank" class="fixed bottom-5 right-5 bg-emerald-500 hover:bg-emerald-400 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition duration-300 z-40">
+        <i class="fa-brands fa-line text-2xl"></i>
+    </a>
+
+    <script>
+        // Config Constant Variables
+        const DISCORD_WEBHOOK_URL = ""; // ใส่ URL Webhook ของ Discord ที่ต้องการ
+        const PROMPTPAY_NUMBER = "0658351446";
+        const ADMIN_MASTER_PIN = "711455";
+
+        // Global Base64 Image Store
+        let base64Images = { idCard: "", selfie: "", slip: "" };
+
+        // App Initialization
+        document.addEventListener("DOMContentLoaded", () => {
+            checkActiveLoan();
+            renderLogs();
+        });
+
+        // Tab Switching Logic
+        function switchTab(tab) {
+            document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('header + main button').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-slate-400');
+            });
+
+            if (tab === 'apply') {
+                document.getElementById('tabApply').classList.remove('hidden');
+                document.getElementById('tabBtnApply').classList.add('bg-indigo-600', 'text-white');
+            } else if (tab === 'payment') {
+                document.getElementById('tabPayment').classList.remove('hidden');
+                document.getElementById('tabBtnPay').classList.add('bg-indigo-600', 'text-white');
+            } else if (tab === 'log') {
+                document.getElementById('tabLog').classList.remove('hidden');
+                document.getElementById('tabBtnLog').classList.add('bg-indigo-600', 'text-white');
+            }
+        }
+
+        // Preview File Image and Convert to Base64
+        function previewImage(input, previewId) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const imgEl = document.getElementById(previewId);
+                    imgEl.src = e.target.result;
+                    imgEl.classList.remove('hidden');
+
+                    if (previewId === 'previewIdCard') base64Images.idCard = e.target.result;
+                    if (previewId === 'previewSelfie') base64Images.selfie = e.target.result;
+                    if (previewId === 'previewSlip') base64Images.slip = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Check if user has active loan contract
+        function checkActiveLoan() {
+            const activeLoan = localStorage.getItem('active_loan');
+            const activeLoanCard = document.getElementById('activeLoanCard');
+            const applyFormContainer = document.getElementById('applyFormContainer');
+            const noLoanPayMsg = document.getElementById('noLoanPayMsg');
+            const payContainer = document.getElementById('payContainer');
+
+            if (activeLoan) {
+                const loanData = JSON.parse(activeLoan);
+                document.getElementById('activeLoanAmount').innerText = Number(loanData.amount).toLocaleString() + ' ฿';
+                activeLoanCard.classList.remove('hidden');
+                applyFormContainer.classList.add('hidden');
+                
+                // Show Pay Form
+                noLoanPayMsg.classList.add('hidden');
+                payContainer.classList.remove('hidden');
+
+                // Generate PromptPay QR
+                const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${loanData.amount}.png`;
+                document.getElementById('qrCodeImg').src = qrUrl;
+                document.getElementById('downloadQrBtn').href = qrUrl;
+                document.getElementById('qrPayAmount').innerText = Number(loanData.amount).toLocaleString() + ' ฿';
+            } else {
+                activeLoanCard.classList.add('hidden');
+                applyFormContainer.classList.remove('hidden');
+                noLoanPayMsg.classList.remove('hidden');
+                payContainer.classList.add('hidden');
+            }
+        }
+
+        // Submit Loan Application
+        function submitApplication() {
+            const amount = document.getElementById('loanAmount').value;
+            const name = document.getElementById('custName').value;
+            const phone = document.getElementById('custPhone').value;
+
+            if (!amount || !name || !phone || !base64Images.idCard || !base64Images.selfie) {
+                alert('กรุณากรอกข้อมูลและแนบรูปภาพให้ครบถ้วน');
+                return;
+            }
+
+            const payload = {
+                type: 'APPLY',
+                amount: amount,
+                name: name,
+                phone: phone,
+                timestamp: new Date().toLocaleString('th-TH'),
+                status: 'ACTIVE'
+            };
+
+            // Save to LocalStorage
+            localStorage.setItem('active_loan', JSON.stringify(payload));
+            saveLog(payload);
+
+            // Send Notification to Discord
+            sendDiscordNotification(`📥 **รายการยื่นขอสินเชื่อใหม่**\n• ชื่อ: ${name}\n• เบอร์โทร: ${phone}\n• วงเงินที่ขอ: ${amount} บาท`);
+
+            alert('ยื่นคำขอสินเชื่อเรียบร้อยแล้ว');
+            checkActiveLoan();
+        }
+
+        // Submit Payment (QR Code Slip)
+        function submitPayment() {
+            if (!base64Images.slip) {
+                alert('กรุณาแนบรูปภาพหลักฐานการโอนเงิน (สลิป)');
+                return;
+            }
+
+            const activeLoan = JSON.parse(localStorage.getItem('active_loan'));
+            const payload = {
+                type: 'PAYMENT_PENDING',
+                amount: activeLoan.amount,
+                name: activeLoan.name,
+                timestamp: new Date().toLocaleString('th-TH'),
+                status: 'PENDING'
+            };
+
+            saveLog(payload);
+            sendDiscordNotification(`💸 **แจ้งชำระเงินผ่าน QR Code (รอตรวจสอบ)**\n• ลูกค้า: ${activeLoan.name}\n• ยอดเงิน: ${activeLoan.amount} บาท`);
+
+            alert('ส่งหลักฐานการชำระเงินเรียบร้อยแล้ว กรุณารอแอดมินตรวจสอบ');
+            switchTab('log');
+        }
+
+        // Save Log Item
+        function saveLog(logItem) {
+            let logs = JSON.parse(localStorage.getItem('app_logs') || '[]');
+            logs.unshift(logItem);
+            localStorage.setItem('app_logs', JSON.stringify(logs));
+            renderLogs();
+        }
+
+        // Render Logs View
+        function renderLogs() {
+            const logList = document.getElementById('logList');
+            const logs = JSON.parse(localStorage.getItem('app_logs') || '[]');
+
+            if (logs.length === 0) {
+                logList.innerHTML = '<div class="text-xs text-slate-500 text-center py-4">ไม่มีประวัติรายการ</div>';
+                return;
+            }
+
+            logList.innerHTML = logs.map(item => `
+                <div class="bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-slate-200">${item.type === 'APPLY' ? 'ยื่นขอสินเชื่อ' : 'ชำระเงิน'} - ${Number(item.amount).toLocaleString()} ฿</div>
+                        <div class="text-slate-400 text-[10px]">${item.timestamp}</div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[10px] ${item.status === 'ACTIVE' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-amber-500/20 text-amber-300'}">${item.status}</span>
+                </div>
+            `).join('');
+        }
+
+        // Send Discord Webhook
+        function sendDiscordNotification(message) {
+            if (!DISCORD_WEBHOOK_URL) return;
+            fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: message })
+            }).catch(err => console.error("Discord error:", err));
+        }
+
+        // Admin Modal Controls
+        function openAdminModal() { document.getElementById('adminModal').classList.remove('hidden'); }
+        function closeAdminModal() { document.getElementById('adminModal').classList.add('hidden'); }
+
+        function verifyAdminPin(action) {
+            const pin = document.getElementById('adminPinInput').value;
+            if (pin === ADMIN_MASTER_PIN) {
+                if (action === 'clear_active') {
+                    localStorage.removeItem('active_loan');
+                    alert('ล้างสัญญาเงินกู้ที่ค้างอยู่สำเร็จ');
+                } else if (action === 'clear_all') {
+                    localStorage.clear();
+                    alert('ล้างประวัติข้อมูลทั้งหมดสำเร็จ');
+                }
+                location.reload();
+            } else {
+                alert('รหัส PIN ไม่ถูกต้อง');
+            }
+        }
+    </script>
 </body>
 </html>
