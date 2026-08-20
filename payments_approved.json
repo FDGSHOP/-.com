@@ -1,0 +1,8 @@
+[
+  {
+    "uid": "UID-123456",
+    "txnRef": "TXN-20260820-1001",
+    "paidAmount": 200,
+    "paymentMode": "interest_only"
+  }
+]
