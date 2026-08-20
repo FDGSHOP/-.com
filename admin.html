@@ -3,281 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบหลังบ้านผู้ดูแลระบบ (Admin Dashboard) - EasyLoan</title>
+    <title>ระบบหลังบ้านแอดมิน - Control & Signal Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * { font-family: 'Prompt', sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
-    <!-- Header Navbar -->
-    <header class="p-4 bg-slate-800 border-b border-slate-700 sticky top-0 z-50 flex justify-between items-center shadow-md">
-        <div class="flex items-center space-x-3">
-            <div class="p-2 bg-indigo-600 rounded-lg text-white">
-                <i class="fa-solid fa-user-shield text-lg"></i>
-            </div>
-            <div>
-                <h1 class="text-base font-bold text-indigo-400">EasyLoan Admin Management</h1>
-                <p class="text-[11px] text-slate-400">ระบบจัดการหลังบ้านผู้ดูแลระบบ & AI ประเมินความเสี่ยง</p>
-            </div>
+<body class="p-4 sm:p-6 min-h-screen">
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row justify-between items-center pb-6 border-b border-slate-800 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-tower-broadcast text-indigo-500"></i> Admin Signal & Collection Center
+            </h1>
+            <p class="text-xs text-slate-400">ระบบควบคุมสัญญาณ UID และติดตามยอดเก็บเงินประจำวัน</p>
         </div>
-        <div class="flex items-center space-x-2">
-            <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-1 rounded-full font-bold flex items-center">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>สถานะ: พร้อมใช้งาน
-            </span>
-            <button onclick="checkAdminData()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-600">
-                <i class="fa-solid fa-rotate mr-1"></i>รีเฟรชข้อมูล
+        <!-- UID Quick Search & Signal Dispatcher -->
+        <div class="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800 w-full sm:w-auto">
+            <input type="text" id="targetUidInput" placeholder="กรอกเลข UID ลูกค้า..." class="bg-slate-950 px-3 py-1.5 rounded-lg text-xs text-white border border-slate-700 outline-none w-full sm:w-48 font-mono">
+            <button onclick="dispatchUidSignal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1 shrink-0">
+                <i class="fa-solid fa-paper-plane"></i> ส่งสัญญาณ
             </button>
         </div>
     </header>
 
-    <!-- Main Content Container for PC Layout -->
-    <main class="w-full max-w-7xl mx-auto p-4 sm:p-6 flex-grow space-y-6">
-
-        <!-- Top Stat Summary -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
-                <div>
-                    <p class="text-xs text-slate-400">คำขอกู้ที่รออนุมัติ</p>
-                    <h3 id="statPending" class="text-2xl font-black text-amber-400 mt-1">0</h3>
-                </div>
-                <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg"><i class="fa-solid fa-clock text-xl"></i></div>
-            </div>
-            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
-                <div>
-                    <p class="text-xs text-slate-400">สัญญาที่อนุมัติแล้ว</p>
-                    <h3 id="statActive" class="text-2xl font-black text-emerald-400 mt-1">0</h3>
-                </div>
-                <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg"><i class="fa-solid fa-file-contract text-xl"></i></div>
-            </div>
-            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
-                <div>
-                    <p class="text-xs text-slate-400">สัญญาที่ปิดแล้วในคลัง</p>
-                    <h3 id="statCleared" class="text-2xl font-black text-indigo-400 mt-1">0</h3>
-                </div>
-                <div class="p-3 bg-indigo-500/10 text-indigo-400 rounded-lg"><i class="fa-solid fa-box-archive text-xl"></i></div>
-            </div>
+    <!-- Daily Collection Summary Cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+            <p class="text-xs text-slate-400">ต้องเก็บเงินภายในวันนี้</p>
+            <p id="sumDailyTarget" class="text-xl font-bold text-amber-400 mt-1">0.00 ฿</p>
         </div>
-
-        <!-- Layout Grid: Left Active Loan / Right Controls & Archive -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            <!-- Left Panel: active request (2 cols on large screen) -->
-            <div class="lg:col-span-2 space-y-4">
-                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
-                    <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                        <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center">
-                            <i class="fa-solid fa-file-invoice-dollar mr-2 text-indigo-400"></i>รายการคำขอสินเชื่อปัจจุบัน
-                        </h2>
-                        <span id="loanStatusBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-400">ไม่มีรายการ</span>
-                    </div>
-
-                    <div id="adminActiveLoanCard" class="bg-slate-900 p-5 rounded-lg border border-slate-700 space-y-4">
-                        <p class="text-slate-500 text-center py-6 text-sm">ยังไม่มีคำขอสินเชื่อถูกยื่นเข้ามาจากฝั่งลูกค้า</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Panel: AI & History Archive (1 col) -->
-            <div class="space-y-4">
-                
-                <!-- Quick Controls Panel -->
-                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-3">
-                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider"><i class="fa-solid fa-sliders mr-1.5 text-amber-400"></i>แผงจำลองการทดสอบ</h3>
-                    <div class="grid grid-cols-1 gap-2 text-xs">
-                        <button onclick="simAddOverdue()" class="bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700/50 p-2 rounded text-left flex justify-between items-center font-medium">
-                            <span><i class="fa-solid fa-calendar-plus mr-1"></i>จำลองค้างชำระ (+1 วัน)</span>
-                            <span class="text-[10px] bg-rose-950 px-1.5 py-0.5 rounded">+50 ฿</span>
-                        </button>
-                        <button onclick="simTriggerSound()" class="bg-amber-900/60 hover:bg-amber-800 text-amber-200 border border-amber-700/50 p-2 rounded text-left font-medium">
-                            <i class="fa-solid fa-bell mr-1"></i>ส่งสัญญาณเสียงเตือน (Find Device)
-                        </button>
-                        <button onclick="simResetAll()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 p-2 rounded text-left font-medium">
-                            <i class="fa-solid fa-trash-can mr-1"></i>ล้างระบบเริ่มใหม่ทั้งหมด
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Archive Room & AI Evaluation -->
-                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-3">
-                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                        <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center">
-                            <i class="fa-solid fa-box-archive mr-1.5"></i>คลังประวัติสัญญาเก่า
-                        </h3>
-                        <button onclick="clearArchive()" class="text-[10px] text-rose-400 hover:underline">ล้างคลัง</button>
-                    </div>
-                    
-                    <div id="adminArchiveContainer" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-                        <p class="text-xs text-slate-500 text-center py-4">ยังไม่มีประวัติสัญญาที่ถูกปิด</p>
-                    </div>
-                </div>
-
-            </div>
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+            <p class="text-xs text-slate-400">เก็บสำเร็จแล้ววันนี้</p>
+            <p id="sumDailyCollected" class="text-xl font-bold text-emerald-400 mt-1">0.00 ฿</p>
         </div>
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+            <p class="text-xs text-slate-400">ค้างชำระ / ยังไม่เก็บ</p>
+            <p id="sumDailyPending" class="text-xl font-bold text-rose-400 mt-1">0.00 ฿</p>
+        </div>
+    </section>
 
+    <!-- Window Navigation Tabs -->
+    <nav class="flex gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 mb-6 overflow-x-auto">
+        <button onclick="switchAdminTab('daily')" id="admin-tab-daily" class="px-4 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 text-white transition shrink-0">
+            <i class="fa-solid fa-calendar-day mr-1"></i> รายการต้องเก็บวันนี้
+        </button>
+        <button onclick="switchAdminTab('pending')" id="admin-tab-pending" class="px-4 py-2.5 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition shrink-0">
+            <i class="fa-solid fa-inbox mr-1"></i> คำร้องขอสินเชื่อ (รออนุมัติ)
+        </button>
+        <button onclick="switchAdminTab('active')" id="admin-tab-active" class="px-4 py-2.5 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition shrink-0">
+            <i class="fa-solid fa-file-contract mr-1"></i> สัญญาที่อนุมัติแล้ว
+        </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="adminMainContent" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 min-h-[300px]">
+        <!-- Dynamic Content Rendered Here -->
     </main>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            checkAdminData();
-            // ซิงค์ข้อมูล Realtime เมื่อมีการเปลี่ยนแปลงจากฝั่งลูกค้า
-            window.addEventListener('storage', checkAdminData);
-            setInterval(checkAdminData, 2000);
-        });
-
-        function checkAdminData() {
-            const activeLoanData = localStorage.getItem('active_loan');
-            const archiveData = JSON.parse(localStorage.getItem('loan_archive') || '[]');
-            
-            const container = document.getElementById('adminActiveLoanCard');
-            const statusBadge = document.getElementById('loanStatusBadge');
-
-            document.getElementById('statCleared').innerText = archiveData.length;
-
-            if (!activeLoanData) {
-                container.innerHTML = `<p class="text-slate-500 text-center py-6 text-sm">ยังไม่มีคำขอสินเชื่อถูกยื่นเข้ามาจากฝั่งลูกค้า</p>`;
-                statusBadge.innerText = 'ไม่มีรายการ';
-                statusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-400';
-                document.getElementById('statPending').innerText = 0;
-                document.getElementById('statActive').innerText = 0;
-                renderArchive();
-                return;
-            }
-
-            const loan = JSON.parse(activeLoanData);
-            const isApproved = loan.status === 'APPROVED';
-
-            document.getElementById('statPending').innerText = isApproved ? 0 : 1;
-            document.getElementById('statActive').innerText = isApproved ? 1 : 0;
-
-            statusBadge.innerText = isApproved ? 'อนุมัติแล้ว' : 'รอการอนุมัติ';
-            statusBadge.className = isApproved 
-                ? 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                : 'text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
-
-            const principal = parseFloat(loan.amount);
-            const interest = principal * 0.20;
-            const fineDays = parseInt(loan.daysOverdue || 0);
-            const fineTotal = fineDays * 50;
-            const totalDebt = Math.round(principal + interest + fineTotal);
-
-            container.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-slate-700 pb-4">
-                    <div>
-                        <span class="text-[10px] text-slate-400 uppercase tracking-wider">ข้อมูลผู้ยื่นกู้</span>
-                        <h3 class="text-lg font-bold text-white mt-0.5">${loan.name}</h3>
-                        <p class="text-xs text-indigo-400 font-medium"><i class="fa-solid fa-phone mr-1"></i>${loan.phone} (เบอร์สำรอง: ${loan.phoneBackup || '-'})</p>
-                        <p class="text-xs text-slate-400 mt-1"><i class="fa-brands fa-facebook mr-1"></i><a href="${loan.facebook}" target="_blank" class="underline hover:text-indigo-300">โปรไฟล์ Facebook</a></p>
-                    </div>
-                    <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 text-xs space-y-1">
-                        <div class="flex justify-between text-slate-400"><span>วงเงินกู้:</span> <span class="text-emerald-400 font-bold">${principal.toLocaleString()} ฿</span></div>
-                        <div class="flex justify-between text-slate-400"><span>ดอกเบี้ย (20%):</span> <span class="text-amber-400 font-bold">${interest.toLocaleString()} ฿</span></div>
-                        <div class="flex justify-between text-slate-400"><span>ค้างชำระ:</span> <span class="text-rose-400 font-bold">${fineDays} วัน (${fineTotal} ฿)</span></div>
-                        <div class="flex justify-between border-t border-slate-700 pt-1 text-slate-200 font-bold"><span>ยอดรวมปัจจุบัน:</span> <span class="text-emerald-300">${totalDebt.toLocaleString()} ฿</span></div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-300">
-                    <div><strong class="text-slate-400">อาชีพ:</strong> ${loan.job} (${parseFloat(loan.income||0).toLocaleString()} ฿/เดือน)</div>
-                    <div><strong class="text-slate-400">ธนาคารรับเงิน:</strong> ${loan.bankName} (${loan.bankAccountNo})</div>
-                    <div class="sm:col-span-2"><strong class="text-slate-400">ที่อยู่/จุดสังเกต:</strong> ${loan.address}</div>
-                </div>
-
-                <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-700">
-                    ${!isApproved ? `<button onclick="approveContract()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded text-xs transition"><i class="fa-solid fa-check mr-1"></i>อนุมัติสัญญา</button>` : ''}
-                    <button onclick="closeContract()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded text-xs transition"><i class="fa-solid fa-box-archive mr-1"></i>ตัดชำระ & ย้ายเข้าคลังประวัติ</button>
-                    <button onclick="deleteContract()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-2 rounded text-xs transition"><i class="fa-solid fa-trash mr-1"></i>ลบข้อมูลทิ้ง</button>
-                </div>
-            `;
-
-            renderArchive();
-        }
-
-        function approveContract() {
-            let loan = JSON.parse(localStorage.getItem('active_loan'));
-            loan.status = 'APPROVED';
-            localStorage.setItem('active_loan', JSON.stringify(loan));
-            checkAdminData();
-        }
-
-        function closeContract() {
-            let loan = JSON.parse(localStorage.getItem('active_loan'));
-            let archive = JSON.parse(localStorage.getItem('loan_archive') || '[]');
-
-            // ระบบ AI ประเมินลูกค้าฝั่งแอดมิน
-            let aiRating = "เกรด A+ (ประวัติดีเยี่ยม - แนะนำขยายวงเงินเป็น 5,000 บ.)";
-            if (loan.daysOverdue > 3) {
-                aiRating = "เกรด C (เคยค้างชำระเกิน 3 วัน - ควรระวังและจำกัดวงเงิน)";
-            } else if (loan.daysOverdue > 0) {
-                aiRating = "เกรด B (มีค้างชำระเล็กน้อย - แนะนำคงวงเงินเท่าเดิม)";
-            }
-
-            archive.push({
-                ...loan,
-                clearedDate: new Date().toLocaleString('th-TH'),
-                aiRating: aiRating
+        // Tab Switcher Logic
+        function switchAdminTab(tabName) {
+            const tabs = ['daily', 'pending', 'active'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`admin-tab-${t}`);
+                if(t === tabName) {
+                    btn.className = "px-4 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 text-white transition shrink-0";
+                } else {
+                    btn.className = "px-4 py-2.5 text-xs font-semibold rounded-xl text-slate-400 hover:text-white transition shrink-0";
+                }
             });
-
-            localStorage.setItem('loan_archive', JSON.stringify(archive));
-            localStorage.removeItem('active_loan');
-            checkAdminData();
+            renderAdminView(tabName);
         }
 
-        function deleteContract() {
-            if (confirm('คุณต้องการลบข้อมูลสัญญานี้ออกทันทีหรือไม่?')) {
-                localStorage.removeItem('active_loan');
-                checkAdminData();
+        // Render Views
+        function renderAdminView(tab) {
+            const container = document.getElementById('adminMainContent');
+            
+            if (tab === 'daily') {
+                container.innerHTML = `
+                    <h3 class="text-sm font-bold text-white mb-4"><i class="fa-solid fa-clock text-amber-400 mr-2"></i>ตารางการเก็บเงินประจำวัน (Filter By Today)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-950 text-slate-400">
+                                <tr>
+                                    <th class="p-3">UID ลูกค้า</th>
+                                    <th class="p-3">ชื่อ-นามสกุล</th>
+                                    <th class="p-3">ยอดต้องเก็บวันนี้</th>
+                                    <th class="p-3">สถานะวันนี้</th>
+                                    <th class="p-3 text-center">จัดการ/ส่งสัญญาณ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                <tr>
+                                    <td class="p-3 font-mono text-indigo-400">UID-90821</td>
+                                    <td class="p-3">สมชาย ใจดี</td>
+                                    <td class="p-3 font-bold text-amber-400">500.00 ฿</td>
+                                    <td class="p-3"><span class="bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full text-[10px]">ยังไม่ได้เก็บ</span></td>
+                                    <td class="p-3 text-center space-x-1">
+                                        <button onclick="sendDirectSignal('UID-90821', 'REMIND_PAYMENT')" class="bg-amber-600 hover:bg-amber-500 text-white px-2.5 py-1 rounded text-[10px]">ส่งสัญญาณเตือน</button>
+                                        <button onclick="markCollected('UID-90821')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded text-[10px]">บันทึกเก็บแล้ว</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else if (tab === 'pending') {
+                container.innerHTML = `
+                    <h3 class="text-sm font-bold text-white mb-4"><i class="fa-solid fa-user-clock text-indigo-400 mr-2"></i>คำร้องขอสินเชื่อใหม่ (รอการพิจารณา)</h3>
+                    <p class="text-xs text-slate-500">คลิกที่รายการเพื่อดูรายละเอียดรูปถ่ายและผลคัดกรอง AI</p>
+                `;
+            } else if (tab === 'active') {
+                container.innerHTML = `
+                    <h3 class="text-sm font-bold text-white mb-4"><i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i>สัญญาที่อนุมัติแล้วทั้งหมด</h3>
+                    <p class="text-xs text-slate-500">รวมสัญญาที่กำลังผ่อนชำระและประวัติย้อนหลัง</p>
+                `;
             }
         }
 
-        function renderArchive() {
-            const archive = JSON.parse(localStorage.getItem('loan_archive') || '[]');
-            const container = document.getElementById('adminArchiveContainer');
-
-            if (archive.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">ยังไม่มีประวัติสัญญาที่ถูกปิด</p>`;
+        // Send Signal by UID
+        function dispatchUidSignal() {
+            const uid = document.getElementById('targetUidInput').value.trim();
+            if(!uid) {
+                Swal.fire({ icon: 'warning', title: 'กรุณากรอก UID ลูกค้า', confirmButtonColor: '#4f46e5' });
                 return;
             }
-
-            container.innerHTML = archive.map((item, idx) => `
-                <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 text-xs space-y-1">
-                    <div class="flex justify-between font-bold text-slate-200">
-                        <span>#${idx+1} ${item.name} (${item.amount} ฿)</span>
-                        <span class="text-emerald-400">ปิดสัญญาแล้ว</span>
-                    </div>
-                    <div class="text-[11px] text-slate-400">วันที่ปิด: ${item.clearedDate}</div>
-                    <div class="text-[11px] text-amber-300 font-medium pt-1 border-t border-slate-800/80">
-                        <i class="fa-solid fa-robot mr-1 text-indigo-400"></i>AI ประเมิน: ${item.aiRating}
-                    </div>
-                </div>
-            `).join('');
+            sendDirectSignal(uid, 'MANUAL_SIGNAL');
         }
 
-        function clearArchive() {
-            if (confirm('ยืนยันล้างคลังประวัติสัญญาเก่าทั้งหมด?')) {
-                localStorage.removeItem('loan_archive');
-                checkAdminData();
-            }
+        function sendDirectSignal(uid, signalType) {
+            Swal.fire({
+                title: `ส่งสัญญาณไปยัง ${uid}`,
+                text: `ประเภทสัญญาณ: ${signalType}`,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยันการส่งสัญญาณ',
+                confirmButtonColor: '#4f46e5'
+            }).then((res) => {
+                if(res.isConfirmed) {
+                    Swal.fire({ icon: 'success', title: 'ส่งสัญญาณเรียบร้อยแล้ว!', text: `สัญญาณถูกยิงไปยังเครื่อง UID: ${uid} แล้ว` });
+                }
+            });
         }
 
-        function simAddOverdue() {
-            const data = localStorage.getItem('active_loan');
-            if (!data) return alert('ยังไม่มีสัญญากู้ในระบบ');
-            let loan = JSON.parse(data);
-            loan.daysOverdue = (loan.daysOverdue || 0) + 1;
-            localStorage.setItem('active_loan', JSON.stringify(loan));
-            checkAdminData();
+        function markCollected(uid) {
+            Swal.fire({ icon: 'success', title: 'อัปเดตสถานะสำเร็จ', text: `บันทึกการเก็บเงินของ UID: ${uid} เรียบร้อยแล้ว` });
         }
 
-        function simTriggerSound() {
-            alert('ส่งสัญญาณเสียงเตือนไปยังอุปกรณ์ลูกค้า!');
-        }
-
-        function simResetAll() {
-            if (confirm('ยืนยันรีเซ็ตข้อมูลทั้งระบบ?')) {
-                localStorage.clear();
-                checkAdminData();
-            }
-        }
+        // Default Load
+        window.onload = () => switchAdminTab('daily');
     </script>
 </body>
 </html>
