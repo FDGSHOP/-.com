@@ -31,18 +31,16 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-20">
 
-    <!-- Header -->
+    <!-- Header & PWA Installation -->
     <header class="p-4 bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-40 flex justify-between items-center shadow-lg">
         <h1 class="text-base font-bold text-indigo-400 flex items-center">
             <i class="fa-solid fa-shield-halved mr-2 text-indigo-500"></i>บริการสินเชื่อ
         </h1>
         
         <div class="flex items-center space-x-2">
-            <!-- ปุ่มติดตั้ง PWA -->
             <button id="pwaInstallBtn" onclick="installPwaApp()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-2.5 py-1 rounded-lg shadow border border-emerald-500/50 flex items-center animate-pulse">
                 <i class="fa-solid fa-download mr-1"></i>ติดตั้งแอป
             </button>
-
             <div class="text-[10px] bg-slate-700/80 px-2 py-1 rounded-full border border-slate-600 text-slate-300">
                 UID: <span id="displayUid" class="font-mono text-indigo-300">Loading...</span>
             </div>
@@ -51,24 +49,38 @@
 
     <main class="max-w-md mx-auto p-4 space-y-4">
 
-        <!-- Banner แสดงสถานะการสมัครสินเชื่อ -->
-        <div id="statusBanner" class="hidden p-4 rounded-xl border text-xs space-y-2">
-            <!-- Rendered dynamically by JS (Pending / Approved / Rejected) -->
-        </div>
+        <!-- Banner แสดงสถานะการสมัคร / ไรเดอร์กำลังเดินทาง -->
+        <div id="statusBanner" class="hidden p-4 rounded-xl border text-xs space-y-2"></div>
 
-        <!-- Loan Dashboard (จะแสดงเฉพาะเมื่ออนุมัติแล้วเท่านั้น) -->
-        <div id="activeLoanCard" class="hidden rgb-border p-5 text-white shadow-2xl">
-            <div class="flex justify-between items-start border-b border-slate-700/60 pb-3 mb-3">
+        <!-- แดชบอร์ดสรุปสัญญา (Loan Dashboard) -->
+        <div id="activeLoanCard" class="hidden rgb-border p-5 text-white shadow-2xl space-y-4">
+            <div class="flex justify-between items-start border-b border-slate-700/60 pb-3">
                 <div>
-                    <span class="text-[11px] text-indigo-300 font-semibold uppercase tracking-wider">แดชบอร์ดสัญญาเงินกู้</span>
+                    <span class="text-[11px] text-indigo-300 font-semibold uppercase tracking-wider">แดชบอร์ดสรุปสัญญาเงินกู้</span>
                     <h2 class="text-2xl font-black text-emerald-400 mt-0.5" id="dashTotalDebt">0 ฿</h2>
-                    <p class="text-[11px] text-slate-400">อัตราดอกเบี้ย 20%</p>
+                    <p class="text-[10px] text-slate-400">อัตราดอกเบี้ย 20%</p>
                 </div>
-                <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs px-2.5 py-1 rounded-full font-medium">สัญญาอนุมัติ</span>
+                <span id="loanStatusBadge" class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs px-2.5 py-1 rounded-full font-medium">สัญญาอนุมัติ</span>
+            </div>
+
+            <!-- รายละเอียด Breakdown ยอดเงิน + ค่าปรับ -->
+            <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700/50 text-xs space-y-1.5">
+                <div class="flex justify-between text-slate-300">
+                    <span>เงินต้น:</span>
+                    <span id="breakdownPrincipal" class="font-medium">0 ฿</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>ดอกเบี้ย (20%):</span>
+                    <span id="breakdownInterest" class="font-medium">0 ฿</span>
+                </div>
+                <div id="fineRow" class="hidden flex justify-between text-rose-400 font-bold border-t border-slate-700/50 pt-1">
+                    <span>ค่าปรับชำระล่าช้า (วันละ 50 ฿):</span>
+                    <span id="breakdownFine">0 ฿</span>
+                </div>
             </div>
 
             <!-- Progress Bar -->
-            <div class="space-y-1 mb-4">
+            <div class="space-y-1">
                 <div class="flex justify-between text-xs font-medium">
                     <span class="text-slate-400">ชำระแล้ว (<span id="payPercentText">0</span>%)</span>
                     <span class="text-emerald-400" id="paidAmountText">0 / 0 ฿</span>
@@ -90,7 +102,7 @@
             <button id="tabBtnLog" onclick="switchTab('log')" class="flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">สัญญา / ประวัติ</button>
         </div>
 
-        <!-- 1. APPLY TAB (ฟอร์มสมัคร + ระบบ AI คัดกรอง) -->
+        <!-- 1. APPLY TAB (ฟอร์มสมัคร) -->
         <section id="tabApply" class="space-y-4">
             <form id="loanApplyForm" onsubmit="event.preventDefault(); submitApplication();" class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
                 <h3 class="text-base font-bold text-slate-200 border-b border-slate-700 pb-2">แบบฟอร์มยื่นขอสินเชื่อ</h3>
@@ -109,7 +121,7 @@
                     </select>
                 </div>
 
-                <!-- ข้อมูลส่วนตัว & อาชีพ (สำหรับ AI ตรวจสอบ) -->
+                <!-- ข้อมูลส่วนตัว & การติดต่อ -->
                 <div class="space-y-3">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -117,16 +129,55 @@
                             <input type="text" id="custName" required placeholder="นาย สมชาย ใจดี" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">เบอร์โทรศัพท์ <span class="text-rose-400">*</span></label>
+                            <label class="block text-xs text-slate-400 mb-1">เบอร์โทรศัพท์หลัก <span class="text-rose-400">*</span></label>
                             <input type="tel" id="custPhone" required maxlength="10" placeholder="08XXXXXXXX" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none">
                         </div>
                     </div>
 
-                    <!-- ฟิลด์คัดกรอง AI -->
+                    <!-- เบอร์สำรอง & ลิงก์ Facebook -->
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">ระบุอาชีพปัจจุบัน <span class="text-rose-400">*</span></label>
-                            <input type="text" id="custJob" required placeholder="เช่น พนักงานบริษัท, ค้าขาย" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none">
+                            <label class="block text-xs text-slate-400 mb-1">เบอร์โทรศัพท์สำรอง <span class="text-rose-400">*</span></label>
+                            <input type="tel" id="custPhoneBackup" required maxlength="10" placeholder="08XXXXXXXX" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">ลิงก์ Facebook <span class="text-rose-400">*</span></label>
+                            <input type="url" id="custFacebook" required placeholder="https://facebook.com/..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- ข้อมูลบัญชีรับเงิน (ระบุเงื่อนไขชื่อตรงกัน) -->
+                    <div class="p-3 bg-slate-900/80 rounded-lg border border-slate-700 space-y-2">
+                        <label class="block text-xs font-semibold text-indigo-400">ข้อมูลบัญชีธนาคารสำหรับรับเงินอนุมัติ</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] text-slate-400 mb-1">ธนาคาร <span class="text-rose-400">*</span></label>
+                                <select id="bankName" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none">
+                                    <option value="" disabled selected>-- เลือกธนาคาร --</option>
+                                    <option value="กสิกรไทย">กสิกรไทย (KBANK)</option>
+                                    <option value="ไทยพาณิชย์">ไทยพาณิชย์ (SCB)</option>
+                                    <option value="กรุงไทย">กรุงไทย (KTB)</option>
+                                    <option value="กรุงเทพ">กรุงเทพ (BBL)</option>
+                                    <option value="กรุงศรี">กรุงศรี (BAY)</option>
+                                    <option value="ออมสิน">ออมสิน (GSB)</option>
+                                    <option value="TTB">ทีทีบี (TTB)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-slate-400 mb-1">เลขที่บัญชี <span class="text-rose-400">*</span></label>
+                                <input type="text" id="bankAccountNo" required placeholder="XXX-X-XXXXX-X" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none">
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-amber-400 font-medium">
+                            <i class="fa-solid fa-triangle-exclamation mr-1"></i>คำเตือน: ชื่อบัญชีธนาคารต้องตรงกับชื่อ-นามสกุลบนบัตรประชาชนที่สมัครเท่านั้น
+                        </p>
+                    </div>
+
+                    <!-- อาชีพ & รายได้ (สำหรับ AI คัดกรอง) -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">อาชีพปัจจุบัน <span class="text-rose-400">*</span></label>
+                            <input type="text" id="custJob" required placeholder="เช่น พนักงานประจำ, ค้าขาย" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">รายได้ต่อเดือน (บาท) <span class="text-rose-400">*</span></label>
@@ -134,17 +185,25 @@
                         </div>
                     </div>
 
+                    <!-- ที่อยู่ & พิกัดสถานที่ -->
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">ที่อยู่ปัจจุบัน <span class="text-rose-400">*</span></label>
                         <textarea id="custAddress" required rows="2" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none"></textarea>
                     </div>
+
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">สถานที่ทำงาน / ร้านค้า <span class="text-rose-400">*</span></label>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs text-slate-400">สถานที่ทำงาน / ร้านค้า <span class="text-rose-400">*</span></label>
+                            <button type="button" onclick="getWorkLocation()" class="text-[10px] text-indigo-400 hover:underline">
+                                <i class="fa-solid fa-location-crosshairs mr-1"></i>ดึง พิกัด GPS
+                            </button>
+                        </div>
                         <textarea id="workAddress" required rows="2" placeholder="ชื่อสถานที่ทำงาน หรือจุดสังเกต" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none"></textarea>
+                        <input type="hidden" id="workGps">
                     </div>
                 </div>
 
-                <!-- แนบไฟล์รูปภาพ -->
+                <!-- แนบไฟล์รูปภาพ 2 รูป -->
                 <div class="space-y-3 pt-2 border-t border-slate-700">
                     <div>
                         <label class="block text-xs text-slate-400 mb-1"><i class="fa-solid fa-id-card mr-1 text-indigo-400"></i>1. รูปถ่ายหน้าบัตรประชาชน <span class="text-rose-400">*</span></label>
@@ -158,11 +217,11 @@
                     </div>
                 </div>
 
-                <!-- Checkbox & Anti-Bot -->
+                <!-- Checkbox ยอมรับสัญญา & Anti-Bot -->
                 <div class="space-y-2 pt-2 border-t border-slate-700">
                     <label class="flex items-start space-x-2 cursor-pointer">
                         <input type="checkbox" id="acceptContract" required class="mt-0.5 rounded bg-slate-900 border-slate-700 text-indigo-600">
-                        <span class="text-xs text-slate-300">ยอมรับข้อตกลงและเงื่อนไขสัญญากู้ยืมเงิน</span>
+                        <span class="text-xs text-slate-300">ยอมรับข้อตกลงสัญญากู้ยืมเงิน (กรณีชำระล่าช้ามีค่าปรับวันละ 50 บาท)</span>
                     </label>
                     <label class="flex items-center space-x-2 cursor-pointer bg-slate-900 p-2.5 rounded-lg border border-slate-700">
                         <input type="checkbox" id="botCheck" required class="w-4 h-4 rounded bg-slate-800 border-slate-600 text-emerald-500">
@@ -170,13 +229,13 @@
                     </label>
                 </div>
 
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-lg text-sm transition">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-lg text-sm transition shadow-lg shadow-indigo-600/30">
                     ส่งข้อมูลยื่นขอสินเชื่อ
                 </button>
             </form>
         </section>
 
-        <!-- 2. PAYMENT TAB -->
+        <!-- 2. PAYMENT TAB (ตัวเลือกชำระเงิน) -->
         <section id="tabPayment" class="hidden space-y-4">
             <div id="noLoanPayMsg" class="bg-slate-800 p-6 rounded-xl border border-slate-700 text-center text-slate-400">
                 <i class="fa-solid fa-circle-info text-3xl text-slate-500 mb-2"></i>
@@ -184,24 +243,82 @@
             </div>
 
             <div id="payContainer" class="hidden bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
-                <h3 class="text-sm font-bold text-slate-200 border-b border-slate-700 pb-2">ชำระเงินกู้</h3>
-                <button onclick="openQrModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-lg text-sm transition">
-                    <i class="fa-solid fa-qrcode mr-2"></i>แสดง QR Code และคัดลอกเบอร์ PromptPay
-                </button>
+                <h3 class="text-sm font-bold text-slate-200 border-b border-slate-700 pb-2">เลือกช่องทางการชำระเงิน</h3>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="selectPayOption('qr')" id="btnOptQr" class="p-3 bg-indigo-600/20 border-2 border-indigo-500 rounded-xl text-center space-y-1">
+                        <i class="fa-solid fa-qrcode text-indigo-400 text-xl"></i>
+                        <div class="text-xs font-bold text-white">สแกน QR Code</div>
+                    </button>
+                    <button onclick="selectPayOption('cash')" id="btnOptCash" class="p-3 bg-slate-900 border border-slate-700 rounded-xl text-center space-y-1 hover:border-slate-500">
+                        <i class="fa-solid fa-hand-holding-dollar text-emerald-400 text-xl"></i>
+                        <div class="text-xs font-bold text-slate-300">นัดชำระเงินสด</div>
+                    </button>
+                </div>
+
+                <!-- 1. ชำระผ่าน QR Code -->
+                <div id="qrPaySection" class="space-y-3 pt-2">
+                    <label class="block text-xs text-slate-400 font-medium">รูปแบบการชำระเงิน</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center justify-between p-2.5 bg-slate-900 rounded-lg border border-slate-700 cursor-pointer">
+                            <div class="flex items-center space-x-2">
+                                <input type="radio" name="payType" value="full" checked onchange="updateQrAmount()" class="text-indigo-600">
+                                <span class="text-xs text-white">จ่ายตัดต้น + ดอกเบี้ย</span>
+                            </div>
+                            <span id="fullPayAmountText" class="text-xs font-bold text-emerald-400">0 ฿</span>
+                        </label>
+                        <label class="flex items-center justify-between p-2.5 bg-slate-900 rounded-lg border border-slate-700 cursor-pointer">
+                            <div class="flex items-center space-x-2">
+                                <input type="radio" name="payType" value="interest" onchange="updateQrAmount()" class="text-indigo-600">
+                                <span class="text-xs text-white">จ่ายเฉพาะดอกเบี้ย (เงินต้นไม่ลด)</span>
+                            </div>
+                            <span id="interestPayAmountText" class="text-xs font-bold text-amber-400">0 ฿</span>
+                        </label>
+                    </div>
+
+                    <button onclick="openQrModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
+                        <i class="fa-solid fa-qrcode mr-1"></i>แสดง QR Code สำหรับสแกนจ่าย
+                    </button>
+                </div>
+
+                <!-- 2. นัดชำระเงินสดกับไรเดอร์ -->
+                <div id="cashPaySection" class="hidden space-y-3 pt-2">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">เลือกรอบเวลานัดหมาย (ตัดรอบ 18:00 น.) <span class="text-rose-400">*</span></label>
+                        <select id="cashTimeSlot" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none">
+                            <option value="เช้า (09:00 - 12:00 น.)">รอบเช้า (09:00 - 12:00 น.)</option>
+                            <option value="บ่าย (13:00 - 16:00 น.)">รอบบ่าย (13:00 - 16:00 น.)</option>
+                            <option value="เย็น (16:00 - 18:00 น.)">รอบเย็น (16:00 - 18:00 น.) [รอบสุดท้าย]</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">จุดสังเกตบ้าน / ลักษณะบ้าน <span class="text-rose-400">*</span></label>
+                        <textarea id="houseLandmark" rows="2" placeholder="เช่น บ้าน 2 ชั้น สีฟ้า หลังคาสีแดง ตรงข้ามร้านค้า" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none"></textarea>
+                    </div>
+
+                    <button onclick="submitCashRequest()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">
+                        <i class="fa-solid fa-motorcycle mr-1"></i>ยืนยันส่งนัดหมายชำระเงินสด
+                    </button>
+                </div>
             </div>
         </section>
 
-        <!-- 3. LOG TAB (แสดงสัญญา) -->
+        <!-- 3. LOG TAB (แสดงสัญญา & ประวัติใบเสร็จ) -->
         <section id="tabLog" class="hidden space-y-3">
-            <h3 class="text-xs font-semibold text-slate-400">สัญญากู้ยืมเงินอิเล็กทรอนิกส์</h3>
+            <h3 class="text-xs font-semibold text-slate-400">หนังสือสัญญา & ประวัติการชำระเงิน</h3>
             <div id="eContractContainer" class="bg-slate-800 border border-slate-700 rounded-xl p-4 text-xs space-y-2">
                 <p class="text-center text-slate-500 py-4">ไม่พบข้อมูลสัญญา</p>
+            </div>
+            
+            <div id="receiptHistoryContainer" class="space-y-2 pt-2">
+                <!-- Dynamic Receipts Rendered Here -->
             </div>
         </section>
 
     </main>
 
-    <!-- Modal Pop-up QR Code + คัดลอกเบอร์ + ดาวน์โหลด -->
+    <!-- Modal QR Code PromptPay -->
     <div id="qrModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 w-full max-w-sm space-y-4 text-center">
             <div class="flex justify-between items-center border-b border-slate-700 pb-2">
@@ -213,17 +330,15 @@
                 <img id="modalQrImg" src="" alt="PromptPay QR" class="w-44 h-44 mx-auto">
             </div>
 
-            <!-- ปุ่มดาวน์โหลด QR และ คัดลอกเบอร์ -->
             <div class="grid grid-cols-2 gap-2">
                 <a id="downloadQrBtn" href="#" download="promptpay-qr.png" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-2 rounded-lg font-medium transition">
                     <i class="fa-solid fa-download mr-1"></i>ดาวน์โหลด QR
                 </a>
                 <button onclick="copyPromptPayNumber()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-2 rounded-lg font-medium transition">
-                    <i class="fa-solid fa-copy mr-1"></i>ก๊อปปี้เบอร์โทร
+                    <i class="fa-solid fa-copy mr-1"></i>ก๊อปปี้เบอร์
                 </button>
             </div>
 
-            <!-- แนบสลิป -->
             <div class="text-left space-y-1.5 pt-2 border-t border-slate-700">
                 <label class="block text-xs text-slate-400">แนบสลิปการโอนเงิน</label>
                 <input type="file" id="fileSlip" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded file:bg-emerald-600 file:text-white border border-slate-700 rounded bg-slate-900">
@@ -238,14 +353,15 @@
     <script>
         const PROMPTPAY_NUMBER = "0658351446";
         let deferredPrompt;
+        let selectedPayAmount = 0;
 
         document.addEventListener("DOMContentLoaded", () => {
             initDeviceId();
             checkLoanStatus();
-            listenForBuzzerSignal(); // ฟังเสียงสัญญาณตามตัว
+            listenForBuzzerSignal();
         });
 
-        // PWA Installer
+        // PWA Installation Setup
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -269,19 +385,30 @@
             document.getElementById('displayUid').innerText = uid;
         }
 
-        // ระบบ AI คัดกรองความเสี่ยงอัตโนมัติ (AI Screener)
+        // กฎปัดเศษสตางค์ (< 0.50 ปัดลง / >= 0.50 ปัดขึ้น)
+        function roundMoney(amount) {
+            return Math.round(amount);
+        }
+
+        // ดึงพิกัด GPS
+        function getWorkLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const gpsStr = `${pos.coords.latitude},${pos.coords.longitude}`;
+                    document.getElementById('workGps').value = gpsStr;
+                    alert('บันทึกพิกัด GPS เรียบร้อยแล้ว');
+                }, () => alert('ไม่สามารถดึงพิกัด GPS ได้'));
+            }
+        }
+
+        // ระบบ AI คัดกรองความเสี่ยง
         function aiRiskScreening(job, income, amount) {
             const riskyJobs = ['ว่างงาน', 'ตกงาน', 'ไม่มี', 'รับจ้างทั่วไป', 'หมุนเงิน'];
-            const cleanJob = job.trim().toLowerCase();
-            
-            // ตรวจสอบคำคีย์เวิร์ดเสี่ยง
-            const isRiskyJob = riskyJobs.some(keyword => cleanJob.includes(keyword));
-            
-            // ตรวจสอบความสอดคล้องของรายได้ (รายได้น้อยกว่า 3,000 หรือต่ำกว่า 3 เท่าของวงเงินกู้)
+            const isRiskyJob = riskyJobs.some(kw => job.trim().toLowerCase().includes(kw));
             const isLowIncome = parseFloat(income) < 3000 || parseFloat(income) < (parseFloat(amount) * 2);
 
             if (isRiskyJob || isLowIncome) {
-                return { passed: false, reason: 'อาชีพหรือรายได้ไม่ผ่านเกณฑ์การประเมินความเสี่ยงขั้นต่ำของระบบ' };
+                return { passed: false, reason: 'อาชีพหรือรายได้ไม่ผ่านเกณฑ์ประเมินความเสี่ยงขั้นต่ำ' };
             }
             return { passed: true };
         }
@@ -294,43 +421,41 @@
             const job = document.getElementById('custJob').value;
             const income = document.getElementById('custIncome').value;
 
-            // ให้ AI ทำการคัดกรองก่อน
             const aiResult = aiRiskScreening(job, income, amount);
             if (!aiResult.passed) {
-                alert(`[ระบบ AI คัดกรองอัตโนมัติ]\nการยื่นขอสินเชื่อไม่ผ่านการอนุมัติ: ${aiResult.reason}`);
-                
-                // บันทึกสถานะปฏิเสธโดย AI
-                const rejectedPayload = {
-                    status: 'REJECTED',
-                    reason: aiResult.reason,
-                    timestamp: new Date().toLocaleString('th-TH')
-                };
+                alert(`[ระบบ AI คัดกรองอัตโนมัติ]\nปฏิเสธการอนุมัติ: ${aiResult.reason}`);
+                const rejectedPayload = { status: 'REJECTED', reason: aiResult.reason };
                 localStorage.setItem('active_loan', JSON.stringify(rejectedPayload));
                 checkLoanStatus();
                 return;
             }
 
-            // หากผ่าน AI บันทึกเป็นสถานะ "รอการตรวจสอบ" (PENDING) ให้แอดมินโทรเช็ก
             const payload = {
                 uid: localStorage.getItem('device_uid'),
                 amount: amount,
                 name: name,
                 phone: phone,
+                phoneBackup: document.getElementById('custPhoneBackup').value,
+                facebook: document.getElementById('custFacebook').value,
+                bankName: document.getElementById('bankName').value,
+                bankAccountNo: document.getElementById('bankAccountNo').value,
                 job: job,
                 income: income,
                 address: document.getElementById('custAddress').value,
                 work: document.getElementById('workAddress').value,
+                workGps: document.getElementById('workGps').value,
                 paidAmount: 0,
+                daysOverdue: 0, // วันที่ค้างชำระ (แอดมินอัปเดต)
                 timestamp: new Date().toLocaleString('th-TH'),
-                status: 'PENDING' // สถานะเริ่มต้นเป็น รอตรวจสอบ
+                status: 'PENDING'
             };
 
             localStorage.setItem('active_loan', JSON.stringify(payload));
-            alert('ส่งข้อมูลเรียบร้อยแล้ว อยู่ระหว่างการตรวจสอบเอกสารและโทรยืนยันตัวตนจากเจ้าหน้าที่');
+            alert('ส่งข้อมูลเรียบร้อยแล้ว อยู่ระหว่างการตรวจสอบเอกสารและโทรยืนยันตัวตน');
             checkLoanStatus();
         }
 
-        // ตรวจสอบสถานะการอนุมัติ
+        // ตรวจสอบสถานะสัญญา
         function checkLoanStatus() {
             const activeLoan = localStorage.getItem('active_loan');
             const banner = document.getElementById('statusBanner');
@@ -346,25 +471,15 @@
             const loan = JSON.parse(activeLoan);
 
             if (loan.status === 'PENDING') {
-                banner.className = "p-4 rounded-xl border bg-amber-500/10 border-amber-500/30 text-amber-300 text-xs space-y-1.5";
-                banner.innerHTML = `
-                    <div class="font-bold flex items-center text-amber-400 text-sm">
-                        <i class="fa-solid fa-clock mr-2"></i>อยู่ระหว่างการตรวจสอบเอกสาร
-                    </div>
-                    <p class="text-slate-300">ระบบได้รับข้อมูลเรียบร้อยแล้ว เจ้าหน้าที่กำลังดำเนินการตรวจสอบข้อมูลและจะโทรติดต่อยืนยันตัวตนก่อนทำการอนุมัติ</p>
-                `;
+                banner.className = "p-4 rounded-xl border bg-amber-500/10 border-amber-500/30 text-amber-300 text-xs space-y-1";
+                banner.innerHTML = `<div class="font-bold flex items-center text-amber-400"><i class="fa-solid fa-clock mr-2"></i>อยู่ระหว่างการตรวจสอบเอกสาร</div><p class="text-slate-300">เจ้าหน้าที่กำลังตรวจสอบข้อมูลก่อนอนุมัติ</p>`;
                 banner.classList.remove('hidden');
                 applyForm.classList.add('hidden');
                 activeLoanCard.classList.add('hidden');
 
             } else if (loan.status === 'REJECTED') {
-                banner.className = "p-4 rounded-xl border bg-rose-500/10 border-rose-500/30 text-rose-300 text-xs space-y-1.5";
-                banner.innerHTML = `
-                    <div class="font-bold flex items-center text-rose-400 text-sm">
-                        <i class="fa-solid fa-circle-xmark mr-2"></i>ไม่ผ่านการอนุมัติสินเชื่อ
-                    </div>
-                    <p class="text-slate-300">สาเหตุ: ${loan.reason || 'ข้อมูลไม่ผ่านเกณฑ์การประเมินความเสี่ยง'}</p>
-                `;
+                banner.className = "p-4 rounded-xl border bg-rose-500/10 border-rose-500/30 text-rose-300 text-xs space-y-1";
+                banner.innerHTML = `<div class="font-bold flex items-center text-rose-400"><i class="fa-solid fa-circle-xmark mr-2"></i>ไม่ผ่านการอนุมัติ</div><p class="text-slate-300">สาเหตุ: ${loan.reason || 'ไม่ผ่านเกณฑ์ประเมิน'}</p>`;
                 banner.classList.remove('hidden');
                 applyForm.classList.add('hidden');
                 activeLoanCard.classList.add('hidden');
@@ -374,25 +489,52 @@
                 applyForm.classList.add('hidden');
                 activeLoanCard.classList.remove('hidden');
 
-                // Render Dashboard
+                // คำนวณยอดเงิน + ค่าปรับ 50 บ./วัน
                 const principal = parseFloat(loan.amount);
-                const totalDebt = principal + (principal * 0.20);
+                const interest = principal * 0.20;
+                const fineDays = parseInt(loan.daysOverdue || 0);
+                const fineTotal = fineDays * 50;
+                const totalDebt = roundMoney(principal + interest + fineTotal);
+
                 document.getElementById('dashTotalDebt').innerText = totalDebt.toLocaleString() + ' ฿';
+                document.getElementById('breakdownPrincipal').innerText = roundMoney(principal).toLocaleString() + ' ฿';
+                document.getElementById('breakdownInterest').innerText = roundMoney(interest).toLocaleString() + ' ฿';
+                
+                if (fineDays > 0) {
+                    document.getElementById('fineRow').classList.remove('hidden');
+                    document.getElementById('breakdownFine').innerText = roundMoney(fineTotal).toLocaleString() + ' ฿';
+                }
+
                 document.getElementById('noLoanPayMsg').classList.add('hidden');
                 document.getElementById('payContainer').classList.remove('hidden');
+                
+                // คำนวณตัวเลือกจ่าย
+                document.getElementById('fullPayAmountText').innerText = totalDebt.toLocaleString() + ' ฿';
+                document.getElementById('interestPayAmountText').innerText = roundMoney(interest).toLocaleString() + ' ฿';
+                updateQrAmount();
+
+            } else if (loan.status === 'CLEARED') {
+                banner.className = "p-4 rounded-xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 text-xs text-center space-y-2";
+                banner.innerHTML = `
+                    <div class="font-bold text-base text-emerald-400"><i class="fa-solid fa-award mr-2"></i>ปิดสัญญาเรียบร้อยแล้ว</div>
+                    <p class="text-slate-300">ขอบคุณที่ชำระเงินตรงเวลา คุณสามารถยื่นขอสินเชื่อรอบใหม่ได้ทันที</p>
+                    <button onclick="localStorage.removeItem('active_loan'); checkLoanStatus();" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold mt-2">ยื่นขอสินเชื่อรอบใหม่</button>
+                `;
+                banner.classList.remove('hidden');
+                applyForm.classList.add('hidden');
+                activeLoanCard.classList.add('hidden');
             }
         }
 
-        // ระบบส่งสัญญาณเสียงตามตัว (Audio Beep Alert)
+        // ระบบส่งสัญญาณเสียงเตือน (Find My Device Alert)
         function triggerBuzzerSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                
                 function playBeep(freq, duration, delay) {
                     setTimeout(() => {
                         const osc = audioCtx.createOscillator();
                         const gain = audioCtx.createGain();
-                        osc.type = 'square'; // เสียง ตี๊ด สไตล์บิ๊ปเตือน
+                        osc.type = 'square';
                         osc.frequency.value = freq;
                         gain.gain.value = 0.8;
                         osc.connect(gain);
@@ -401,18 +543,12 @@
                         osc.stop(audioCtx.currentTime + duration);
                     }, delay);
                 }
-
-                // เล่นเสียง ตี๊ด! ตี๊ด! ตี๊ด! 3 ครั้งรวด
                 playBeep(2500, 0.15, 0);
                 playBeep(2500, 0.15, 250);
                 playBeep(2500, 0.30, 500);
-
-            } catch (e) {
-                console.log("Audio not allowed yet");
-            }
+            } catch (e) { console.log("Audio not allowed"); }
         }
 
-        // จำลองฟังการส่งสัญญาณเสียงจากฝั่งแอดมิน
         function listenForBuzzerSignal() {
             window.addEventListener('storage', (e) => {
                 if (e.key === 'trigger_sound_uid' && e.newValue === localStorage.getItem('device_uid')) {
@@ -421,12 +557,41 @@
             });
         }
 
-        // QR & PromptPay Actions
-        function openQrModal() {
+        // Payment Option Selector
+        function selectPayOption(type) {
+            const btnQr = document.getElementById('btnOptQr');
+            const btnCash = document.getElementById('btnOptCash');
+            const qrSec = document.getElementById('qrPaySection');
+            const cashSec = document.getElementById('cashPaySection');
+
+            if (type === 'qr') {
+                btnQr.className = "p-3 bg-indigo-600/20 border-2 border-indigo-500 rounded-xl text-center space-y-1";
+                btnCash.className = "p-3 bg-slate-900 border border-slate-700 rounded-xl text-center space-y-1 hover:border-slate-500";
+                qrSec.classList.remove('hidden');
+                cashSec.classList.add('hidden');
+            } else {
+                btnCash.className = "p-3 bg-emerald-600/20 border-2 border-emerald-500 rounded-xl text-center space-y-1";
+                btnQr.className = "p-3 bg-slate-900 border border-slate-700 rounded-xl text-center space-y-1 hover:border-slate-500";
+                cashSec.classList.remove('hidden');
+                qrSec.classList.add('hidden');
+            }
+        }
+
+        function updateQrAmount() {
             const loan = JSON.parse(localStorage.getItem('active_loan') || '{}');
-            const amount = loan.amount ? parseFloat(loan.amount) * 1.2 : 0;
-            const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${amount}.png`;
+            if (!loan.amount) return;
             
+            const principal = parseFloat(loan.amount);
+            const interest = principal * 0.20;
+            const fineTotal = parseInt(loan.daysOverdue || 0) * 50;
+            const totalDebt = principal + interest + fineTotal;
+
+            const payType = document.querySelector('input[name="payType"]:checked').value;
+            selectedPayAmount = payType === 'full' ? roundMoney(totalDebt) : roundMoney(interest);
+        }
+
+        function openQrModal() {
+            const qrUrl = `https://promptpay.io/${PROMPTPAY_NUMBER}/${selectedPayAmount}.png`;
             document.getElementById('modalQrImg').src = qrUrl;
             document.getElementById('downloadQrBtn').href = qrUrl;
             document.getElementById('qrModal').classList.remove('hidden');
@@ -436,7 +601,19 @@
 
         function copyPromptPayNumber() {
             navigator.clipboard.writeText(PROMPTPAY_NUMBER);
-            alert(`ก๊อปปี้เบอร์ PromptPay (${PROMPTPAY_NUMBER}) เรียบร้อยแล้ว`);
+            alert(`คัดลอกเบอร์ PromptPay (${PROMPTPAY_NUMBER}) เรียบร้อยแล้ว`);
+        }
+
+        function submitCashRequest() {
+            const timeSlot = document.getElementById('cashTimeSlot').value;
+            const landmark = document.getElementById('houseLandmark').value;
+
+            if (!landmark) {
+                alert('กรุณาระบุจุดสังเกตบ้านหรือลักษณะบ้าน');
+                return;
+            }
+
+            alert(`ส่งนัดหมายชำระเงินสดสำเร็จ!\nรอบเวลา: ${timeSlot}\nไรเดอร์จะเดินทางไปตามพิกัดและจุดสังเกตที่ระบุ`);
         }
 
         function switchTab(tab) {
