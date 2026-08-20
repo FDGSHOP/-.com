@@ -3,126 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แอดมิน - สินเชื่อออนไลน์สำหรับคนพะเยา</title>
+    <title>Admin - สินเชื่อคนพะเยา</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style> * { font-family: 'Prompt', sans-serif; } body { background-color: #0f172a; color: #f8fafc; } </style>
+    <style>* { font-family: 'Prompt', sans-serif; }</style>
 </head>
-<body class="p-4 sm:p-6 min-h-screen">
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 sm:p-6">
 
-    <!-- Header -->
-    <header class="flex flex-col sm:flex-row justify-between items-center pb-6 border-b border-slate-800 gap-4">
-        <div>
-            <h1 class="text-xl font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-shield-halved text-indigo-500"></i> Admin Center - สินเชื่อคนพะเยา
-            </h1>
-            <p class="text-xs text-slate-400">ระบบคุม UID, ตรวจรับเงินสด และบันทึกดอกเบี้ยลอยรายวัน</p>
-        </div>
-        
-        <!-- ปุ่มสแกน QR เงินสดหน้าร้าน -->
-        <button onclick="openCashScanner()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-bold flex items-center gap-2">
-            <i class="fa-solid fa-qrcode text-base"></i> สแกน QR รับเงินสดหน้าร้าน
-        </button>
-    </header>
+    <div class="max-w-6xl mx-auto space-y-6">
+        <header class="flex flex-col sm:flex-row justify-between items-center pb-4 border-b border-slate-800 gap-4">
+            <div>
+                <h1 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-indigo-500"></i> Admin Panel - สินเชื่อคนพะเยา
+                </h1>
+                <p class="text-xs text-slate-400">จัดการคำขอกู้ ตรวจรับเงินสดหน้าร้าน และบันทึกดอกเบี้ยลอย</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="scanCashQr()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2.5 rounded-xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode text-sm"></i> สแกน QR รับเงินสดหน้าร้าน
+                </button>
+                <button onclick="loadAllData()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs px-3 py-2.5 rounded-xl font-bold">
+                    <i class="fa-solid fa-rotate"></i>
+                </button>
+            </div>
+        </header>
 
-    <!-- Dispatch Signal by UID -->
-    <section class="my-4 bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center gap-3">
-        <span class="text-xs text-slate-300 shrink-0 font-bold">ส่งสัญญาณตรงด้วย UID:</span>
-        <input type="text" id="adminUidTarget" placeholder="กรอก UID ลูกค้า (เช่น PY-892102)..." class="bg-slate-950 px-3 py-2 rounded-xl text-xs text-white border border-slate-700 outline-none w-full font-mono">
-        <button onclick="sendSignalByUid('REMIND')" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-2 rounded-xl shrink-0 font-semibold">ส่งสัญญาณเตือนชำระ</button>
-        <button onclick="sendSignalByUid('APPROVE')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-2 rounded-xl shrink-0 font-semibold">ส่งสัญญาณอนุมัติ</button>
-    </section>
+        <main class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-indigo-400"></i> กระดานควบคุม UID และสัญญาลูกค้า
+            </h3>
 
-    <!-- Table Daily Tasks -->
-    <main class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-        <h3 class="text-sm font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-list-check text-indigo-400"></i> รายการลูกค้านัดเก็บเงินประจำวัน
-        </h3>
-        
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs text-slate-300">
-                <thead class="bg-slate-950 text-slate-400">
-                    <tr>
-                        <th class="p-3">UID ลูกค้า</th>
-                        <th class="p-3">วงเงินกู้</th>
-                        <th class="p-3">ค่างวดปกติ</th>
-                        <th class="p-3 text-amber-400">ดอกเบี้ยลอย/วัน</th>
-                        <th class="p-3 text-center">จัดการการชำระเงิน</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800">
-                    <tr>
-                        <td class="p-3 font-mono text-indigo-400 font-bold">PY-582910</td>
-                        <td class="p-3 font-bold text-white">5,000 ฿</td>
-                        <td class="p-3 font-bold text-emerald-400">857 ฿</td>
-                        <td class="p-3 font-bold text-amber-400">143 ฿</td>
-                        <td class="p-3 text-center space-x-1">
-                            <button onclick="recordPayment('PY-582910', 'FULL')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold">
-                                Cut-Off (ตัดต้น+ดอก)
-                            </button>
-                            <button onclick="recordPayment('PY-582910', 'INTEREST_ONLY')" class="bg-amber-600 hover:bg-amber-500 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold">
-                                Pay Interest (ดอกลอย)
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </main>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                        <tr>
+                            <th class="p-3">เลขสัญญา</th>
+                            <th class="p-3">UID ลูกค้า</th>
+                            <th class="p-3">เงินต้น</th>
+                            <th class="p-3">ยอดรวมดอก</th>
+                            <th class="p-3">งวดปกติ</th>
+                            <th class="p-3 text-amber-400">ดอกลอย</th>
+                            <th class="p-3 text-emerald-400">คงเหลือ</th>
+                            <th class="p-3">สถานะ</th>
+                            <th class="p-3 text-center">จัดการอนุมัติ / ตัดยอด</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody" class="divide-y divide-slate-800">
+                        <tr><td colspan="9" class="p-4 text-center text-slate-500">กำลังโหลดข้อมูล...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
 
     <script>
-        // บันทึกการชำระเงินจากฝั่งแอดมิน
-        function recordPayment(uid, payType) {
-            if (payType === 'FULL') {
-                Swal.fire({
-                    icon: 'success',
-                    title: `รับชำระค่างวดปกติ (${uid})`,
-                    text: 'ระบบหักยอดเงินต้นและดอกเบี้ยตามสัญญาเรียบร้อยแล้ว',
-                    confirmButtonColor: '#10b981'
-                });
-            } else if (payType === 'INTEREST_ONLY') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: `รับชำระเฉพาะดอกเบี้ย - ดอกลอย (${uid})`,
-                    text: 'บันทึกการรับดอกเบี้ยประจำวันเรียบร้อยแล้ว (ยอดเงินต้นคงเหลือจะไม่ลดลง)',
-                    confirmButtonColor: '#f59e0b'
-                });
+        const API_URL = "https://script.google.com/macros/s/AKfycbxWsCZty6r1n5WbmvKZUGu85Wft-0tatAMjU7ou8RgSjfQ2ZMv3yvCnXY11ZOIabPa0sg/exec";
+
+        async function loadAllData() {
+            try {
+                const res = await fetch(`${API_URL}?action=admin_fetch_all`);
+                const response = await res.json();
+                const list = response.data || [];
+
+                const tbody = document.getElementById('adminTableBody');
+                if (list.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-500">ไม่พบสัญญากู้ในระบบ</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = list.reverse().map(item => `
+                    <tr>
+                        <td class="p-3 font-mono text-slate-400">${item.contract_id}</td>
+                        <td class="p-3 font-mono text-indigo-400 font-bold">${item.uid}</td>
+                        <td class="p-3">${Number(item.principal).toLocaleString()} ฿</td>
+                        <td class="p-3">${Number(item.total_with_interest).toLocaleString()} ฿</td>
+                        <td class="p-3 font-bold text-emerald-400">${Number(item.installment_amount).toLocaleString()} ฿</td>
+                        <td class="p-3 font-bold text-amber-400">${Number(item.floating_interest).toLocaleString()} ฿</td>
+                        <td class="p-3 font-extrabold text-white">${Number(item.remaining_balance).toLocaleString()} ฿</td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                item.status === 'approved' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' :
+                                item.status === 'pending' ? 'bg-amber-950 text-amber-400 border border-amber-800' :
+                                item.status === 'closed' ? 'bg-slate-800 text-slate-400' : 'bg-rose-950 text-rose-400'
+                            }">${item.status}</span>
+                        </td>
+                        <td class="p-3 text-center space-x-1">
+                            ${item.status === 'pending' ? `
+                                <button onclick="approveLoan('${item.uid}', 'approved')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded text-[10px] font-bold">อนุมัติ</button>
+                                <button onclick="approveLoan('${item.uid}', 'rejected')" class="bg-rose-600 hover:bg-rose-500 text-white px-2 py-1 rounded text-[10px] font-bold">ปฏิเสธ</button>
+                            ` : item.status === 'approved' ? `
+                                <button onclick="adminPay('${item.uid}', 'full', ${item.installment_amount})" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded text-[10px] font-bold">ตัดต้น+ดอก</button>
+                                <button onclick="adminPay('${item.uid}', 'interest_only', ${item.floating_interest})" class="bg-amber-600 hover:bg-amber-500 text-white px-2 py-1 rounded text-[10px] font-bold">รับดอกลอย</button>
+                            ` : `-`}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error("Load Data Error:", e);
             }
         }
 
-        // ส่งสัญญาณไปยังเครื่องลูกค้าด้วย UID
-        function sendSignalByUid(type) {
-            const uid = document.getElementById('adminUidTarget').value.trim();
-            if(!uid) {
-                Swal.fire({ icon: 'error', title: 'กรุณากรอก UID ลูกค้าก่อนส่งสัญญาณ' });
-                return;
-            }
-            Swal.fire({
-                icon: 'success',
-                title: 'ส่งสัญญาณเรียบร้อย!',
-                text: `สัญญาณประเภท ${type} ถูกยิงไปยังเครื่อง ${uid} แล้ว`,
-                confirmButtonColor: '#4f46e5'
-            });
+        async function approveLoan(uid, status) {
+            Swal.fire({ title: 'กำลังทำรายการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'admin_approve', uid: uid, status: status })
+                });
+                const data = await res.json();
+                if(data.status === 'success') {
+                    Swal.fire({ icon: 'success', title: `ปรับสถานะเป็น ${status} เรียบร้อย` });
+                    loadAllData();
+                }
+            } catch (e) { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด' }); }
         }
 
-        // จำลองระบบสแกน QR Code เงินสด
-        function openCashScanner() {
+        async function adminPay(uid, payType, amount) {
+            Swal.fire({ title: 'กำลังบันทึกการชำระ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'payment',
+                        uid: uid,
+                        pay_type: payType,
+                        pay_amount: amount,
+                        method: 'cash'
+                    })
+                });
+                const data = await res.json();
+                if(data.status === 'success') {
+                    Swal.fire({ icon: 'success', title: 'บันทึกรายการสำเร็จ' });
+                    loadAllData();
+                }
+            } catch (e) { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด' }); }
+        }
+
+        function scanCashQr() {
             Swal.fire({
-                title: 'กล้องสแกน QR Code รับเงินสด',
-                text: 'กำลังเปิดกล้องเพื่ออ่าน QR Code จากหน้าจอลูกค้า...',
+                title: 'สแกน QR / ระบุ UID เพื่อรับเงินสด',
                 input: 'text',
-                inputPlaceholder: 'หรือกรอกรหัส QR/UID เงินสดตรงนี้...',
+                inputPlaceholder: 'กรอกรหัส UID ลูกค้า (เช่น PY-892102)',
                 showCancelButton: true,
-                confirmButtonText: 'ยืนยันตัดยอดเงินสด',
+                confirmButtonText: 'ถัดไป',
                 confirmButtonColor: '#10b981'
             }).then((res) => {
                 if(res.isConfirmed && res.value) {
-                    Swal.fire({ icon: 'success', title: 'สแกนสำเร็จ!', text: `รับเงินสดและตัดยอดสำหรับ UID: ${res.value} เรียบร้อยแล้ว` });
+                    const uid = res.value.trim();
+                    Swal.fire({
+                        title: `เลือกประเภทการตัดยอดเงินสด (${uid})`,
+                        showDenyButton: true,
+                        confirmButtonText: 'ตัดค่างวดปกติ (ต้น+ดอก)',
+                        denyButtonText: 'รับเฉพาะดอกลอย (เงินต้นไม่ลด)',
+                        confirmButtonColor: '#10b981',
+                        denyButtonColor: '#f59e0b'
+                    }).then(async (payRes) => {
+                        if (payRes.isConfirmed) {
+                            adminPay(uid, 'full', prompt('ระบุยอดเงินสดที่รับ:'));
+                        } else if (payRes.isDenied) {
+                            adminPay(uid, 'interest_only', prompt('ระบุยอดดอกลอยที่รับ:'));
+                        }
+                    });
                 }
             });
         }
+
+        loadAllData();
     </script>
 </body>
 </html>
