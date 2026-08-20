@@ -6,6 +6,8 @@
     <title>บริการขอสินเชื่อ - EasyLoan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         .rgb-border { position: relative; background: #1e293b; border-radius: 1rem; }
         .rgb-border::before {
@@ -18,157 +20,80 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between">
 
-    <!-- Header & PWA Install -->
     <header class="p-3 bg-slate-800 border-b border-slate-700 sticky top-0 z-50 flex justify-between items-center shadow-lg">
         <h1 class="text-sm font-bold text-indigo-400 flex items-center">
             <i class="fa-solid fa-shield-halved mr-1.5 text-indigo-500"></i> EasyLoan Customer
         </h1>
-        <button onclick="installPwaApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-lg shadow flex items-center">
-            <i class="fa-solid fa-download mr-1"></i>ติดตั้งแอป
-        </button>
+        <div class="flex items-center space-x-2">
+            <button onclick="resetClientData()" class="bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded">ล้างข้อมูลค้าง</button>
+            <button onclick="alert('ระบบบันทึก Bookmark PWA เรียบร้อยแล้ว')" class="bg-emerald-600 text-white text-[11px] font-semibold px-2.5 py-1 rounded-lg">ติดตั้งแอป</button>
+        </div>
     </header>
 
-    <!-- Main Mobile Container -->
     <main class="w-full max-w-md mx-auto p-4 flex-grow space-y-4">
-        
-        <!-- Status Banner -->
         <div id="statusBanner" class="hidden p-4 rounded-xl border text-xs space-y-2"></div>
 
-        <!-- Active Loan Dashboard Card -->
+        <!-- Card สรุปเมื่ออนุมัติ -->
         <div id="activeLoanCard" class="hidden rgb-border p-5 text-white shadow-2xl space-y-4">
             <div class="flex justify-between items-start border-b border-slate-700/60 pb-3">
                 <div>
-                    <span class="text-[11px] text-indigo-300 font-semibold uppercase tracking-wider">แดชบอร์ดสรุปสัญญาเงินกู้</span>
+                    <span class="text-[11px] text-indigo-300 font-semibold uppercase">แดชบอร์ดสรุปสัญญาเงินกู้</span>
                     <h2 class="text-3xl font-black text-emerald-400 mt-0.5" id="dashTotalDebt">0 ฿</h2>
-                    <p class="text-[10px] text-slate-400">ปัดเศษสตางค์อัตโนมัติ (< 0.50 ปัดลง / >= 0.50 ปัดขึ้น)</p>
                 </div>
                 <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs px-2.5 py-1 rounded-full font-medium">สัญญาอนุมัติ</span>
             </div>
-
             <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700/50 text-xs space-y-1.5">
-                <div class="flex justify-between text-slate-300">
-                    <span>เงินต้น:</span>
-                    <span id="breakdownPrincipal" class="font-medium">0 ฿</span>
-                </div>
-                <div class="flex justify-between text-slate-300">
-                    <span>ดอกเบี้ย (20%):</span>
-                    <span id="breakdownInterest" class="font-medium">0 ฿</span>
-                </div>
+                <div class="flex justify-between"><span>เงินต้น:</span><span id="breakdownPrincipal">0 ฿</span></div>
+                <div class="flex justify-between"><span>ดอกเบี้ย (20%):</span><span id="breakdownInterest">0 ฿</span></div>
                 <div id="fineRow" class="hidden flex justify-between text-rose-400 font-bold border-t border-slate-700/50 pt-1">
-                    <span>ค่าปรับล่าช้า (วันละ 50 ฿):</span>
-                    <span id="breakdownFine">0 ฿</span>
+                    <span>ค่าปรับล่าช้า (วันละ 50 ฿):</span><span id="breakdownFine">0 ฿</span>
                 </div>
             </div>
+        </div>
 
-            <button onclick="switchTab('payment')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition shadow-lg shadow-emerald-600/30">
-                <i class="fa-solid fa-wallet mr-1.5"></i>ชำระเงิน
+        <!-- แบบฟอร์มยื่นกู้ -->
+        <form id="loanApplyForm" onsubmit="event.preventDefault(); submitApplication();" class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+            <h3 class="text-xs font-bold text-slate-200 border-b border-slate-700 pb-2">แบบฟอร์มยื่นขอสินเชื่อ</h3>
+            
+            <div>
+                <label class="block text-xs text-slate-400 mb-1">วงเงินที่ต้องการกู้ *</label>
+                <select id="loanAmount" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs font-bold text-emerald-400">
+                    <option value="1000">1,000 บาท (ดอกเบี้ย 200 บาท)</option>
+                    <option value="2000">2,000 บาท (ดอกเบี้ย 400 บาท)</option>
+                    <option value="3000">3,000 บาท (ดอกเบี้ย 600 บาท)</option>
+                </select>
+            </div>
+
+            <input type="text" id="custName" required placeholder="ชื่อ-นามสกุล *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+            <input type="tel" id="custPhone" required maxlength="10" placeholder="เบอร์โทรศัพท์หลัก *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+            <input type="tel" id="custPhoneBackup" required maxlength="10" placeholder="เบอร์โทรศัพท์สำรอง *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+            <input type="url" id="custFacebook" required placeholder="ลิงก์ Facebook *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+
+            <div class="p-3 bg-slate-900/80 rounded-lg border border-slate-700 space-y-2">
+                <label class="block text-xs font-semibold text-indigo-400">บัญชีธนาคารสำหรับรับเงินโอน</label>
+                <select id="bankName" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white">
+                    <option value="กสิกรไทย">กสิกรไทย (KBANK)</option>
+                    <option value="ไทยพาณิชย์">ไทยพาณิชย์ (SCB)</option>
+                    <option value="กรุงไทย">กรุงไทย (KTB)</option>
+                    <option value="กรุงเทพ">กรุงเทพ (BBL)</option>
+                </select>
+                <input type="text" id="bankAccountNo" required placeholder="เลขที่บัญชี" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white">
+            </div>
+
+            <input type="text" id="custJob" required placeholder="อาชีพปัจจุบัน *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+            <input type="number" id="custIncome" required placeholder="รายได้ต่อเดือน (บาท) *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+            <textarea id="custAddress" required rows="2" placeholder="ที่อยู่ปัจจุบัน / จุดสังเกตบ้าน *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white"></textarea>
+
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg text-sm shadow-lg shadow-indigo-600/30">
+                ส่งข้อมูลยื่นขอสินเชื่อ
             </button>
-        </div>
-
-        <!-- Navigation Tabs -->
-        <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
-            <button id="tabBtnApply" onclick="switchTab('apply')" class="flex-1 py-2 text-xs font-semibold rounded-lg bg-indigo-600 text-white transition">ยื่นขอสินเชื่อ</button>
-            <button id="tabBtnPay" onclick="switchTab('payment')" class="flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">ชำระเงิน</button>
-        </div>
-
-        <!-- TAB 1: APPLY FORM -->
-        <section id="tabApply" class="space-y-4">
-            <form id="loanApplyForm" onsubmit="event.preventDefault(); submitApplication();" class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
-                <h3 class="text-xs font-bold text-slate-200 border-b border-slate-700 pb-2">แบบฟอร์มยื่นขอสินเชื่อ</h3>
-                
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">วงเงินที่ต้องการกู้ <span class="text-rose-400">*</span></label>
-                    <select id="loanAmount" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs font-bold text-emerald-400">
-                        <option value="1000">1,000 บาท (ดอกเบี้ย 200 บาท)</option>
-                        <option value="2000">2,000 บาท (ดอกเบี้ย 400 บาท)</option>
-                        <option value="3000">3,000 บาท (ดอกเบี้ย 600 บาท)</option>
-                    </select>
-                </div>
-
-                <input type="text" id="custName" required placeholder="ชื่อ-นามสกุล *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
-                <input type="tel" id="custPhone" required maxlength="10" placeholder="เบอร์โทรศัพท์หลัก *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
-                <input type="tel" id="custPhoneBackup" required maxlength="10" placeholder="เบอร์โทรศัพท์สำรอง *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
-                <input type="url" id="custFacebook" required placeholder="ลิงก์ Facebook *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
-
-                <div class="p-3 bg-slate-900/80 rounded-lg border border-slate-700 space-y-2">
-                    <label class="block text-xs font-semibold text-indigo-400">บัญชีธนาคารสำหรับรับเงินโอน</label>
-                    <select id="bankName" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white">
-                        <option value="กสิกรไทย">กสิกรไทย (KBANK)</option>
-                        <option value="ไทยพาณิชย์">ไทยพาณิชย์ (SCB)</option>
-                        <option value="กรุงไทย">กรุงไทย (KTB)</option>
-                        <option value="กรุงเทพ">กรุงเทพ (BBL)</option>
-                    </select>
-                    <input type="text" id="bankAccountNo" required placeholder="เลขที่บัญชี" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white">
-                </div>
-
-                <input type="text" id="custJob" required placeholder="อาชีพปัจจุบัน *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
-                <input type="number" id="custIncome" required placeholder="รายได้ต่อเดือน (บาท) *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
-                <textarea id="custAddress" required rows="2" placeholder="ที่อยู่ปัจจุบัน / จุดสังเกตบ้าน *" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white"></textarea>
-
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg text-sm shadow-lg shadow-indigo-600/30">
-                    ส่งข้อมูลยื่นขอสินเชื่อ
-                </button>
-            </form>
-        </section>
-
-        <!-- TAB 2: PAYMENT -->
-        <section id="tabPayment" class="hidden space-y-4">
-            <div id="noLoanPayMsg" class="bg-slate-800 p-6 rounded-xl border border-slate-700 text-center text-slate-400">
-                <p class="text-sm">ไม่อยู่ในสถานะชำระเงิน หรือสัญญาไม่ได้ถูกอนุมัติ</p>
-            </div>
-
-            <div id="payContainer" class="hidden bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4">
-                <h3 class="text-xs font-bold text-slate-200 border-b border-slate-700 pb-2">เลือกรูปแบบการชำระ</h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="selectPayOption('qr')" id="btnOptQr" class="p-3 bg-indigo-600/20 border-2 border-indigo-500 rounded-xl text-center">
-                        <i class="fa-solid fa-qrcode text-indigo-400 text-xl"></i>
-                        <div class="text-xs font-bold text-white mt-1">สแกน QR Code</div>
-                    </button>
-                    <button onclick="selectPayOption('cash')" id="btnOptCash" class="p-3 bg-slate-900 border border-slate-700 rounded-xl text-center">
-                        <i class="fa-solid fa-hand-holding-dollar text-emerald-400 text-xl"></i>
-                        <div class="text-xs font-bold text-slate-300 mt-1">นัดรับเงินสด</div>
-                    </button>
-                </div>
-
-                <div id="qrPaySection" class="space-y-3">
-                    <div class="space-y-2">
-                        <label class="flex items-center justify-between p-2.5 bg-slate-900 rounded-lg border border-slate-700">
-                            <div class="flex items-center space-x-2">
-                                <input type="radio" name="payType" value="full" checked onchange="updateQrAmount()" class="text-indigo-600">
-                                <span class="text-xs text-white">จ่ายตัดต้น + ดอกเบี้ย</span>
-                            </div>
-                            <span id="fullPayAmountText" class="text-xs font-bold text-emerald-400">0 ฿</span>
-                        </label>
-                        <label class="flex items-center justify-between p-2.5 bg-slate-900 rounded-lg border border-slate-700">
-                            <div class="flex items-center space-x-2">
-                                <input type="radio" name="payType" value="interest" onchange="updateQrAmount()" class="text-indigo-600">
-                                <span class="text-xs text-white">จ่ายเฉพาะดอกเบี้ย</span>
-                            </div>
-                            <span id="interestPayAmountText" class="text-xs font-bold text-amber-400">0 ฿</span>
-                        </label>
-                    </div>
-                    <button onclick="alert('สร้าง Dynamic QR เรียบร้อย')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg text-sm">
-                        <i class="fa-solid fa-qrcode mr-1"></i>แสดง Dynamic QR
-                    </button>
-                </div>
-            </div>
-        </section>
-
+        </form>
     </main>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            checkLoanStatus();
-            // Listen for changes from Admin PC
-            window.addEventListener('storage', checkLoanStatus);
-            setInterval(checkLoanStatus, 2000); // Poll Status Sync
-        });
-
-        function installPwaApp() {
-            alert('ระบบทำการบันทึก Bookmark และเตรียมความพร้อม PWA บนมือถือเรียบร้อยแล้ว');
-        }
-
-        function roundMoney(amount) { return Math.round(amount); }
+        // ใช้ LocalStorage แบบยืดหยุ่น ซิงค์ได้ทุกสภาวะ
+        document.addEventListener("DOMContentLoaded", checkStatus);
+        window.addEventListener('storage', checkStatus);
 
         function submitApplication() {
             const payload = {
@@ -183,70 +108,64 @@
                 income: document.getElementById('custIncome').value,
                 address: document.getElementById('custAddress').value,
                 daysOverdue: 0,
-                timestamp: new Date().toLocaleString('th-TH'),
-                status: 'PENDING'
+                status: 'PENDING',
+                timestamp: new Date().toLocaleString('th-TH')
             };
 
             localStorage.setItem('active_loan', JSON.stringify(payload));
-            alert('ส่งข้อมูลคำขอกู้เรียบร้อยแล้ว! กรุณาแจ้งแอดมินให้กดอนุมัติที่ฝั่ง PC');
-            checkLoanStatus();
+            alert('ส่งคำขอสินเชื่อเรียบร้อยแล้ว!');
+            checkStatus();
         }
 
-        function checkLoanStatus() {
-            const activeLoan = localStorage.getItem('active_loan');
+        function checkStatus() {
+            const data = localStorage.getItem('active_loan');
             const banner = document.getElementById('statusBanner');
             const applyForm = document.getElementById('loanApplyForm');
-            const activeLoanCard = document.getElementById('activeLoanCard');
+            const activeCard = document.getElementById('activeLoanCard');
 
-            if (!activeLoan) {
+            if (!data) {
                 banner.classList.add('hidden');
                 applyForm.classList.remove('hidden');
-                activeLoanCard.classList.add('hidden');
-                document.getElementById('noLoanPayMsg').classList.remove('hidden');
-                document.getElementById('payContainer').classList.add('hidden');
+                activeCard.classList.add('hidden');
                 return;
             }
 
-            const loan = JSON.parse(activeLoan);
+            const loan = JSON.parse(data);
 
             if (loan.status === 'PENDING') {
                 banner.className = "p-4 rounded-xl border bg-amber-500/10 border-amber-500/30 text-amber-300 text-xs space-y-1";
-                banner.innerHTML = `<div class="font-bold flex items-center text-amber-400"><i class="fa-solid fa-clock mr-2"></i>อยู่ระหว่างรอแอดมินอนุมัติสัญญา</div><p class="text-slate-300">กรุณาให้แอดมินกดอนุมัติจากหน้าจอ PC</p>`;
+                banner.innerHTML = `<div class="font-bold text-amber-400"><i class="fa-solid fa-clock mr-1"></i>อยู่ระหว่างรอแอนมินอนุมัติ</div><p class="text-slate-300">กรุณาเปิดหน้า admin.html บน PC เพื่อกดอนุมัติ</p>`;
                 banner.classList.remove('hidden');
                 applyForm.classList.add('hidden');
-                activeLoanCard.classList.add('hidden');
+                activeCard.classList.add('hidden');
             } else if (loan.status === 'APPROVED') {
                 banner.classList.add('hidden');
                 applyForm.classList.add('hidden');
-                activeLoanCard.classList.remove('hidden');
+                activeCard.classList.remove('hidden');
 
                 const principal = parseFloat(loan.amount);
                 const interest = principal * 0.20;
                 const fineDays = parseInt(loan.daysOverdue || 0);
                 const fineTotal = fineDays * 50;
-                const totalDebt = roundMoney(principal + interest + fineTotal);
+                const totalDebt = Math.round(principal + interest + fineTotal);
 
                 document.getElementById('dashTotalDebt').innerText = totalDebt.toLocaleString() + ' ฿';
-                document.getElementById('breakdownPrincipal').innerText = roundMoney(principal).toLocaleString() + ' ฿';
-                document.getElementById('breakdownInterest').innerText = roundMoney(interest).toLocaleString() + ' ฿';
-
+                document.getElementById('breakdownPrincipal').innerText = Math.round(principal).toLocaleString() + ' ฿';
+                document.getElementById('breakdownInterest').innerText = Math.round(interest).toLocaleString() + ' ฿';
+                
                 if (fineDays > 0) {
                     document.getElementById('fineRow').classList.remove('hidden');
-                    document.getElementById('breakdownFine').innerText = roundMoney(fineTotal).toLocaleString() + ' ฿';
+                    document.getElementById('breakdownFine').innerText = Math.round(fineTotal).toLocaleString() + ' ฿';
                 } else {
                     document.getElementById('fineRow').classList.add('hidden');
                 }
-
-                document.getElementById('noLoanPayMsg').classList.add('hidden');
-                document.getElementById('payContainer').classList.remove('hidden');
-                document.getElementById('fullPayAmountText').innerText = totalDebt.toLocaleString() + ' ฿';
-                document.getElementById('interestPayAmountText').innerText = roundMoney(interest).toLocaleString() + ' ฿';
             }
         }
 
-        function switchTab(tab) {
-            document.getElementById('tabApply').classList.toggle('hidden', tab !== 'apply');
-            document.getElementById('tabPayment').classList.toggle('hidden', tab !== 'payment');
+        function resetClientData() {
+            localStorage.removeItem('active_loan');
+            checkStatus();
+            alert('ล้างข้อมูลค้างสำเร็จ สามารถทดลองกรอกใหม่ได้ทันที');
         }
     </script>
 </body>
