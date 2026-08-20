@@ -10,14 +10,14 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>* { font-family: 'Prompt', sans-serif; }</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-4 flex justify-center items-center">
+<body class="bg-slate-950 text-slate-100 min-h-screen p-3 sm:p-4 flex justify-center items-start">
 
-    <div class="w-full max-w-md space-y-4">
+    <div class="w-full max-w-md space-y-4 my-2">
         <!-- Header UID -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-lg">
             <div>
-                <p class="text-[10px] text-indigo-400 font-semibold tracking-wider uppercase">รหัสเครื่องประจำตัว (UID)</p>
-                <p id="displayUid" class="text-sm font-mono font-bold text-white">กำลังสร้าง UID...</p>
+                <p class="text-[10px] text-indigo-400 font-semibold tracking-wider uppercase">รหัสประจำตัว (UID)</p>
+                <p id="displayUid" class="text-sm font-mono font-bold text-white">กำลังโหลด...</p>
             </div>
             <div id="statusBadge" class="bg-slate-800 text-slate-400 text-xs px-3 py-1 rounded-full font-medium border border-slate-700">
                 พร้อมใช้งาน
@@ -27,7 +27,7 @@
         <!-- Form คำขอกู้ -->
         <div id="loanCard" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
             <h2 class="text-base font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> ยื่นขอสินเชื่อ (1,000 - 10,000 ฿)
+                <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i> ยื่นขอสินเชื่อ
             </h2>
             
             <div class="space-y-1">
@@ -58,7 +58,7 @@
                 <div class="flex justify-between text-slate-400"><span>จ่ายเฉพาะดอกเบี้ย (ดอกลอย):</span><span id="txtFloating" class="text-amber-400 font-semibold">86 ฿/งวด</span></div>
             </div>
 
-            <button onclick="submitLoan()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs transition duration-200">
+            <button onclick="submitLoan()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-xs transition duration-200 shadow-lg shadow-emerald-950">
                 ส่งคำขอกู้เงิน
             </button>
         </div>
@@ -66,7 +66,7 @@
         <!-- Active Contract Card -->
         <div id="activeCard" class="hidden bg-slate-900 border border-indigo-900/50 p-5 rounded-2xl space-y-4 shadow-xl">
             <div class="flex justify-between items-center pb-3 border-b border-slate-800">
-                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">สัญญากู้ปัจจุบัน</h3>
+                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider"><i class="fa-solid fa-file-contract"></i> สัญญากู้ปัจจุบัน</h3>
                 <span id="contractIdTxt" class="text-xs font-mono text-slate-400">CN-XXXXXX</span>
             </div>
             
@@ -77,21 +77,41 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="showPaymentQr('full')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs">
-                    ชำระค่างวดปกติ
+                <button onclick="showPaymentModal('full')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">
+                    <i class="fa-solid fa-qrcode"></i> ชำระค่างวดปกติ
                 </button>
-                <button onclick="showPaymentQr('interest_only')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-xs">
-                    จ่ายเฉพาะดอกเบี้ย
+                <button onclick="showPaymentModal('interest_only')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">
+                    <i class="fa-solid fa-percent"></i> จ่ายเฉพาะดอกเบี้ย
                 </button>
+            </div>
+
+            <!-- ตารางกำหนดผ่อนชำระ -->
+            <div class="space-y-2 pt-2 border-t border-slate-800">
+                <h4 class="text-xs font-bold text-slate-300 flex justify-between items-center">
+                    <span><i class="fa-regular fa-calendar-check text-indigo-400"></i> ตารางกำหนดชำระ</span>
+                    <span id="scheduleRounds" class="text-[10px] text-slate-500"></span>
+                </h4>
+                <div id="scheduleContainer" class="max-h-36 overflow-y-auto space-y-1.5 pr-1 text-xs">
+                    <!-- Schedule Items Dynamic -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ประวัติการชำระเงิน -->
+        <div id="historyCard" class="hidden bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+            <h3 class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> ประวัติการชำระเงินย้อนหลัง
+            </h3>
+            <div id="historyList" class="space-y-2 max-h-48 overflow-y-auto text-xs pr-1">
+                <p class="text-slate-500 text-center py-2">ยังไม่มีประวัติการชำระเงิน</p>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxWsCZty6r1n5WbmvKZUGu85Wft-0tatAMjU7ou8RgSjfQ2ZMv3yvCnXY11ZOIabPa0sg/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzE0C3oU0JA80hVfXHdefYB1-1lzTD5Vm5CYrWjmTZhuXre77plbvg7MQADfiteIjmDXw/exec";
         let activeContractData = null;
 
-        // ระบบจำ UID ประจำเครื่อง
         let clientUid = localStorage.getItem('phayao_uid');
         if (!clientUid) {
             clientUid = 'PY-' + Math.floor(100000 + Math.random() * 900000);
@@ -99,7 +119,6 @@
         }
         document.getElementById('displayUid').innerText = clientUid;
 
-        // คำนวณยอดเงิน
         function calcLoan() {
             const amt = Number(document.getElementById('loanAmount').value) || 0;
             const period = Number(document.getElementById('payPeriod').value);
@@ -119,7 +138,6 @@
         document.getElementById('payPeriod').addEventListener('change', calcLoan);
         document.getElementById('payInterval').addEventListener('change', calcLoan);
 
-        // ส่งคำขอกู้
         async function submitLoan() {
             const amt = document.getElementById('loanAmount').value;
             const period = document.getElementById('payPeriod').value;
@@ -148,46 +166,56 @@
             }
         }
 
-        // แสดง QR Code ชำระเงิน
-        function showPaymentQr(payType) {
+        function showPaymentModal(payType) {
             if(!activeContractData) return;
 
-            let payAmount = 0;
-            let titleText = '';
-
-            if (payType === 'full') {
-                payAmount = activeContractData.installment_amount;
-                titleText = `ชำระค่างวดปกติ: ${payAmount.toLocaleString()} บาท`;
-            } else {
-                payAmount = activeContractData.floating_interest;
-                titleText = `จ่ายเฉพาะดอกเบี้ย (ดอกลอย): ${payAmount.toLocaleString()} บาท`;
-            }
-
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PROMPTPAY-PAYAO-PAYMENT-${payAmount}-${clientUid}`;
+            const payAmount = payType === 'full' ? activeContractData.installment_amount : activeContractData.floating_interest;
+            const titleText = payType === 'full' ? `ชำระค่างวดปกติ: ${payAmount.toLocaleString()} ฿` : `ชำระดอกลอย: ${payAmount.toLocaleString()} ฿`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=PROMPTPAY-${payAmount}-${clientUid}`;
 
             Swal.fire({
                 title: titleText,
                 html: `
-                    <p class="text-xs text-gray-400 mb-3">สแกน QR Code หรือนำไปให้แอดมินสแกนหน้าร้าน</p>
-                    <div class="flex justify-center my-2">
-                        <img src="${qrUrl}" alt="QR Code Payment" class="rounded-xl border border-gray-300 p-2 bg-white">
+                    <div class="space-y-3">
+                        <div class="flex justify-center my-1">
+                            <img src="${qrUrl}" alt="QR Code" class="rounded-xl border border-gray-300 p-1.5 bg-white shadow-sm">
+                        </div>
+                        <p class="text-[11px] text-gray-500">สแกนเพื่อโอนเงิน หรือแสดงให้แอดมินหน้าร้าน</p>
+                        <div class="text-left bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                            <label class="text-[11px] font-bold text-gray-700 block mb-1">แนบสลิปโอนเงิน (ถ้ามี)</label>
+                            <input type="file" id="slipInput" accept="image/*" class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                        </div>
                     </div>
-                    <p class="text-[11px] text-gray-500 font-mono mt-2">UID: ${clientUid}</p>
                 `,
                 showCancelButton: true,
-                confirmButtonText: 'ยืนยันแจ้งชำระเงินแล้ว',
+                confirmButtonText: 'แจ้งชำระเงิน',
                 cancelButtonText: 'ยกเลิก',
                 confirmButtonColor: '#10b981'
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    processPayment(payType, payAmount);
+                    const slipFile = document.getElementById('slipInput').files[0];
+                    let slipBase64 = "-";
+
+                    if (slipFile) {
+                        slipBase64 = await convertBase64(slipFile);
+                    }
+
+                    processPayment(payType, payAmount, slipBase64);
                 }
             });
         }
 
-        // ประมวลผลชำระเงิน
-        async function processPayment(payType, amount) {
-            Swal.fire({ title: 'กำลังบันทึกการชำระ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        function convertBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        async function processPayment(payType, amount, slipImage) {
+            Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
                 const res = await fetch(API_URL, {
@@ -197,12 +225,13 @@
                         uid: clientUid,
                         pay_type: payType,
                         pay_amount: amount,
-                        method: 'promptpay'
+                        method: 'promptpay',
+                        slip_image: slipImage
                     })
                 });
                 const data = await res.json();
                 if(data.status === 'success') {
-                    Swal.fire({ icon: 'success', title: 'บันทึกการชำระเงินเรียบร้อยแล้ว' });
+                    Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อยแล้ว' });
                     checkContractStatus();
                 }
             } catch (e) {
@@ -210,12 +239,12 @@
             }
         }
 
-        // ตรวจสอบสถานะสัญญา
         async function checkContractStatus() {
             try {
                 const res = await fetch(`${API_URL}?uid=${clientUid}`);
                 const response = await res.json();
                 const contract = response.data;
+                const history = response.history || [];
 
                 if (contract) {
                     activeContractData = contract;
@@ -243,9 +272,75 @@
                             badge.innerText = "คำขอถูกปฏิเสธ";
                             badge.className = "bg-rose-950 text-rose-400 text-xs px-3 py-1 rounded-full border border-rose-800";
                         }
+
+                        renderSchedule(contract);
                     }
                 }
+
+                renderHistory(history);
+
             } catch (e) { console.error('Sync Error:', e); }
+        }
+
+        function renderSchedule(contract) {
+            const period = parseInt(contract.pay_period);
+            const interval = parseInt(contract.pay_interval.replace('ทุก ', ''));
+            const rounds = Math.ceil(period / interval);
+            const container = document.getElementById('scheduleContainer');
+            document.getElementById('scheduleRounds').innerText = `ทั้งหมด ${rounds} งวด`;
+
+            let html = '';
+            const today = new Date();
+
+            for(let i = 1; i <= rounds; i++) {
+                const dueDate = new Date();
+                dueDate.setDate(today.getDate() + (i * interval));
+                const dateStr = dueDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+
+                html += `
+                    <div class="flex justify-between items-center bg-slate-950/70 p-2 rounded-lg border border-slate-800/80">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-indigo-950 border border-indigo-800 text-indigo-400 flex items-center justify-center font-bold text-[10px]">${i}</span>
+                            <span class="text-slate-300">งวดวันที่ ${dateStr}</span>
+                        </div>
+                        <span class="font-bold text-emerald-400">${Number(contract.installment_amount).toLocaleString()} ฿</span>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function renderHistory(list) {
+            const card = document.getElementById('historyCard');
+            const container = document.getElementById('historyList');
+
+            if (list.length === 0) {
+                card.classList.add('hidden');
+                return;
+            }
+
+            card.classList.remove('hidden');
+            container.innerHTML = list.map(item => `
+                <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                    <div>
+                        <p class="font-bold text-white">${item.pay_type === 'full' ? 'ตัดค่างวดปกติ' : 'จ่ายดอกลอย'}</p>
+                        <p class="text-[10px] text-slate-400">${new Date(item.date).toLocaleString('th-TH')}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-emerald-400">+${Number(item.amount).toLocaleString()} ฿</p>
+                        ${item.slip_url !== '-' ? `<button onclick="viewSlip('${item.slip_url}')" class="text-[10px] text-indigo-400 underline">ดูสลิป</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewSlip(url) {
+            Swal.fire({
+                imageUrl: url,
+                imageAlt: 'สลิปการชำระเงิน',
+                confirmButtonText: 'ปิด',
+                confirmButtonColor: '#6366f1'
+            });
         }
 
         checkContractStatus();
