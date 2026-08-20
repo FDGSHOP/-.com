@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>ระบบแอดมิน - จัดการสินเชื่อ</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #eef2f5; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #1e293b; color: white; }
+        input[type="number"] { width: 90px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 6px 12px; border: none; cursor: pointer; border-radius: 4px; color: white; font-weight: bold; }
+        .btn-approve { background: #10b981; }
+        .btn-reject { background: #ef4444; }
+        .btn-preset { background: #64748b; font-size: 11px; padding: 4px 6px; margin-left: 2px; }
+        .btn-save { background: #2563eb; padding: 10px 20px; font-size: 16px; margin-top: 20px; float: right; }
+        .status-badge { font-weight: bold; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+        .status-pending { background: #fef08a; color: #854d0e; }
+        .status-approved { background: #bbf7d0; color: #166534; }
+        .status-rejected { background: #fecaca; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2> ระบบจัดการคำขอสินเชื่อ (Admin View)</h2>
+    <p>แก้ไข วงเงิน/จำนวนวัน หรือกดอนุมัติ แล้วกดบันทึกเพื่อให้ระบบซิงค์ไปยัง GitHub</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>UID</th>
+                <th>ชื่อผู้ขอ</th>
+                <th>ปรับวงเงิน (บาท)</th>
+                <th>ปรับระยะเวลา (วัน)</th>
+                <th>สถานะปัจจุบัน</th>
+                <th>การอนุมัติ</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <button class="btn btn-save" onclick="saveToGitHub()">💾 บันทึกและซิงค์ข้อมูลไป GitHub</button>
+</div>
+
+<script>
+    // ** ใส่ข้อมูลของคุณตรงนี้ **
+    const GH_CONFIG = {
+        token: "github_pat_xxx", // ใส่ Personal Access Token ที่ได้จาก Step 2
+        owner: "your-username",  // ใส่ชื่อ Username GitHub ของคุณ
+        repo: "loan-system",     // ใส่ชื่อ Repository
+        path: "loans.json"       // ชื่อไฟล์ข้อมูล
+    };
+
+    let loanData = [];
+    let fileSha = "";
+
+    async function loadDataFromGitHub() {
+        const url = `https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/${GH_CONFIG.path}`;
+        try {
+            const res = await fetch(url, { headers: { Authorization: `token ${GH_CONFIG.token}` } });
+            const data = await res.json();
+            fileSha = data.sha;
+            
+            // แปลงรหัส Base64 เป็น ข้อความ JSON
+            const decodedContent = decodeURIComponent(escape(atob(data.content)));
+            loanData = JSON.parse(decodedContent);
+            renderTable();
+        } catch (err) {
+            alert("ดึงข้อมูลไม่สำเร็จ กรุณาตรวจสอบ Token หรือ ชื่อ Repo");
+        }
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        loanData.forEach((item, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${item.uid}</b></td>
+                    <td>${item.name}</td>
+                    <td><input type="number" value="${item.amount}" onchange="updateData(${index}, 'amount', this.value)"></td>
+                    <td>
+                        <input type="number" value="${item.days}" onchange="updateData(${index}, 'days', this.value)">
+                        <button class="btn btn-preset" onclick="setDays(${index}, 7)">7d</button>
+                        <button class="btn btn-preset" onclick="setDays(${index}, 30)">30d</button>
+                    </td>
+                    <td><span class="status-badge status-${item.status}">${item.status.toUpperCase()}</span></td>
+                    <td>
+                        <button class="btn btn-approve" onclick="setStatus(${index}, 'approved')">อนุมัติ</button>
+                        <button class="btn btn-reject" onclick="setStatus(${index}, 'rejected')">ไม่อนุมัติ</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function updateData(index, key, val) { loanData[index][key] = Number(val); }
+    function setDays(index, days) { loanData[index].days = days; renderTable(); }
+    function setStatus(index, status) { loanData[index].status = status; renderTable(); }
+
+    async function saveToGitHub() {
+        const url = `https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/${GH_CONFIG.path}`;
+        const contentEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(loanData, null, 2))));
+
+        const payload = {
+            message: "Admin updated loans data",
+            content: contentEncoded,
+            sha: fileSha
+        };
+
+        const res = await fetch(url, {
+            method: "PUT",
+            headers: {
+                Authorization: `token ${GH_CONFIG.token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert("บันทึกสำเร็จ! ข้อมูลใน GitHub อัปเดตเรียบร้อยแล้ว");
+            loadDataFromGitHub();
+        } else {
+            alert("บันทึกไม่สำเร็จ ตรวจสอบสิทธิ์ Token");
+        }
+    }
+
+    loadDataFromGitHub();
+</script>
+</body>
+</html>
