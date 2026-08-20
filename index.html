@@ -2,73 +2,130 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>หน้าตรวจสอบสถานะสินเชื่อ (ลูกค้า)</title>
+    <title>ระบบขอสินเชื่อสำหรับลูกค้า</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
-        .box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; width: 350px; }
-        .status { margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: bold; }
-        .pending { background: #fffbebf1; color: #b45309; }
-        .approved { background: #dcfce7; color: #15803d; }
-        .rejected { background: #fee2e2; color: #b91c1c; }
-        .time-counter { font-size: 12px; color: #888; margin-top: 10px; }
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 40px; }
+        .card { background: white; padding: 25px; border-radius: 10px; width: 350px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .status-box { margin-top: 20px; padding: 15px; border-radius: 6px; text-align: center; font-weight: bold; }
+        .pending { background: #fef08a; color: #854d0e; }
+        .approved { background: #bbf7d0; color: #166534; }
+        .rejected { background: #fecaca; color: #991b1b; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <h2>สถานะการสมัครสินเชื่อ</h2>
-    <p>UID ของคุณ: <b id="userUID">1001</b></p>
-    
-    <div id="statusDisplay" class="status pending">กำลังโหลดข้อมูล...</div>
-    <div class="time-counter" id="lastCheck">ระบบจะตรวจสอบข้อมูลใหม่อัตโนมัติทุกๆ 20 วินาที</div>
+<div class="card">
+    <!-- ส่วนที่ 1: ฟอร์มสมัคร -->
+    <div id="sectionRegister">
+        <h2>ยื่นขอสินเชื่อ</h2>
+        <div class="form-group">
+            <label>เลข UID / บัตรประชาชน:</label>
+            <input type="text" id="regUid" placeholder="เช่น 1003">
+        </div>
+        <div class="form-group">
+            <label>ชื่อ-นามสกุล:</label>
+            <input type="text" id="regName" placeholder="เช่น สมชาย ใจดี">
+        </div>
+        <div class="form-group">
+            <label>วงเงินที่ต้องการ (บาท):</label>
+            <input type="number" id="regAmount" placeholder="เช่น 5000">
+        </div>
+        <div class="form-group">
+            <label>จำนวนวัน:</label>
+            <input type="number" id="regDays" value="30">
+        </div>
+        <button onclick="submitApplication()">ส่งข้อมูลสมัคร</button>
+    </div>
+
+    <!-- ส่วนที่ 2: หน้าติดตามสถานะ (จะแสดงหลังจากกดสมัครแล้ว) -->
+    <div id="sectionStatus" style="display: none;">
+        <h2>สถานะคำขอสินเชื่อ</h2>
+        <p>UID ของคุณ: <b id="displayUid"></b></p>
+        <div id="statusBox" class="status-box pending">กำลังส่งข้อมูล...</div>
+        <p style="font-size: 12px; color: #666; text-align: center; margin-top: 15px;">
+            ระบบตรวจสอบสถานะใหม่อัตโนมัติทุกๆ 20 วินาที
+        </p>
+    </div>
 </div>
 
 <script>
-    // ** ใส่ข้อมูลของคุณตรงนี้ **
-    const USER_CONFIG = {
-        owner: "your-username", // ใส่ Username GitHub
-        repo: "loan-system",    // ใส่ชื่อ Repo
-        path: "loans.json",
-        myUID: "1001"           // ลองเปลี่ยนเป็น 1001 หรือ 1002 เพื่อทดสอบ
+    const CONFIG = {
+        token: "github_pat_xxx", // ใส่ PAT Token เพื่อให้ฝั่งลูกค้าเขียนข้อมูลลง GitHub ได้
+        owner: "your-username",
+        repo: "loan-system",
+        path: "loans.json"
     };
 
-    async function checkStatus() {
-        // เพิ่ม timestamp ป้องกัน Browser จดจำ Cache (ทำให้ดึงไฟล์ใหม่จาก GitHub เสมอ)
-        const rawUrl = `https://raw.githubusercontent.com/${USER_CONFIG.owner}/${USER_CONFIG.repo}/main/${USER_CONFIG.path}?nocache=${new Date().getTime()}`;
+    let currentUserUID = "";
+
+    // 1. ส่งข้อมูลสมัครไปบันทึกใน GitHub
+    async function submitApplication() {
+        const uid = document.getElementById('regUid').value.trim();
+        const name = document.getElementById('regName').value.trim();
+        const amount = Number(document.getElementById('regAmount').value);
+        const days = Number(document.getElementById('regDays').value);
+
+        if (!uid || !name || !amount) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+
+        currentUserUID = uid;
+
+        // ดึงไฟล์เดิมมาก่อนเพื่อเอา sha และข้อมูลเก่า
+        const url = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.path}`;
+        const res = await fetch(url, { headers: { Authorization: `token ${CONFIG.token}` } });
+        const fileData = await res.json();
         
-        try {
-            const res = await fetch(rawUrl);
-            const data = await res.json();
-            
-            const myData = data.find(item => item.uid === USER_CONFIG.myUID);
-            const display = document.getElementById("statusDisplay");
+        const currentList = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
 
-            if (myData) {
-                if (myData.status === "approved") {
-                    display.className = "status approved";
-                    display.innerHTML = ` ยินดีด้วย! อนุมัติแล้ว<br>วงเงิน: ${myData.amount.toLocaleString()} บาท<br>ระยะเวลา: ${myData.days} วัน`;
-                } else if (myData.status === "rejected") {
-                    display.className = "status rejected";
-                    display.innerText = " คำขอของคุณไม่ได้รับการอนุมัติ";
-                } else {
-                    display.className = "status pending";
-                    display.innerText = "⏳ กำลังรอการพิจารณา...";
-                }
-            } else {
-                display.innerText = "ไม่พบข้อมูล UID นี้";
-            }
+        // เพิ่มรายการใหม่ต่อท้าย
+        currentList.push({ uid, name, amount, days, status: "pending" });
 
-            document.getElementById("lastCheck").innerText = `ตรวจสอบล่าสุดเมื่อ: ${new Date().toLocaleTimeString()}`;
-        } catch (err) {
-            console.error("Error fetching data:", err);
-        }
+        // บันทึกกลับไปที่ GitHub
+        const updatedContent = btoa(unescape(encodeURIComponent(JSON.stringify(currentList, null, 2))));
+        await fetch(url, {
+            method: "PUT",
+            headers: { Authorization: `token ${CONFIG.token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: `New application from UID: ${uid}`,
+                content: updatedContent,
+                sha: fileData.sha
+            })
+        });
+
+        // สลับไปแสดงหน้าติดตามสถานะ
+        document.getElementById('sectionRegister').style.display = 'none';
+        document.getElementById('sectionStatus').style.display = 'block';
+        document.getElementById('displayUid').innerText = uid;
+
+        // เริ่มดึงสถานะทันที และตั้งดึงซ้ำทุก 20 วินาที
+        checkStatus();
+        setInterval(checkStatus, 20000);
     }
 
-    // เรียกทำงานครั้งแรกทันที
-    checkStatus();
+    // 2. ดึงสถานะมาแสดงผล
+    async function checkStatus() {
+        const rawUrl = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/main/${CONFIG.path}?nocache=${new Date().getTime()}`;
+        const res = await fetch(rawUrl);
+        const data = await res.json();
+        const myData = data.find(item => item.uid === currentUserUID);
 
-    // ตั้งเวลาให้ดึงข้อมูลอัตโนมัติทุกๆ 20 วินาที (20000ms)
-    setInterval(checkStatus, 20000);
+        const box = document.getElementById('statusBox');
+        if (myData) {
+            if (myData.status === 'approved') {
+                box.className = "status-box approved";
+                box.innerHTML = `อนุมัติแล้ว!<br>วงเงิน: ${myData.amount.toLocaleString()} บาท<br>ระยะเวลา: ${myData.days} วัน`;
+            } else if (myData.status === 'rejected') {
+                box.className = "status-box rejected";
+                box.innerText = "คำขอของคุณไม่อนุมัติ";
+            } else {
+                box.className = "status-box pending";
+                box.innerText = "⏳ กำลังรอแอดมินพิจารณา...";
+            }
+        }
+    }
 </script>
 </body>
 </html>
