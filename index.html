@@ -3,52 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ยื่นขอสินเชื่อ</title>
+    <title>ระบบยื่นคำขอสินเชื่อออนไลน์</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 40px; margin: 0; }
-        .card { background: white; padding: 25px; border-radius: 10px; width: 320px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 4px; font-weight: bold; }
-        input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        button:hover { background: #1d4ed8; }
+        * { box-sizing: border-box; font-family: 'Sarabun', sans-serif; }
+        body { background: #f1f5f9; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; max-width: 600px; width: 100%; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 30px; }
+        .header { text-align: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 25px; }
+        .header h2 { color: #0f172a; margin: 0; font-size: 22px; }
+        .header p { color: #64748b; font-size: 14px; margin-top: 5px; }
         
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; text-align: center; width: 260px; }
+        /* Stepper */
+        .stepper { display: flex; justify-content: space-between; margin-bottom: 30px; position: relative; }
+        .step { width: 30%; text-align: center; position: relative; z-index: 1; }
+        .step-number { width: 35px; height: 35px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: bold; }
+        .step.active .step-number { background: #2563eb; color: white; }
+        .step-title { font-size: 12px; color: #64748b; font-weight: 600; }
         
-        .status-box { margin-top: 15px; padding: 12px; border-radius: 6px; text-align: center; font-weight: bold; }
-        .pending { background: #fef08a; color: #854d0e; }
-        .approved { background: #bbf7d0; color: #166534; }
-        .rejected { background: #fecaca; color: #991b1b; }
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 6px; }
+        input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+        input:focus, select:focus { border-color: #2563eb; }
+        
+        .btn-group { display: flex; justify-content: space-between; margin-top: 25px; }
+        .btn { padding: 10px 20px; border-radius: 6px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-secondary { background: #94a3b8; color: white; }
+        
+        /* Status Card */
+        .status-card { text-align: center; padding: 25px; border-radius: 8px; margin-top: 20px; }
+        .pending-box { background: #fef9c3; border: 1px solid #fde047; color: #854d0e; }
+        .approved-box { background: #dcfce7; border: 1px solid #86efac; color: #166534; }
+        .rejected-box { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:99; }
+        .modal-content { background:white; padding:25px; border-radius:10px; text-align:center; max-width:320px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div id="registerForm">
-        <h2>ยื่นขอสินเชื่อ</h2>
-        <div class="form-group"><label>เลข UID:</label><input type="text" id="uid" placeholder="เช่น 1001"></div>
-        <div class="form-group"><label>ชื่อ-นามสกุล:</label><input type="text" id="name" placeholder="สมชาย ใจดี"></div>
-        <div class="form-group"><label>วงเงินที่ขอ (บาท):</label><input type="number" id="amount" placeholder="เช่น 5000"></div>
-        <div class="form-group"><label>จำนวนวัน:</label><input type="number" id="days" value="30"></div>
-        <button id="submitBtn" onclick="submitData()">ส่งข้อมูลสมัคร</button>
+<div class="container">
+    <div class="header">
+        <h2>สถาบันการเงินออนไลน์</h2>
+        <p>แบบฟอร์มยื่นคำขออนุมัติสินเชื่อเพื่อการพาณิชย์และบุคคล</p>
     </div>
 
-    <div id="statusSection" style="display:none;">
-        <h2>สถานะสินเชื่อ</h2>
-        <p>UID ของคุณ: <b id="userUidDisplay"></b></p>
-        <div id="statusBox" class="status-box pending">กำลังตรวจสอบ...</div>
-        <p style="font-size: 11px; color: #777; text-align: center; margin-top: 15px;">
-            ระบบเช็กสถานะใหม่อัตโนมัติทุกๆ 20 วินาที
-        </p>
+    <!-- Stepper Indicator -->
+    <div class="stepper" id="stepper">
+        <div class="step active" id="st-1"><div class="step-number">1</div><div class="step-title">ข้อมูลส่วนตัว</div></div>
+        <div class="step" id="st-2"><div class="step-number">2</div><div class="step-title">อาชีพ/เอกสาร</div></div>
+        <div class="step" id="st-3"><div class="step-number">3</div><div class="step-title">ข้อมูลสินเชื่อ</div></div>
+    </div>
+
+    <!-- Main Form -->
+    <form id="loanForm" onsubmit="return false;">
+        <!-- ขั้นตอนที่ 1 -->
+        <div class="form-section active" id="sec-1">
+            <div class="form-group"><label>เลข UID อ้างอิงระบบ:</label><input type="text" id="uid" placeholder="เช่น 1001" required></div>
+            <div class="form-group"><label>ชื่อ-นามสกุล (ตามบัตรประชาชน):</label><input type="text" id="name" placeholder="นาย สมชาย ใจดี" required></div>
+            <div class="form-group"><label>เลขบัตรประจำตัวประชาชน 13 หลัก:</label><input type="text" id="idCard" maxlength="13" placeholder="1234567890123" required></div>
+            <div class="form-group"><label>เบอร์โทรศัพท์ติดต่อ:</label><input type="tel" id="phone" placeholder="0812345678" required></div>
+            <div class="btn-group">
+                <div></div>
+                <button class="btn btn-primary" onclick="nextStep(2)">ถัดไป: ข้อมูลอาชีพ &rarr;</button>
+            </div>
+        </div>
+
+        <!-- ขั้นตอนที่ 2 -->
+        <div class="form-section" id="sec-2">
+            <div class="form-group">
+                <label>อาชีพปัจจุบัน:</label>
+                <select id="occupation" required>
+                    <option value="">-- โปรดระบุอาชีพ --</option>
+                    <option value="พนักงานบริษัทเอกชน">พนักงานบริษัทเอกชน</option>
+                    <option value="รับราชการ / รัฐวิสาหกิจ">รับราชการ / รัฐวิสาหกิจ</option>
+                    <option value="เจ้าของธุรกิจ / ค้าขาย">เจ้าของธุรกิจ / ค้าขาย</option>
+                    <option value="อาชีพอิสระ (Freelance)">อาชีพอิสระ (Freelance)</option>
+                </select>
+            </div>
+            <div class="form-group"><label>รายได้เฉลี่ยต่อเดือน (บาท):</label><input type="number" id="income" placeholder="25000" required></div>
+            <div class="form-group"><label>วัตถุประสงค์การขอสินเชื่อ:</label><input type="text" id="purpose" placeholder="เพื่อหมุนเวียนในธุรกิจ / ใช้จ่ายส่วนตัว" required></div>
+            <div class="form-group"><label>ลิงก์แนบแนบแนบไฟล์เอกสาร/สลิปเงินเดือน (Drive/Cloud):</label><input type="url" id="docUrl" placeholder="https://drive.google.com/..." required></div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="nextStep(1)">&larr; ย้อนกลับ</button>
+                <button class="btn btn-primary" onclick="nextStep(3)">ถัดไป: ข้อมูลสินเชื่อ &rarr;</button>
+            </div>
+        </div>
+
+        <!-- ขั้นตอนที่ 3 -->
+        <div class="form-section" id="sec-3">
+            <div class="form-group"><label>วงเงินสินเชื่อที่ต้องการยื่นขอ (บาท):</label><input type="number" id="amount" placeholder="10000" required></div>
+            <div class="form-group">
+                <label>ระยะเวลาผ่อนชำระที่ต้องการ:</label>
+                <select id="days" required>
+                    <option value="7">7 วัน</option>
+                    <option value="15">15 วัน</option>
+                    <option value="30" selected>30 วัน</option>
+                    <option value="60">60 วัน</option>
+                </select>
+            </div>
+            <div style="background: #f8fafc; padding: 15px; border-radius:6px; font-size:12px; color:#475569; margin-bottom:15px;">
+                * ข้อมูลคำขอจะถูกนำเข้าสู่ระบบเพื่อตรวจสอบคุณสมบัติในขั้นตอนถัดไป การยื่นคำขอไม่มีผลต่อการเรียกเก็บค่าธรรมเนียมใดๆ ทั้งสิ้น
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="nextStep(2)">&larr; ย้อนกลับ</button>
+                <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">ยืนยันการส่งคำขอสินเชื่อ</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Tracking Section -->
+    <div id="trackingSection" style="display:none;">
+        <h3 style="text-align:center; color:#0f172a; margin-top:0;">ติดตามสถานะคำขอสินเชื่อ</h3>
+        <p style="text-align:center; font-size:14px; color:#64748b;">รหัสติดตามคำขอ (UID): <b id="displayUid"></b></p>
+        <div id="statusBox" class="status-card pending-box">กำลังตรวจสอบข้อมูล...</div>
+        <p style="font-size:11px; text-align:center; color:#94a3b8; margin-top:20px;">* ระบบซิงค์ข้อมูลสถานะการพิจารณาจากฝ่ายอนุมัติให้อัตโนมัติทุกๆ 20 วินาที</p>
     </div>
 </div>
 
-<div id="popup" class="modal">
+<!-- Modal Pop-up -->
+<div id="successModal" class="modal">
     <div class="modal-content">
-        <h3 style="color: #10b981; margin-top: 0;">ส่งข้อมูลสำเร็จ!</h3>
-        <p>ระบบได้ส่งข้อมูลของคุณไปยังเจ้าหน้าที่เรียบร้อยแล้ว</p>
-        <button style="background: #10b981;" onclick="closePopup()">ตกลง</button>
+        <h3 style="color:#10b981; margin:0 0 10px;">ยื่นคำขอสำเร็จ!</h3>
+        <p style="font-size:14px; color:#475569; margin-bottom:20px;">ระบบได้รับการยืนยันข้อมูลของคุณเรียบร้อยแล้ว คำขอจะถูกส่งเข้าสู่ศูนย์พิจารณาอนุมัติทันที</p>
+        <button class="btn btn-primary" style="width:100%;" onclick="closeModal()">รับทราบ & ตรวจสอบสถานะ</button>
     </div>
 </div>
 
@@ -56,45 +137,61 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbze1aTsgVwkV6yLR0iRPN7hC7T4xc0z_MRCfs5MvJ0GCcQKno8_bx1EtTlo-QcdIgDE7Q/exec";
     let myUID = "";
 
-    async function submitData() {
-        myUID = document.getElementById('uid').value.trim();
-        const name = document.getElementById('name').value.trim();
-        const amount = document.getElementById('amount').value;
-        const days = document.getElementById('days').value;
+    function nextStep(step) {
+        document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`sec-${step}`).classList.add('active');
+        for(let i=1; i<=step; i++) {
+            document.getElementById(`st-${i}`).classList.add('active');
+        }
+    }
 
-        if(!myUID || !name || !amount) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+    async function submitForm() {
+        myUID = document.getElementById('uid').value.trim();
+        if(!myUID || !document.getElementById('name').value || !document.getElementById('amount').value) {
+            return alert("กรุณากรอกข้อมูลสำคัญให้ครบถ้วนก่อนส่งคำขอ");
+        }
 
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
-        btn.innerText = "กำลังส่งข้อมูล...";
+        btn.innerText = "กำลังนำส่งข้อมูลเข้าสู่ระบบ...";
+
+        const payload = {
+            action: "register",
+            uid: myUID,
+            name: document.getElementById('name').value,
+            idCard: document.getElementById('idCard').value,
+            phone: document.getElementById('phone').value,
+            occupation: document.getElementById('occupation').value,
+            income: Number(document.getElementById('income').value),
+            purpose: document.getElementById('purpose').value,
+            docUrl: document.getElementById('docUrl').value,
+            amount: Number(document.getElementById('amount').value),
+            days: Number(document.getElementById('days').value)
+        };
 
         try {
             await fetch(GAS_URL, {
                 method: "POST",
                 mode: "no-cors",
                 headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ 
-                    action: "register", 
-                    uid: myUID, 
-                    name: name, 
-                    amount: Number(amount), 
-                    days: Number(days) 
-                })
+                body: JSON.stringify(payload)
             });
-
-            document.getElementById('popup').style.display = 'flex';
-        } catch (err) {
-            alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
+            document.getElementById('successModal').style.display = 'flex';
+        } catch(e) {
+            alert("เกิดข้อผิดพลาดในการส่งข้อมูล โปรดตรวจสอบการเชื่อมต่อ");
             btn.disabled = false;
-            btn.innerText = "ส่งข้อมูลสมัคร";
+            btn.innerText = "ยืนยันการส่งคำขอสินเชื่อ";
         }
     }
 
-    function closePopup() {
-        document.getElementById('popup').style.display = 'none';
-        document.getElementById('registerForm').style.display = 'none';
-        document.getElementById('statusSection').style.display = 'block';
-        document.getElementById('userUidDisplay').innerText = myUID;
+    function closeModal() {
+        document.getElementById('successModal').style.display = 'none';
+        document.getElementById('loanForm').style.display = 'none';
+        document.getElementById('stepper').style.display = 'none';
+        document.getElementById('trackingSection').style.display = 'block';
+        document.getElementById('displayUid').innerText = myUID;
 
         checkStatus();
         setInterval(checkStatus, 20000);
@@ -105,23 +202,21 @@
             const res = await fetch(GAS_URL);
             const data = await res.json();
             const myData = data.find(item => item.uid.toString() === myUID.toString());
-            
             const box = document.getElementById('statusBox');
+
             if(myData) {
                 if(myData.status === 'approved') {
-                    box.className = "status-box approved";
-                    box.innerHTML = `อนุมัติแล้ว!<br>วงเงิน: ${Number(myData.amount).toLocaleString()} บาท<br>ระยะเวลา: ${myData.days} วัน`;
+                    box.className = "status-card approved-box";
+                    box.innerHTML = `<h3>ผลการพิจารณา: อนุมัติสินเชื่อ</h3><p>วงเงินอนุมัติ: <b>${Number(myData.amount).toLocaleString()} บาท</b> | ระยะเวลา: <b>${myData.days} วัน</b></p><span style="font-size:12px;">เจ้าหน้าที่จะทำการโอนเงินเข้าบัญชีตามขั้นตอน</span>`;
                 } else if(myData.status === 'rejected') {
-                    box.className = "status-box rejected";
-                    box.innerText = "คำขอของคุณไม่ได้รับการอนุมัติ";
+                    box.className = "status-card rejected-box";
+                    box.innerHTML = `<h3>ผลการพิจารณา: ไม่อนุมัติ</h3><p>คำขอของคุณไม่ผ่านเกณฑ์การพิจารณาเบื้องต้นของสถาบัน</p>`;
                 } else {
-                    box.className = "status-box pending";
-                    box.innerText = "⏳ กำลังรอเจ้าหน้าที่พิจารณา...";
+                    box.className = "status-card pending-box";
+                    box.innerHTML = `<h3>อยู่ระหว่างการพิจารณาเอกสาร (Pending)</h3><p>วงเงินที่ขอ: ${Number(myData.amount).toLocaleString()} บาท (${myData.days} วัน)</p><span style="font-size:12px;">เจ้าหน้าที่กำลังดำเนินการตรวจสอบความถูกต้องของข้อมูล</span>`;
                 }
             }
-        } catch (err) {
-            console.error("Fetch status error:", err);
-        }
+        } catch(e) { console.error(e); }
     }
 </script>
 </body>
