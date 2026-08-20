@@ -1,0 +1,16 @@
+[
+  {
+    "uid": "1001",
+    "name": "สมชาย ใจดี",
+    "amount": 10000,
+    "days": 30,
+    "status": "pending"
+  },
+  {
+    "uid": "1002",
+    "name": "สมหญิง รักสงบ",
+    "amount": 25000,
+    "days": 15,
+    "status": "pending"
+  }
+]
