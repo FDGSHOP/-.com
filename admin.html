@@ -44,8 +44,7 @@
 </div>
 
 <script>
-    // URL Web App จาก Google Apps Script ของคุณ
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbx51fB_rn_XjG__EI40j9UFRPPFU-Oqd5XY9TvtOqoI13Axkl1WOYJfc8aqucHVz6L-wiQ/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbze1aTsgVwkV6yLR0iRPN7hC7T4xc0z_MRCfs5MvJ0GCcQKno8_bx1EtTlo-QcdIgDE7Q/exec";
     let loanData = [];
 
     async function loadAdminData() {
@@ -97,6 +96,8 @@
         try {
             await fetch(GAS_URL, {
                 method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify({
                     action: "update",
                     uid: uid,
@@ -107,16 +108,13 @@
             });
 
             alert(`บันทึกข้อมูล UID: ${uid} เรียบร้อยแล้ว!`);
-            loadAdminData(); // โหลดข้อมูลใหม่ทันที
+            loadAdminData();
         } catch (err) {
             alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
         }
     }
 
-    // โหลดข้อมูลเมื่อเปิดหน้าเว็บครั้งแรก
     loadAdminData();
-
-    // ดึงข้อมูลใหม่มาเช็กทุกๆ 30 วินาที (30000 ms)
     setInterval(loadAdminData, 30000);
 </script>
 </body>
