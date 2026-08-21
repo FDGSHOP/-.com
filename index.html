@@ -45,7 +45,7 @@
     .upload-area {
       border: 2px dashed #d0d7de;
       border-radius: 12px;
-      padding: 24px;
+      padding: 20px;
       text-align: center;
       background: #fafbfc;
       cursor: pointer;
@@ -59,26 +59,6 @@
       width: 100%;
       border: none;
     }
-    .bottom-sheet {
-      position: fixed;
-      bottom: -100%;
-      left: 0; right: 0;
-      background: white;
-      border-top-left-radius: 24px;
-      border-top-right-radius: 24px;
-      padding: 20px;
-      transition: bottom 0.3s ease;
-      z-index: 1050;
-    }
-    .bottom-sheet.active { bottom: 0; }
-    .sheet-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      z-index: 1040;
-    }
-    .sheet-overlay.active { display: block; }
     .bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -111,11 +91,35 @@
     }
     .page-section { display: none; }
     .page-section.active { display: block; }
+
+    /* สไตล์ใบเสร็จอิเล็กทรอนิกส์ E-Receipt */
+    .e-receipt-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'Courier New', Courier, monospace, sans-serif;
+      position: relative;
+    }
+    .e-receipt-card::after {
+      content: "";
+      position: absolute;
+      bottom: -6px; left: 0; right: 0;
+      height: 6px;
+      background: repeating-linear-gradient(-45deg, #fff, #fff 8px, transparent 8px, transparent 16px);
+    }
+    .receipt-item-click {
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .receipt-item-click:hover {
+      background-color: #f8f9fa;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Top Bar: ปรับชื่อแอปและปุ่มติดตั้งแอป -->
+  <!-- Top Bar -->
   <div class="top-bar">
     <div class="fw-bold"><i class="bi bi-geo-alt-fill text-warning me-1"></i> สินเชื่อเพื่อคนพะเยา</div>
     <button class="btn btn-sm btn-light text-primary rounded-pill px-3 fw-bold" onclick="installAppAlert()">
@@ -182,14 +186,7 @@
             <option value="กรุงไทย (KTB)">ธนาคารกรุงไทย (KTB)</option>
             <option value="กรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
             <option value="กรุงศรีอยุธยา (BAY)">ธนาคารกรุงศรีอยุธยา (BAY)</option>
-            <option value="ทหารไทยธนชาต (ttb)">ธนาคารทหารไทยธนชาต (ttb)</option>
             <option value="ออมสิน (GSB)">ธนาคารออมสิน (GSB)</option>
-            <option value="ธ.ก.ส. (BAAC)">ธนาคารเพื่อการเกษตรฯ (BAAC)</option>
-            <option value="อาคารสงเคราะห์ (GHB)">ธนาคารอาคารสงเคราะห์ (GHB)</option>
-            <option value="ซีไอเอ็มบี (CIMBT)">ธนาคารซีไอเอ็มบี ไทย (CIMBT)</option>
-            <option value="เกียรตินาคินภัทร (KKP)">ธนาคารเกียรตินาคินภัทร (KKP)</option>
-            <option value="แลนด์ แอนด์ เฮ้าส์ (LHFG)">ธนาคารแลนด์ แอนด์ เฮ้าส์ (LHFG)</option>
-            <option value="ยูโอบี (UOB)">ธนาคารยูโอบี (UOB)</option>
             <option value="TrueMoney Wallet">ทรูมันนี่ วอลเล็ท (TrueMoney)</option>
           </select>
         </div>
@@ -210,13 +207,10 @@
       </div>
 
       <div class="card-box">
-        <div class="small fw-bold mb-2">
-          <span class="badge bg-warning text-dark me-1">TIPS</span> อัปโหลดภาพด้านหน้าบัตรประชาชน
-        </div>
-
-        <div class="upload-area" onclick="toggleSheet(true)">
+        <div class="upload-area" onclick="document.getElementById('idCardFileInput').click()">
           <i class="bi bi-camera fs-1 text-secondary"></i>
-          <div class="fw-bold text-secondary mt-2" id="uploadStatusText">สแกน/แนบภาพ ด้านหน้าบัตรประชาชน</div>
+          <div class="fw-bold text-secondary mt-2" id="uploadStatusText">คลิกเพื่อแนบภาพ ด้านหน้าบัตรประชาชน</div>
+          <input type="file" id="idCardFileInput" class="d-none" accept="image/*" onchange="onIdCardSelected(this)">
         </div>
       </div>
 
@@ -229,13 +223,15 @@
         <div class="spinner-border text-light my-3" style="width: 3rem; height: 3rem;" role="status"></div>
         <h5 class="fw-bold">อยู่ในระหว่างการอนุมัติ</h5>
         <div class="small opacity-75">ระบบกำลังดำเนินการตรวจสอบข้อมูลของคุณ</div>
-        <div class="extra-small text-white-50 mt-2">*ยื่นคำขอแล้ว ไม่สามารถยื่นคำขอซ้ำได้</div>
+        <button class="btn btn-sm btn-light text-primary fw-bold mt-3 px-3 rounded-pill" onclick="simulateAdminApprove()">
+          <i class="bi bi-shield-check me-1"></i> [จำลอง] แอดมินกดอนุมัติสัญญา
+        </button>
       </div>
 
       <div class="card-box">
         <div class="d-flex justify-content-between my-1">
           <span class="text-muted small">วงเงินที่ขอสิทธิ์:</span>
-          <span class="fw-bold text-primary" id="pendingAmount">฿ 0</span>
+          <span class="fw-bold text-primary" id="pendingAmount">฿ 1,000</span>
         </div>
         <div class="d-flex justify-content-between my-1">
           <span class="text-muted small">สถานะ:</span>
@@ -244,42 +240,59 @@
       </div>
     </div>
 
-    <!-- PAGE 5: รายการชำระเงิน (หน้าหลักการชำระ) -->
+    <!-- PAGE 5: หน้าทำรายการชำระเงิน (ขึ้นอยู่กับสถานะอนุมัติจริง) -->
     <div id="page-history" class="page-section">
       <h6 class="fw-bold mb-3"><i class="bi bi-wallet2 me-2"></i>ทำรายการชำระเงิน</h6>
       
+      <!-- การ์ด 1: แสดงกรณีสัญญายังไม่อนุมัติ -->
       <div id="historyPendingCard" class="card-box text-center py-4">
-        <div class="spinner-border text-warning my-2" role="status"></div>
-        <h6 class="fw-bold">กำลังรอผลการอนุมัติสินเชื่อ</h6>
-        <p class="small text-muted mb-0">เมื่อได้รับการอนุมัติสัญญาแล้ว สามารถเลือกรูปแบบและแจ้งโอนเงินชำระได้ที่หน้านี้ครับ</p>
+        <i class="bi bi-clock-history text-warning display-4"></i>
+        <h6 class="fw-bold mt-2">ยังไม่มีสัญญาที่อนุมัติ</h6>
+        <p class="small text-muted mb-0">เมนูการชำระเงินจะเปิดใช้งานอัตโนมัติ เมื่อผลการอนุมัติสินเชื่อของคุณสำเร็จแล้วครับ</p>
       </div>
 
-      <!-- สิมมูเลทหน้าชำระเมื่ออนุมัติสัญญาแล้ว -->
-      <div id="paymentActiveCard" class="card-box">
+      <!-- การ์ด 2: แสดงเมื่อสัญญาสมบูรณ์และอนุมัติแล้ว -->
+      <div id="paymentActiveCard" class="card-box d-none">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>สัญญาอนุมัติแล้ว</span>
           <span class="text-muted extra-small">งวดชำระประจำวัน</span>
         </div>
-        <div class="mb-3">
-          <label class="small fw-bold text-muted mb-1">เลือกประเภทการชำระ:</label>
-          <select id="payOptionSelect" class="form-select form-select-sm">
-            <option value="full">สแกนจ่าย (เงินต้น + ดอกเบี้ยประจำวัน)</option>
-            <option value="interest">สแกนจ่าย (เฉพาะดอกลอย)</option>
-          </select>
-        </div>
+        
         <div class="p-3 bg-light rounded text-center mb-3">
           <div class="small text-muted">ยอดที่ต้องชำระวันนี้</div>
-          <div class="h3 fw-bold text-primary my-1">฿ 171.42</div>
+          <div class="h3 fw-bold text-primary my-1" id="payAmountDisplay">฿ 171.42</div>
           <div class="extra-small text-danger">*ชำระก่อนเวลา 18:00 น. เพื่อหลีกเลี่ยงค่าปรับ late fee 50 บาท</div>
         </div>
-        <button class="btn-main" onclick="simulatePaymentSuccess()">แนบสลิป & แจ้งชำระเงิน</button>
+
+        <div class="mb-3">
+          <label class="small fw-bold text-muted mb-1">เลือกประเภทการชำระ:</label>
+          <select id="payOptionSelect" class="form-select form-select-sm" onchange="updatePayOption()">
+            <option value="171.42">ชำระค่างวดปกติ (เงินต้น + ดอกเบี้ย) - ฿171.42</option>
+            <option value="20.00">ชำระเฉพาะดอกเบี้ยรายวัน - ฿20.00</option>
+            <option value="1000.00">ชำระปิดยอดทั้งหมด - ฿1,000.00</option>
+          </select>
+        </div>
+
+        <!-- ฟอร์มแนบสลิปชำระเงินจริง -->
+        <div class="mb-3">
+          <label class="small fw-bold text-muted mb-1">แนบสลิปการโอนเงิน (Slip Upload):</label>
+          <div class="upload-area" onclick="document.getElementById('slipFileInput').click()">
+            <i class="bi bi-file-earmark-arrow-up fs-2 text-primary"></i>
+            <div class="small fw-bold text-primary mt-1" id="slipUploadText">คลิกเพื่อเลือกไฟล์/ถ่ายภาพสลิป</div>
+            <input type="file" id="slipFileInput" class="d-none" accept="image/*" onchange="onSlipSelected(this)">
+          </div>
+          <div id="slipPreviewBox" class="mt-2 text-center d-none">
+            <img id="slipPreviewImg" src="" class="img-thumbnail" style="max-height: 150px;">
+          </div>
+        </div>
+
+        <button class="btn-main" onclick="submitSlipPayment()"><i class="bi bi-send me-1"></i> ยืนยันการชำระเงิน (ส่งสลิป)</button>
       </div>
     </div>
 
-    <!-- PAGE 6: หน้าโปรไฟล์ (จัดเต็ม: ข้อมูลผู้กู้ + ติดต่อแอดมิน + แดชบอร์ดสถานะชำระ + ประวัติใบเสร็จ) -->
+    <!-- PAGE 6: หน้าโปรไฟล์ -->
     <div id="page-profile" class="page-section">
       
-      <!-- ข้อมูลผู้กู้ + ปุ่มติดต่อเจ้าหน้าที่ -->
       <div class="card-box">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <div class="d-flex align-items-center">
@@ -289,35 +302,27 @@
               <span class="extra-small text-muted" id="profileUserId">USR-XXXXXX</span>
             </div>
           </div>
-          <button class="btn btn-sm btn-outline-headset text-success border-success rounded-pill" onclick="contactAdmin()">
+          <button class="btn btn-sm btn-outline-success rounded-pill" onclick="contactAdmin()">
             <i class="bi bi-headset me-1"></i> ติดต่อเจ้าหน้าที่
           </button>
         </div>
         <hr class="my-2">
-        <div class="small text-muted mb-1">เบอร์โทรศัพท์ (ล็อก): <span id="profilePhone" class="text-dark fw-bold">-</span></div>
+        <div class="small text-muted mb-1">เบอร์โทรศัพท์: <span id="profilePhone" class="text-dark fw-bold">-</span></div>
         <div class="small text-muted mb-1">เลขบัตรประชาชน: <span id="profileIdCard" class="text-dark fw-bold">-</span></div>
         <div class="small text-muted mb-2">ธนาคารรับเงิน: <span id="profileBank" class="text-dark fw-bold">-</span></div>
-        
-        <button class="btn btn-sm btn-light text-primary w-100 fw-bold border" onclick="openEditModal()">
-          <i class="bi bi-pencil-square me-1"></i> แจ้งขอเปลี่ยนบัญชีรับเงิน
-        </button>
-
-        <div id="bankPendingAlert" class="alert alert-warning extra-small mt-2 p-2 d-none mb-0" style="font-size: 11px;">
-          <i class="bi bi-hourglass-split me-1"></i> ส่งเรื่องขอเปลี่ยนบัญชีแล้ว อยู่ระหว่างรอแอดมินอนุมัติ
-        </div>
       </div>
 
-      <!-- แดชบอร์ดสรุปสถานะการชำระเงิน (เปอร์เซ็นต์, ยอดเงินต้น, ดอกเบี้ย, ยอดต้องชำระพรุ่งนี้) -->
+      <!-- แดชบอร์ดสรุปสถานะการชำระเงิน -->
       <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-primary me-2"></i>ภาพรวมการชำระสินเชื่อ</h6>
+        <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-primary me-2"></i>ภาพรวมการชำระสินเชื่อเพื่อคนพะเยา</h6>
         
         <div class="mb-3">
           <div class="d-flex justify-content-between small mb-1">
             <span class="text-muted">ความคืบหน้าการชำระคืน:</span>
-            <span class="fw-bold text-primary" id="payPercentText">28.5%</span>
+            <span class="fw-bold text-primary" id="payPercentText">0%</span>
           </div>
           <div class="progress" style="height: 10px;">
-            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" id="payProgressBar" role="progressbar" style="width: 28.5%;"></div>
+            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" id="payProgressBar" role="progressbar" style="width: 0%;"></div>
           </div>
         </div>
 
@@ -325,19 +330,19 @@
           <div class="col-6">
             <div class="p-2 bg-light rounded">
               <div class="extra-small text-muted">ยอดเงินต้นคงเหลือ</div>
-              <div class="fw-bold text-danger" id="profileRemainingPrincipal">฿ 1,000</div>
+              <div class="fw-bold text-danger" id="profileRemainingPrincipal">฿ 1,000.00</div>
             </div>
           </div>
           <div class="col-6">
             <div class="p-2 bg-light rounded">
               <div class="extra-small text-muted">ดอกเบี้ยคงเหลือ</div>
-              <div class="fw-bold text-warning" id="profileRemainingInterest">฿ 142</div>
+              <div class="fw-bold text-warning" id="profileRemainingInterest">฿ 200.00</div>
             </div>
           </div>
           <div class="col-6">
             <div class="p-2 bg-light rounded">
               <div class="extra-small text-muted">ชำระแล้วสะสม</div>
-              <div class="fw-bold text-success" id="profilePaidTotal">฿ 342.84</div>
+              <div class="fw-bold text-success" id="profilePaidTotal">฿ 0.00</div>
             </div>
           </div>
           <div class="col-6">
@@ -349,31 +354,12 @@
         </div>
       </div>
 
-      <!-- ประวัติใบเสร็จรับเงิน (รายการที่อนุมัติแล้ว) -->
+      <!-- ประวัติใบเสร็จรับเงิน (กดดูสลิปอิเล็กทรอนิกส์ได้) -->
       <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-receipt-cutoff text-success me-2"></i>ประวัติใบเสร็จชำระเงิน</h6>
+        <h6 class="fw-bold mb-1"><i class="bi bi-receipt-cutoff text-success me-2"></i>ประวัติใบเสร็จชำระเงิน</h6>
+        <div class="extra-small text-muted mb-3">*คลิกที่รายการใบเสร็จเพื่อดูสลิปใบเสร็จรับเงินอิเล็กทรอนิกส์</div>
         <div id="receiptList">
-          <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-            <div>
-              <div class="fw-bold small text-dark"><i class="bi bi-file-earmark-check text-success me-1"></i>ใบเสร็จ #REC-002</div>
-              <div class="extra-small text-muted">21 ส.ค. 2026 - 14:30 น. (อนุมัติแล้ว)</div>
-            </div>
-            <div class="text-end">
-              <div class="fw-bold text-success">+ ฿ 171.42</div>
-              <span class="badge bg-success-subtle text-success extra-small" style="font-size:10px;">ชำระสำเร็จ</span>
-            </div>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-            <div>
-              <div class="fw-bold small text-dark"><i class="bi bi-file-earmark-check text-success me-1"></i>ใบเสร็จ #REC-001</div>
-              <div class="extra-small text-muted">20 ส.ค. 2026 - 10:15 น. (อนุมัติแล้ว)</div>
-            </div>
-            <div class="text-end">
-              <div class="fw-bold text-success">+ ฿ 171.42</div>
-              <span class="badge bg-success-subtle text-success extra-small" style="font-size:10px;">ชำระสำเร็จ</span>
-            </div>
-          </div>
+          <div class="text-center text-muted py-3 extra-small" id="noReceiptText">ยังไม่มีประวัติการชำระเงิน</div>
         </div>
       </div>
 
@@ -381,76 +367,72 @@
 
   </div>
 
-  <!-- Modal แจ้งขอเปลี่ยนบัญชีธนาคาร (ส่งเรื่องรอแอดมินอนุมัติ) -->
-  <div class="modal fade" id="editDataModal" tabindex="-1">
+  <!-- Modal ใบเสร็จรับเงินอิเล็กทรอนิกส์ (E-Receipt Modal) -->
+  <div class="modal fade" id="receiptModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h6 class="modal-header-title fw-bold">แจ้งขอเปลี่ยนบัญชีรับเงิน (รอแอดมินอนุมัติ)</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="alert alert-warning small py-2 mb-2" style="font-size:11px;">
-            *แก้ไขได้เฉพาะธนาคารและเลขบัญชีเท่านั้น (ไม่สามารถเปลี่ยนเบอร์โทรศัพท์ได้ หากต้องการเปลี่ยนเบอร์โทรโปรดติดต่อแอดมิน)
-          </div>
-          <div class="mb-2">
-            <label class="small text-muted">ชื่อผู้กู้ (ล็อก)</label>
-            <input type="text" id="editFullname" class="form-control form-control-sm bg-light" readonly>
-          </div>
-          <div class="mb-2">
-            <label class="small text-muted">เบอร์โทรศัพท์ (ล็อก)</label>
-            <input type="text" id="editPhone" class="form-control form-control-sm bg-light" readonly>
-          </div>
-          <div class="mb-2">
-            <label class="small text-muted">เลือกธนาคารใหม่</label>
-            <select id="editBankName" class="form-select form-select-sm">
-              <option value="กสิกรไทย (KBANK)">ธนาคารกสิกรไทย (KBANK)</option>
-              <option value="ไทยพาณิชย์ (SCB)">ธนาคารไทยพาณิชย์ (SCB)</option>
-              <option value="กรุงไทย (KTB)">ธนาคารกรุงไทย (KTB)</option>
-              <option value="กรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
-              <option value="กรุงศรีอยุธยา (BAY)">ธนาคารกรุงศรีอยุธยา (BAY)</option>
-              <option value="ทหารไทยธนชาต (ttb)">ธนาคารทหารไทยธนชาต (ttb)</option>
-              <option value="ออมสิน (GSB)">ธนาคารออมสิน (GSB)</option>
-              <option value="ธ.ก.ส. (BAAC)">ธนาคารเพื่อการเกษตรฯ (BAAC)</option>
-              <option value="อาคารสงเคราะห์ (GHB)">ธนาคารอาคารสงเคราะห์ (GHB)</option>
-              <option value="ซีไอเอ็มบี (CIMBT)">ธนาคารซีไอเอ็มบี ไทย (CIMBT)</option>
-              <option value="เกียรตินาคินภัทร (KKP)">ธนาคารเกียรตินาคินภัทร (KKP)</option>
-              <option value="แลนด์ แอนด์ เฮ้าส์ (LHFG)">ธนาคารแลนด์ แอนด์ เฮ้าส์ (LHFG)</option>
-              <option value="ยูโอบี (UOB)">ธนาคารยูโอบี (UOB)</option>
-              <option value="TrueMoney Wallet">ทรูมันนี่ วอลเล็ท (TrueMoney)</option>
-            </select>
-          </div>
-          <div class="mb-2">
-            <label class="small text-muted">เลขบัญชีใหม่</label>
-            <input type="number" id="editBankAcc" class="form-control form-control-sm" placeholder="เลขบัญชีใหม่">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary btn-sm w-100" onclick="submitEditRequest()">ส่งเรื่องขออนุมัติเปลี่ยนบัญชี</button>
-        </div>
-      </div>
-    </div>
-  </div>
+      <div class="modal-content border-0 bg-transparent">
+        <div class="modal-body p-0">
+          <div class="e-receipt-card">
+            <div class="text-center border-bottom pb-3 mb-3">
+              <i class="bi bi-check-circle-fill text-success fs-1"></i>
+              <h5 class="fw-bold text-dark mt-1 mb-0">ใบเสร็จรับเงินอิเล็กทรอนิกส์</h5>
+              <div class="small text-primary fw-bold">สินเชื่อเพื่อคนพะเยา</div>
+              <div class="extra-small text-muted mt-1" id="recModalId">เลขที่: REC-20260821-001</div>
+            </div>
 
-  <!-- Bottom Sheet เลือกวิธีอัปโหลด -->
-  <div class="sheet-overlay" id="overlay" onclick="toggleSheet(false)"></div>
-  <div class="bottom-sheet" id="sheet">
-    <h6 class="fw-bold mb-3">เลือกวิธีการแนบรูปถ่าย</h6>
-    <div class="row g-2">
-      <div class="col-6">
-        <div class="border rounded-3 p-3 text-center" onclick="triggerFile()">
-          <i class="bi bi-camera fs-2 text-primary"></i>
-          <div class="fw-bold small">ถ่ายภาพ</div>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="border rounded-3 p-3 text-center" onclick="triggerFile()">
-          <i class="bi bi-image fs-2 text-primary"></i>
-          <div class="fw-bold small">อัปโหลดรูปภาพ</div>
+            <div class="small">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">วันที่-เวลาชำระ:</span>
+                <span class="fw-bold text-dark" id="recModalDate">21 ส.ค. 2026 - 10:30 น.</span>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">ผู้ชำระเงิน:</span>
+                <span class="fw-bold text-dark" id="recModalCustomer">นายสมชาย ใจดี</span>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">ช่องทางชำระ:</span>
+                <span class="fw-bold text-dark">สแกน QR โอนชำระเงิน</span>
+              </div>
+            </div>
+
+            <hr class="my-2 border-dashed">
+
+            <div class="small">
+              <div class="d-flex justify-content-between mb-1">
+                <span>จำนวนเงินที่ชำระ:</span>
+                <span class="fw-bold text-success" id="recModalPaidAmount">฿ 171.42</span>
+              </div>
+              <div class="d-flex justify-content-between mb-1 text-muted extra-small">
+                <span>- หักเงินต้น:</span>
+                <span id="recModalDeductPrincipal">฿ 142.86</span>
+              </div>
+              <div class="d-flex justify-content-between mb-1 text-muted extra-small">
+                <span>- หักดอกเบี้ย:</span>
+                <span id="recModalDeductInterest">฿ 28.56</span>
+              </div>
+            </div>
+
+            <hr class="my-2 border-dashed">
+
+            <div class="small">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">ยอดเงินต้นคงเหลือ:</span>
+                <span class="fw-bold text-danger" id="recModalRemainPrincipal">฿ 857.14</span>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">สถานะการชำระ:</span>
+                <span class="badge bg-success">ชำระอนุมัติเรียบร้อย</span>
+              </div>
+            </div>
+
+            <div class="text-center mt-4 pt-2 border-top">
+              <div class="extra-small text-muted">ขอบคุณที่ใช้บริการ สินเชื่อเพื่อคนพะเยา</div>
+              <button class="btn btn-sm btn-dark w-100 rounded-pill mt-3" data-bs-dismiss="modal">ปิดหน้าต่างใบเสร็จ</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <input type="file" id="fileInput" class="d-none" accept="image/*" onchange="fileSelected(this)">
   </div>
 
   <!-- Bottom Nav Bar -->
@@ -468,28 +450,40 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    let pickedFileData = null;
-    let editModalObj = null;
+    let pickedIdCardFile = null;
+    let pickedSlipFile = null;
+    let receiptModalObj = null;
 
     let userId = localStorage.getItem('loan_user_id') || ('USR-' + Math.floor(100000 + Math.random() * 900000));
+    let loanApproved = localStorage.getItem('loan_approved') === 'true'; // สถานะอนุมัติสัญญาจริง
     let userStatus = localStorage.getItem('loan_status') || 'NONE'; 
-    let currentLoanAmount = parseInt(localStorage.getItem('loan_amount') || '1000');
+    let currentLoanAmount = parseFloat(localStorage.getItem('loan_amount') || '1000');
+    
+    // ข้อมูลยอดเงินสินเชื่อ
+    let remainingPrincipal = parseFloat(localStorage.getItem('rem_principal') || currentLoanAmount);
+    let remainingInterest = parseFloat(localStorage.getItem('rem_interest') || (currentLoanAmount * 0.20));
+    let totalPaid = parseFloat(localStorage.getItem('total_paid') || '0');
+
+    // เก็บรายการใบเสร็จ
+    let receiptsHistory = JSON.parse(localStorage.getItem('receipts_data') || '[]');
 
     localStorage.setItem('loan_user_id', userId);
 
     window.onload = function() {
-      editModalObj = new bootstrap.Modal(document.getElementById('editDataModal'));
+      receiptModalObj = new bootstrap.Modal(document.getElementById('receiptModal'));
       document.getElementById('profileUserId').innerText = userId;
       loadSavedUserData();
       checkApplicationStatus();
+      updateDashboardData();
+      renderReceiptsList();
     };
 
     function installAppAlert() {
-      alert("ระบบทำการเพิ่มแอปพลิเคชันลงในหน้าจอหลัก (Home Screen) ของคุณเรียบร้อยแล้ว!");
+      alert("ระบบทำการเพิ่มแอปพลิเคชัน 'สินเชื่อเพื่อคนพะเยา' ลงในหน้าจอหลักเรียบร้อยแล้ว!");
     }
 
     function contactAdmin() {
-      alert("กำลังเชื่อมต่อไปยังไลน์แอดมิน/เจ้าหน้าที่บริการลูกค้า พะเยา...");
+      alert("กำลังเปิดไลน์แอดมินเจ้าหน้าที่บริการลูกค้าพะเยา...");
     }
 
     function onSelectAmountChange() {
@@ -505,7 +499,7 @@
     }
 
     function updateDisplayAmount(val) {
-      currentLoanAmount = parseInt(val);
+      currentLoanAmount = parseFloat(val);
       const interest = currentLoanAmount * 0.20;
       document.getElementById('displayLoanAmount').innerText = '฿ ' + currentLoanAmount.toLocaleString();
       document.getElementById('displayInterest').innerText = '฿ ' + interest.toLocaleString();
@@ -529,6 +523,15 @@
       if(userStatus === 'PENDING') {
         document.getElementById('pendingAmount').innerText = '฿ ' + currentLoanAmount.toLocaleString();
         goToPage('page-pending');
+      }
+
+      // ตรวจสอบสัญญาว่าอนุมัติแล้วหรือยัง เพื่อปรับหน้าชำระเงิน
+      if(loanApproved) {
+        document.getElementById('historyPendingCard').classList.add('d-none');
+        document.getElementById('paymentActiveCard').classList.remove('d-none');
+      } else {
+        document.getElementById('historyPendingCard').classList.remove('d-none');
+        document.getElementById('paymentActiveCard').classList.add('d-none');
       }
     }
 
@@ -554,80 +557,178 @@
     }
 
     function loadSavedUserData() {
-      const name = localStorage.getItem('user_fullname') || '-';
-      const phone = localStorage.getItem('user_phone') || '-';
-      const idCard = localStorage.getItem('user_idcard') || '-';
-      const bank = localStorage.getItem('user_bank') || '-';
-
-      document.getElementById('profileName').innerText = name;
-      document.getElementById('profilePhone').innerText = phone;
-      document.getElementById('profileIdCard').innerText = idCard;
-      document.getElementById('profileBank').innerText = bank;
-
-      if(localStorage.getItem('bank_edit_pending') === 'true') {
-        document.getElementById('bankPendingAlert').classList.remove('d-none');
-      } else {
-        document.getElementById('bankPendingAlert').classList.add('d-none');
-      }
+      document.getElementById('profileName').innerText = localStorage.getItem('user_fullname') || 'ผู้ใช้งานทั่วไป';
+      document.getElementById('profilePhone').innerText = localStorage.getItem('user_phone') || '-';
+      document.getElementById('profileIdCard').innerText = localStorage.getItem('user_idcard') || '-';
+      document.getElementById('profileBank').innerText = localStorage.getItem('user_bank') || '-';
     }
 
-    function toggleSheet(show) {
-      document.getElementById('overlay').classList.toggle('active', show);
-      document.getElementById('sheet').classList.toggle('active', show);
-    }
-
-    function triggerFile() {
-      document.getElementById('fileInput').click();
-    }
-
-    function fileSelected(input) {
+    function onIdCardSelected(input) {
       if (input.files && input.files[0]) {
-        const file = input.files[0];
-        document.getElementById('uploadStatusText').innerText = "แนบไฟล์แล้ว: " + file.name;
-        pickedFileData = file.name;
-        toggleSheet(false);
+        pickedIdCardFile = input.files[0];
+        document.getElementById('uploadStatusText').innerText = "แนบไฟล์สำเร็จ: " + pickedIdCardFile.name;
       }
     }
 
     function submitData() {
-      if (!pickedFileData) {
-        alert("กรุณาเลือกไฟล์แนบรูปภาพบัตรประชาชนก่อนครับ");
-        toggleSheet(true);
+      if (!pickedIdCardFile) {
+        alert("กรุณาเลือกไฟล์ภาพถ่ายบัตรประชาชนก่อนครับ");
         return;
       }
 
       userStatus = 'PENDING';
+      remainingPrincipal = currentLoanAmount;
+      remainingInterest = currentLoanAmount * 0.20;
+
       localStorage.setItem('loan_status', 'PENDING');
       localStorage.setItem('loan_amount', currentLoanAmount);
+      localStorage.setItem('rem_principal', remainingPrincipal);
+      localStorage.setItem('rem_interest', remainingInterest);
 
       document.getElementById('pendingAmount').innerText = '฿ ' + currentLoanAmount.toLocaleString();
       goToPage('page-pending');
     }
 
-    function simulatePaymentSuccess() {
-      alert("แนบสลิปเรียบร้อย! เมื่อแอดมินกดยืนยันการชำระ ใบเสร็จและสถานะเปอร์เซ็นต์จะถูกอัปเดตไปที่หน้าโปรไฟล์ของคุณทันทีครับ");
+    // ฟังก์ชันจำลองแอดมินกดอนุมัติสัญญา
+    function simulateAdminApprove() {
+      loanApproved = true;
+      userStatus = 'APPROVED';
+      localStorage.setItem('loan_approved', 'true');
+      localStorage.setItem('loan_status', 'APPROVED');
+
+      alert("ระบบอนุมัติสัญญาเรียบร้อยแล้ว! สามารถทำรายการชำระเงินได้ทันที");
+      checkApplicationStatus();
+      switchTab('page-history');
     }
 
-    function openEditModal() {
-      document.getElementById('editFullname').value = localStorage.getItem('user_fullname') || '';
-      document.getElementById('editPhone').value = localStorage.getItem('user_phone') || '';
-      editModalObj.show();
+    function onSlipSelected(input) {
+      if (input.files && input.files[0]) {
+        pickedSlipFile = input.files[0];
+        document.getElementById('slipUploadText').innerText = "แนบสลิปแล้ว: " + pickedSlipFile.name;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('slipPreviewImg').src = e.target.result;
+          document.getElementById('slipPreviewBox').classList.remove('d-none');
+        }
+        reader.readAsDataURL(pickedSlipFile);
+      }
     }
 
-    function submitEditRequest() {
-      const newBankAcc = document.getElementById('editBankAcc').value;
-      const newBankName = document.getElementById('editBankName').value;
+    function updatePayOption() {
+      const selectedVal = document.getElementById('payOptionSelect').value;
+      document.getElementById('payAmountDisplay').innerText = '฿ ' + parseFloat(selectedVal).toFixed(2);
+    }
 
-      if(!newBankAcc) {
-        alert('กรุณากรอกเลขบัญชีใหม่ก่อนครับ');
+    function submitSlipPayment() {
+      if(!pickedSlipFile) {
+        alert('กรุณาแนบไฟล์สลิปการโอนเงินก่อนส่งชำระครับ');
         return;
       }
 
-      localStorage.setItem('bank_edit_pending', 'true');
-      document.getElementById('bankPendingAlert').classList.remove('d-none');
+      const payAmt = parseFloat(document.getElementById('payOptionSelect').value);
+      
+      // คำนวณยอดเงินต้น/ดอกเบี้ย
+      let interestPaid = Math.min(remainingInterest, payAmt * 0.15);
+      let principalPaid = payAmt - interestPaid;
 
-      editModalObj.hide();
-      alert('ส่งเรื่องขอเปลี่ยนบัญชีเรียบร้อยแล้ว กรุณารอแอดมินตรวจสอบและอนุมัติครับ');
+      remainingPrincipal = Math.max(0, remainingPrincipal - principalPaid);
+      remainingInterest = Math.max(0, remainingInterest - interestPaid);
+      totalPaid += payAmt;
+
+      // บันทึกคำนวณลง LocalStorage
+      localStorage.setItem('rem_principal', remainingPrincipal);
+      localStorage.setItem('rem_interest', remainingInterest);
+      localStorage.setItem('total_paid', totalPaid);
+
+      // สร้างข้อมูลใบเสร็จใหม่
+      const now = new Date();
+      const recId = 'REC-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + Math.floor(100+Math.random()*900);
+      const dateStr = now.toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'numeric'}) + ' - ' + now.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}) + ' น.';
+
+      const newReceipt = {
+        id: recId,
+        date: dateStr,
+        amount: payAmt,
+        deductPrincipal: principalPaid,
+        deductInterest: interestPaid,
+        remainPrincipal: remainingPrincipal,
+        customerName: localStorage.getItem('user_fullname') || 'ผู้ใช้งาน'
+      };
+
+      receiptsHistory.unshift(newReceipt);
+      localStorage.setItem('receipts_data', JSON.stringify(receiptsHistory));
+
+      // รีเซ็ตฟอร์มแนบสลิป
+      pickedSlipFile = null;
+      document.getElementById('slipFileInput').value = '';
+      document.getElementById('slipUploadText').innerText = 'คลิกเพื่อเลือกไฟล์/ถ่ายภาพสลิป';
+      document.getElementById('slipPreviewBox').classList.add('d-none');
+
+      alert("แจ้งชำระเงินและแนบสลิปสำเร็จ! ระบบสร้างใบเสร็จเรียบร้อยแล้ว");
+      
+      updateDashboardData();
+      renderReceiptsList();
+      switchTab('page-profile');
+    }
+
+    function updateDashboardData() {
+      const initialTotal = currentLoanAmount + (currentLoanAmount * 0.20);
+      const currentBalance = remainingPrincipal + remainingInterest;
+      let percent = 0;
+      
+      if(initialTotal > 0) {
+        percent = ((totalPaid / initialTotal) * 100).toFixed(1);
+        if(percent > 100) percent = 100;
+      }
+
+      document.getElementById('payPercentText').innerText = percent + '%';
+      document.getElementById('payProgressBar').style.width = percent + '%';
+
+      document.getElementById('profileRemainingPrincipal').innerText = '฿ ' + remainingPrincipal.toFixed(2);
+      document.getElementById('profileRemainingInterest').innerText = '฿ ' + remainingInterest.toFixed(2);
+      document.getElementById('profilePaidTotal').innerText = '฿ ' + totalPaid.toFixed(2);
+      document.getElementById('profileNextPayAmount').innerText = remainingPrincipal > 0 ? '฿ 171.42' : '฿ 0.00';
+    }
+
+    function renderReceiptsList() {
+      const container = document.getElementById('receiptList');
+      if(receiptsHistory.length === 0) {
+        container.innerHTML = `<div class="text-center text-muted py-3 extra-small">ยังไม่มีประวัติการชำระเงิน</div>`;
+        return;
+      }
+
+      let html = '';
+      receiptsHistory.forEach((rec, idx) => {
+        html += `
+          <div class="d-flex justify-content-between align-items-center p-2 border-bottom receipt-item-click" onclick="openReceiptModal(${idx})">
+            <div>
+              <div class="fw-bold small text-dark"><i class="bi bi-file-earmark-check text-success me-1"></i>ใบเสร็จ #${rec.id}</div>
+              <div class="extra-small text-muted">${rec.date} (กดเพื่อดูสลิป)</div>
+            </div>
+            <div class="text-end">
+              <div class="fw-bold text-success">+ ฿ ${rec.amount.toFixed(2)}</div>
+              <span class="badge bg-success-subtle text-success extra-small" style="font-size:10px;">สำเร็จ</span>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function openReceiptModal(index) {
+      const rec = receiptsHistory[index];
+      if(!rec) return;
+
+      document.getElementById('recModalId').innerText = 'เลขที่: ' + rec.id;
+      document.getElementById('recModalDate').innerText = rec.date;
+      document.getElementById('recModalCustomer').innerText = rec.customerName;
+      document.getElementById('recModalPaidAmount').innerText = '฿ ' + rec.amount.toFixed(2);
+      document.getElementById('recModalDeductPrincipal').innerText = '฿ ' + rec.deductPrincipal.toFixed(2);
+      document.getElementById('recModalDeductInterest').innerText = '฿ ' + rec.deductInterest.toFixed(2);
+      document.getElementById('recModalRemainPrincipal').innerText = '฿ ' + rec.remainPrincipal.toFixed(2);
+
+      receiptModalObj.show();
     }
   </script>
 </body>
