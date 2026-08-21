@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>พร้อมพ์โลน</title>
+  <title>พร้อมพ์โลน - บริการสินเชื่อ</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   <style>
@@ -118,7 +118,7 @@
   <!-- Top Bar -->
   <div class="top-bar">
     <div><i class="bi bi-chevron-left me-2"></i> พร้อมพ์โลน</div>
-    <div class="badge bg-white text-dark rounded-pill px-3 py-1"><i class="bi bi-headset me-1"></i> ติดต่อพนักงาน</div>
+    <div class="badge bg-white text-dark rounded-pill px-3 py-1"><i class="bi bi-headset me-1"></i> ติดต่อแอดมิน</div>
   </div>
 
   <div class="container py-3">
@@ -126,16 +126,34 @@
     <!-- PAGE 1: เลือกวงเงินกู้ -->
     <div id="page-select" class="page-section active">
       <div class="card-box bg-warning bg-opacity-10 text-warning border-0 small mb-3">
-        <i class="bi bi-exclamation-circle-fill me-1"></i> ระบบจะให้ความสำคัญกับการแนะนำผลิตภัณฑ์วงเงินสูงก่อน
+        <i class="bi bi-exclamation-circle-fill me-1"></i> เลือกระยะเวลาและวงเงินที่ต้องการกู้ยืม
       </div>
 
       <div class="card-box bg-primary text-white text-center p-4">
-        <div class="small">กรุณาเลือกจำนวนเงินกู้</div>
-        <div class="h2 fw-bold my-2">฿ 1,000</div>
-        <div class="small opacity-75">ระยะเวลา 7 วัน (ดอกเบี้ย 200 บาท)</div>
+        <div class="small">จำนวนเงินกู้ที่เลือก</div>
+        <div class="h1 fw-bold my-2" id="displayLoanAmount">฿ 1,000</div>
+        <div class="small opacity-75">ระยะเวลา 7 วัน (ดอกเบี้ย 20% = <span id="displayInterest">฿ 200</span>)</div>
       </div>
 
-      <button class="btn-main mt-3" onclick="goToPage('page-form')">สมัครทันที</button>
+      <div class="card-box">
+        <label class="fw-bold small mb-2">เลือกวงเงินกู้ (1,000 - 5,000 บาท):</label>
+        <select id="loanAmountSelect" class="form-select form-select-lg mb-3 fw-bold text-primary" onchange="onSelectAmountChange()">
+          <option value="1000">฿ 1,000</option>
+          <option value="1500">฿ 1,500</option>
+          <option value="2000">฿ 2,000</option>
+          <option value="2500">฿ 2,500</option>
+          <option value="3000">฿ 3,000</option>
+          <option value="3500">฿ 3,500</option>
+          <option value="4000">฿ 4,000</option>
+          <option value="4500">฿ 4,500</option>
+          <option value="5000">฿ 5,000</option>
+        </select>
+
+        <label class="small text-muted mb-1">หรือเลื่อนแถบเพื่อเลือก:</label>
+        <input type="range" class="form-range" id="loanRange" min="1000" max="5000" step="500" value="1000" oninput="onRangeAmountChange()">
+      </div>
+
+      <button class="btn-main mt-2" onclick="goToPage('page-form')">สมัครขอสินเชื่อ</button>
     </div>
 
     <!-- PAGE 2: กรอกข้อมูลส่วนตัวผู้กู้ -->
@@ -157,14 +175,24 @@
         <div class="mb-2">
           <label class="small text-muted">ธนาคารรับเงิน</label>
           <select id="inputBankName" class="form-select form-select-sm">
-            <option value="กสิกรไทย">ธนาคารกสิกรไทย</option>
-            <option value="ไทยพาณิชย์">ธนาคารไทยพาณิชย์</option>
-            <option value="กรุงไทย">ธนาคารกรุงไทย</option>
-            <option value="กรุงเทพ">ธนาคารกรุงเทพ</option>
+            <option value="กสิกรไทย (KBANK)">ธนาคารกสิกรไทย (KBANK)</option>
+            <option value="ไทยพาณิชย์ (SCB)">ธนาคารไทยพาณิชย์ (SCB)</option>
+            <option value="กรุงไทย (KTB)">ธนาคารกรุงไทย (KTB)</option>
+            <option value="กรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
+            <option value="กรุงศรีอยุธยา (BAY)">ธนาคารกรุงศรีอยุธยา (BAY)</option>
+            <option value="ทหารไทยธนชาต (ttb)">ธนาคารทหารไทยธนชาต (ttb)</option>
+            <option value="ออมสิน (GSB)">ธนาคารออมสิน (GSB)</option>
+            <option value="ธ.ก.ส. (BAAC)">ธนาคารเพื่อการเกษตรฯ (BAAC)</option>
+            <option value="อาคารสงเคราะห์ (GHB)">ธนาคารอาคารสงเคราะห์ (GHB)</option>
+            <option value="ซีไอเอ็มบี (CIMBT)">ธนาคารซีไอเอ็มบี ไทย (CIMBT)</option>
+            <option value="เกียรตินาคินภัทร (KKP)">ธนาคารเกียรตินาคินภัทร (KKP)</option>
+            <option value="แลนด์ แอนด์ เฮ้าส์ (LHFG)">ธนาคารแลนด์ แอนด์ เฮ้าส์ (LHFG)</option>
+            <option value="ยูโอบี (UOB)">ธนาคารยูโอบี (UOB)</option>
+            <option value="TrueMoney Wallet">ทรูมันนี่ วอลเล็ท (TrueMoney)</option>
           </select>
         </div>
         <div class="mb-3">
-          <label class="small text-muted">เลขบัญชีธนาคาร</label>
+          <label class="small text-muted">เลขบัญชีธนาคาร / เบอร์วอลเล็ท</label>
           <input type="number" id="inputBankAcc" class="form-control form-control-sm" placeholder="เลขบัญชี">
         </div>
         <button class="btn-main" onclick="validateAndGoUpload()">ถัดไป: ยืนยันตัวตน</button>
@@ -176,7 +204,7 @@
       <div class="text-center my-3">
         <i class="bi bi-person-vcard text-warning display-4"></i>
         <h5 class="fw-bold mt-2">ยืนยันตัวตน</h5>
-        <div class="text-muted small">กรอกข้อมูลให้สมบูรณ์ (4/4)</div>
+        <div class="text-muted small">อัปโหลดภาพถ่ายบัตรประชาชนเพื่อส่งพิจารณา</div>
       </div>
 
       <div class="card-box">
@@ -185,8 +213,8 @@
         </div>
 
         <div class="upload-area" onclick="toggleSheet(true)">
-          <i class="bi bi-aspect-ratio fs-1 text-secondary"></i>
-          <div class="fw-bold text-secondary mt-2" id="uploadStatusText">สแกนด้านหน้า บัตรประชาชน</div>
+          <i class="bi bi-camera fs-1 text-secondary"></i>
+          <div class="fw-bold text-secondary mt-2" id="uploadStatusText">สแกน/แนบภาพ ด้านหน้าบัตรประชาชน</div>
         </div>
       </div>
 
@@ -196,79 +224,118 @@
     <!-- PAGE 4: หน้ารออนุมัติ -->
     <div id="page-pending" class="page-section">
       <div class="blue-status-card mb-3">
-        <i class="bi bi-folder-check display-3 d-block mb-2"></i>
+        <div class="spinner-border text-light my-3" style="width: 3rem; height: 3rem;" role="status"></div>
         <h5 class="fw-bold">อยู่ในระหว่างการอนุมัติ</h5>
-        <div class="small opacity-75">ระบบกำลังดำเนินการอนุมัติให้คุณเป็นลำดับแรก</div>
-        <div class="spinner-border spinner-border-sm text-light mt-3" role="status"></div>
+        <div class="small opacity-75">ระบบกำลังดำเนินการตรวจสอบข้อมูลของคุณ</div>
+        <div class="extra-small text-white-50 mt-2">*ยื่นคำขอแล้ว ไม่สามารถยื่นคำขอซ้ำได้</div>
       </div>
 
       <div class="card-box">
-        <div class="text-muted small">จำนวนเงินกู้</div>
-        <div class="h3 fw-bold my-1">฿1,000</div>
-        <div class="text-muted small">สถานะการสมัคร</div>
-        <div class="fw-bold text-warning">รอแอดมินตรวจสอบข้อมูล</div>
+        <div class="d-flex justify-content-between my-1">
+          <span class="text-muted small">วงเงินที่ขอสิทธิ์:</span>
+          <span class="fw-bold text-primary" id="pendingAmount">฿ 0</span>
+        </div>
+        <div class="d-flex justify-content-between my-1">
+          <span class="text-muted small">สถานะ:</span>
+          <span class="fw-bold text-warning"><i class="bi bi-hourglass-split"></i> กำลังรอแอดมินตรวจสอบ</span>
+        </div>
       </div>
     </div>
 
-    <!-- PAGE 5: รายการชำระ / ประวัติ (คำนวณตามจริง) -->
+    <!-- PAGE 5: รายการชำระ / ประวัติการกู้ -->
     <div id="page-history" class="page-section">
-      <h6 class="fw-bold mb-3"><i class="bi bi-receipt me-2"></i>ประวัติรายการชำระเงิน</h6>
+      <h6 class="fw-bold mb-3"><i class="bi bi-receipt me-2"></i>รายการชำระเงิน</h6>
       
-      <!-- เคสที่ 1: รออนุมัติ -->
       <div id="historyPendingCard" class="card-box text-center py-4">
-        <i class="bi bi-clock-history fs-1 text-warning mb-2 d-block"></i>
-        <h6 class="fw-bold">ยังไม่พบรายการชำระ</h6>
-        <p class="small text-muted mb-0">รายการสินเชื่อของคุณกำลังอยู่ในขั้นตอน **รอแอดมินอนุมัติ** หลังได้รับการอนุมัติแล้วจึงจะเริ่มชำระเงินได้ครับ</p>
-      </div>
-
-      <!-- เคสที่ 2: อนุมัติแล้ว (แสดงฟังก์ชันชำระ + คำนวณ) -->
-      <div id="historyApprovedCard" class="card-box d-none">
-        <div class="d-flex justify-content-between align-items-center">
-          <span class="badge bg-success">ได้รับอนุมัติ ฿1,000</span>
-          <span class="text-danger fw-bold small">รอชำระเงิน</span>
-        </div>
-        <hr class="my-2">
-        
-        <div class="mb-3">
-          <label class="small fw-bold text-muted">รูปแบบการชำระเงิน:</label>
-          <select id="payOptionSelect" class="form-select form-select-sm" onchange="calculatePayAmount()">
-            <option value="full">สแกนจ่าย (ต้น + ดอก)</option>
-            <option value="interest">สแกนจ่าย (เฉพาะดอกลอย - ต้นไม่ลด)</option>
-            <option value="cash_full">จ่ายเงินสด (ต้น + ดอก)</option>
-            <option value="cash_interest">จ่ายเงินสด (เฉพาะดอกลอย - ต้นไม่ลด)</option>
-          </select>
-        </div>
-
-        <div class="p-3 bg-light rounded mb-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="small text-muted">ยอดที่ต้องชำระวันนี้:</span>
-            <span class="h4 fw-bold text-primary mb-0" id="displayPayCalc">฿ 171.43</span>
-          </div>
-          <div id="penaltyText" class="extra-small text-danger mt-1 d-none">*รวมค่าปรับเกิน 18:00 น. +50 บาทแล้ว</div>
-        </div>
-
-        <button class="btn btn-sm btn-success w-100 fw-bold py-2">ยืนยันชำระเงิน / แจ้งโอน</button>
+        <div class="spinner-border text-warning my-2" role="status"></div>
+        <h6 class="fw-bold">กำลังรอผลการอนุมัติ</h6>
+        <p class="small text-muted mb-0">รายการสินเชื่อของคุณอยู่ระหว่างการตรวจสอบ เมื่ออนุมัติแล้วจะสามารถชำระเงินได้ที่นี่</p>
       </div>
     </div>
 
     <!-- PAGE 6: หน้าโปรไฟล์ -->
     <div id="page-profile" class="page-section">
-      <div class="card-box text-center py-4">
-        <div class="display-4 text-primary mb-2"><i class="bi bi-person-circle"></i></div>
+      <div class="card-box text-center py-3">
+        <div class="display-4 text-primary mb-1"><i class="bi bi-person-circle"></i></div>
         <h5 class="fw-bold mb-1" id="profileName">ผู้ใช้งานทั่วไป</h5>
-        <div class="badge bg-light text-dark border px-3 py-2 my-2">
+        <div class="badge bg-light text-dark border px-3 py-2 my-1">
           User ID: <span class="fw-bold text-primary" id="profileUserId">USR-XXXXXX</span>
         </div>
-        <div class="text-muted small" id="profilePhone">เบอร์โทร: -</div>
+      </div>
+
+      <div class="card-box">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0"><i class="bi bi-card-list me-1"></i>ข้อมูลผู้กู้</h6>
+          <button class="btn btn-outline-primary btn-sm rounded-pill" onclick="openEditModal()"><i class="bi bi-pencil-square"></i> แจ้งเปลี่ยนบัญชี</button>
+        </div>
+        <div class="small text-muted mb-1">เบอร์โทรศัพท์ (ล็อก): <span id="profilePhone" class="text-dark fw-bold">-</span></div>
+        <div class="small text-muted mb-1">เลขบัตรประชาชน: <span id="profileIdCard" class="text-dark fw-bold">-</span></div>
+        <div class="small text-muted mb-1">ธนาคารรับเงิน: <span id="profileBank" class="text-dark fw-bold">-</span></div>
+        
+        <!-- แถบเตือนเมื่อส่งเรื่องขอเปลี่ยนบัญชีแล้ว -->
+        <div id="bankPendingAlert" class="alert alert-warning extra-small mt-2 p-2 d-none mb-0" style="font-size: 12px;">
+          <i class="bi bi-hourglass-split me-1"></i> ส่งเรื่องขอเปลี่ยนบัญชีแล้ว อยู่ระหว่างรอแอดมินอนุมัติ
+        </div>
       </div>
     </div>
 
   </div>
 
+  <!-- Modal แจ้งขอเปลี่ยนบัญชีธนาคาร (ส่งเรื่องรอแอดมินอนุมัติ) -->
+  <div class="modal fade" id="editDataModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-header-title fw-bold">แจ้งขอเปลี่ยนบัญชีรับเงิน (รอแอดมินอนุมัติ)</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning small py-2 mb-2" style="font-size:11px;">
+            *แก้ไขได้เฉพาะธนาคารและเลขบัญชีเท่านั้น (ไม่สามารถเปลี่ยนเบอร์โทรศัพท์ได้ หากต้องการเปลี่ยนเบอร์โทรโปรดติดต่อแอดมิน)
+          </div>
+          <div class="mb-2">
+            <label class="small text-muted">ชื่อผู้กู้ (ล็อก)</label>
+            <input type="text" id="editFullname" class="form-control form-control-sm bg-light" readonly>
+          </div>
+          <div class="mb-2">
+            <label class="small text-muted">เบอร์โทรศัพท์ (ล็อก)</label>
+            <input type="text" id="editPhone" class="form-control form-control-sm bg-light" readonly>
+          </div>
+          <div class="mb-2">
+            <label class="small text-muted">เลือกธนาคารใหม่</label>
+            <select id="editBankName" class="form-select form-select-sm">
+              <option value="กสิกรไทย (KBANK)">ธนาคารกสิกรไทย (KBANK)</option>
+              <option value="ไทยพาณิชย์ (SCB)">ธนาคารไทยพาณิชย์ (SCB)</option>
+              <option value="กรุงไทย (KTB)">ธนาคารกรุงไทย (KTB)</option>
+              <option value="กรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
+              <option value="กรุงศรีอยุธยา (BAY)">ธนาคารกรุงศรีอยุธยา (BAY)</option>
+              <option value="ทหารไทยธนชาต (ttb)">ธนาคารทหารไทยธนชาต (ttb)</option>
+              <option value="ออมสิน (GSB)">ธนาคารออมสิน (GSB)</option>
+              <option value="ธ.ก.ส. (BAAC)">ธนาคารเพื่อการเกษตรฯ (BAAC)</option>
+              <option value="อาคารสงเคราะห์ (GHB)">ธนาคารอาคารสงเคราะห์ (GHB)</option>
+              <option value="ซีไอเอ็มบี (CIMBT)">ธนาคารซีไอเอ็มบี ไทย (CIMBT)</option>
+              <option value="เกียรตินาคินภัทร (KKP)">ธนาคารเกียรตินาคินภัทร (KKP)</option>
+              <option value="แลนด์ แอนด์ เฮ้าส์ (LHFG)">ธนาคารแลนด์ แอนด์ เฮ้าส์ (LHFG)</option>
+              <option value="ยูโอบี (UOB)">ธนาคารยูโอบี (UOB)</option>
+              <option value="TrueMoney Wallet">ทรูมันนี่ วอลเล็ท (TrueMoney)</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="small text-muted">เลขบัญชีใหม่</label>
+            <input type="number" id="editBankAcc" class="form-control form-control-sm" placeholder="เลขบัญชีใหม่">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary btn-sm w-100" onclick="submitEditRequest()">ส่งเรื่องขออนุมัติเปลี่ยนบัญชี</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bottom Sheet เลือกวิธีอัปโหลด -->
   <div class="sheet-overlay" id="overlay" onclick="toggleSheet(false)"></div>
   <div class="bottom-sheet" id="sheet">
-    <h6 class="fw-bold mb-3">เลือกวิธีการตรวจสอบ</h6>
+    <h6 class="fw-bold mb-3">เลือกวิธีการแนบรูปถ่าย</h6>
     <div class="row g-2">
       <div class="col-6">
         <div class="border rounded-3 p-3 text-center" onclick="triggerFile()">
@@ -299,18 +366,42 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     let pickedFileData = null;
+    let editModalObj = null;
+
     let userId = localStorage.getItem('loan_user_id') || ('USR-' + Math.floor(100000 + Math.random() * 900000));
-    let userStatus = localStorage.getItem('loan_status') || 'NONE'; // NONE, PENDING, APPROVED
+    let userStatus = localStorage.getItem('loan_status') || 'NONE'; 
+    let currentLoanAmount = parseInt(localStorage.getItem('loan_amount') || '1000');
 
     localStorage.setItem('loan_user_id', userId);
 
     window.onload = function() {
+      editModalObj = new bootstrap.Modal(document.getElementById('editDataModal'));
       document.getElementById('profileUserId').innerText = userId;
       loadSavedUserData();
-      updateHistoryView();
+      checkApplicationStatus();
     };
+
+    function onSelectAmountChange() {
+      const val = document.getElementById('loanAmountSelect').value;
+      document.getElementById('loanRange').value = val;
+      updateDisplayAmount(val);
+    }
+
+    function onRangeAmountChange() {
+      const val = document.getElementById('loanRange').value;
+      document.getElementById('loanAmountSelect').value = val;
+      updateDisplayAmount(val);
+    }
+
+    function updateDisplayAmount(val) {
+      currentLoanAmount = parseInt(val);
+      const interest = currentLoanAmount * 0.20;
+      document.getElementById('displayLoanAmount').innerText = '฿ ' + currentLoanAmount.toLocaleString();
+      document.getElementById('displayInterest').innerText = '฿ ' + interest.toLocaleString();
+    }
 
     function goToPage(pageId) {
       document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
@@ -318,33 +409,58 @@
     }
 
     function switchTab(pageId, btnEl) {
+      if(pageId === 'page-select' && userStatus === 'PENDING') {
+        pageId = 'page-pending';
+      }
       document.querySelectorAll('.nav-item-btn').forEach(el => el.classList.remove('active'));
       if(btnEl) btnEl.classList.add('active');
       goToPage(pageId);
+    }
+
+    function checkApplicationStatus() {
+      if(userStatus === 'PENDING') {
+        document.getElementById('pendingAmount').innerText = '฿ ' + currentLoanAmount.toLocaleString();
+        goToPage('page-pending');
+      }
     }
 
     function validateAndGoUpload() {
       const name = document.getElementById('inputFullname').value;
       const phone = document.getElementById('inputPhone').value;
       const idCard = document.getElementById('inputIdCard').value;
+      const bankName = document.getElementById('inputBankName').value;
       const bankAcc = document.getElementById('inputBankAcc').value;
 
       if(!name || !phone || !idCard || !bankAcc) {
-        alert('กรุณากรอกข้อมูลผู้กู้ให้ครบทุกช่องก่อนครับ');
+        alert('กรุณากรอกข้อมูลผู้กู้ให้ครบถ้วนทุกช่องก่อนครับ');
         return;
       }
 
       localStorage.setItem('user_fullname', name);
       localStorage.setItem('user_phone', phone);
+      localStorage.setItem('user_idcard', idCard);
+      localStorage.setItem('user_bank', bankName + ' ' + bankAcc);
+
       loadSavedUserData();
       goToPage('page-upload');
     }
 
     function loadSavedUserData() {
-      const name = localStorage.getItem('user_fullname');
-      const phone = localStorage.getItem('user_phone');
-      if(name) document.getElementById('profileName').innerText = name;
-      if(phone) document.getElementById('profilePhone').innerText = 'เบอร์โทร: ' + phone;
+      const name = localStorage.getItem('user_fullname') || '-';
+      const phone = localStorage.getItem('user_phone') || '-';
+      const idCard = localStorage.getItem('user_idcard') || '-';
+      const bank = localStorage.getItem('user_bank') || '-';
+
+      document.getElementById('profileName').innerText = name;
+      document.getElementById('profilePhone').innerText = phone;
+      document.getElementById('profileIdCard').innerText = idCard;
+      document.getElementById('profileBank').innerText = bank;
+
+      if(localStorage.getItem('bank_edit_pending') === 'true') {
+        document.getElementById('bankPendingAlert').classList.remove('d-none');
+      } else {
+        document.getElementById('bankPendingAlert').classList.add('d-none');
+      }
     }
 
     function toggleSheet(show) {
@@ -359,68 +475,47 @@
     function fileSelected(input) {
       if (input.files && input.files[0]) {
         const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          pickedFileData = { fileName: file.name, fileData: e.target.result };
-          document.getElementById('uploadStatusText').innerText = "แนบไฟล์แล้ว: " + file.name;
-          toggleSheet(false);
-        };
-        reader.readAsDataURL(file);
+        document.getElementById('uploadStatusText').innerText = "แนบไฟล์แล้ว: " + file.name;
+        pickedFileData = file.name;
+        toggleSheet(false);
       }
     }
 
     function submitData() {
       if (!pickedFileData) {
-        alert("กรุณาเลือกไฟล์แนบรูปภาพก่อนครับ");
+        alert("กรุณาเลือกไฟล์แนบรูปภาพบัตรประชาชนก่อนครับ");
         toggleSheet(true);
         return;
       }
 
       userStatus = 'PENDING';
       localStorage.setItem('loan_status', 'PENDING');
-      updateHistoryView();
+      localStorage.setItem('loan_amount', currentLoanAmount);
+
+      document.getElementById('pendingAmount').innerText = '฿ ' + currentLoanAmount.toLocaleString();
       goToPage('page-pending');
     }
 
-    // ระบบคำนวณยอดชำระอัตโนมัติ
-    function calculatePayAmount() {
-      const principal = 1000;
-      const interest = 200;
-      const days = 7;
-      const opt = document.getElementById('payOptionSelect').value;
-      
-      let basePay = 0;
-      if (opt === 'full' || opt === 'cash_full') {
-        // ต้น + ดอก (1000 + 200) / 7 = 171.43 บาท/วัน
-        basePay = (principal + interest) / days;
-      } else {
-        // เฉพาะดอกลอย 200 / 7 = 28.57 บาท/วัน
-        basePay = interest / days;
-      }
-
-      // เช็คเวลาตัดรอบ 18:00 น.
-      const currentHour = new Date().getHours();
-      let penalty = 0;
-      if (currentHour >= 18) {
-        penalty = 50;
-        document.getElementById('penaltyText').classList.remove('d-none');
-      } else {
-        document.getElementById('penaltyText').classList.add('d-none');
-      }
-
-      const totalToday = (basePay + penalty).toFixed(2);
-      document.getElementById('displayPayCalc').innerText = '฿ ' + totalToday;
+    function openEditModal() {
+      document.getElementById('editFullname').value = localStorage.getItem('user_fullname') || '';
+      document.getElementById('editPhone').value = localStorage.getItem('user_phone') || '';
+      editModalObj.show();
     }
 
-    function updateHistoryView() {
-      if (userStatus === 'APPROVED') {
-        document.getElementById('historyPendingCard').classList.add('d-none');
-        document.getElementById('historyApprovedCard').classList.remove('d-none');
-        calculatePayAmount();
-      } else {
-        document.getElementById('historyPendingCard').classList.remove('d-none');
-        document.getElementById('historyApprovedCard').classList.add('d-none');
+    function submitEditRequest() {
+      const newBankAcc = document.getElementById('editBankAcc').value;
+      const newBankName = document.getElementById('editBankName').value;
+
+      if(!newBankAcc) {
+        alert('กรุณากรอกเลขบัญชีใหม่ก่อนครับ');
+        return;
       }
+
+      localStorage.setItem('bank_edit_pending', 'true');
+      document.getElementById('bankPendingAlert').classList.remove('d-none');
+
+      editModalObj.hide();
+      alert('ส่งเรื่องขอเปลี่ยนบัญชีเรียบร้อยแล้ว กรุณารอแอดมินตรวจสอบและอนุมัติครับ');
     }
   </script>
 </body>
