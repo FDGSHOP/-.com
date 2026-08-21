@@ -92,7 +92,7 @@
     .page-section { display: none; }
     .page-section.active { display: block; }
 
-    /* สไตล์ใบเสร็จอิเล็กทรอนิกส์ E-Receipt */
+    /* ใบเสร็จ E-Receipt */
     .e-receipt-card {
       background: #fff;
       border: 1px solid #e0e0e0;
@@ -100,13 +100,6 @@
       padding: 20px;
       font-family: 'Courier New', Courier, monospace, sans-serif;
       position: relative;
-    }
-    .e-receipt-card::after {
-      content: "";
-      position: absolute;
-      bottom: -6px; left: 0; right: 0;
-      height: 6px;
-      background: repeating-linear-gradient(-45deg, #fff, #fff 8px, transparent 8px, transparent 16px);
     }
     .receipt-item-click {
       cursor: pointer;
@@ -154,8 +147,6 @@
           <option value="4500">฿ 4,500</option>
           <option value="5000">฿ 5,000</option>
         </select>
-
-        <label class="small text-muted mb-1">หรือเลื่อนแถบเพื่อเลือก:</label>
         <input type="range" class="form-range" id="loanRange" min="1000" max="5000" step="500" value="1000" oninput="onRangeAmountChange()">
       </div>
 
@@ -185,7 +176,6 @@
             <option value="ไทยพาณิชย์ (SCB)">ธนาคารไทยพาณิชย์ (SCB)</option>
             <option value="กรุงไทย (KTB)">ธนาคารกรุงไทย (KTB)</option>
             <option value="กรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
-            <option value="กรุงศรีอยุธยา (BAY)">ธนาคารกรุงศรีอยุธยา (BAY)</option>
             <option value="ออมสิน (GSB)">ธนาคารออมสิน (GSB)</option>
             <option value="TrueMoney Wallet">ทรูมันนี่ วอลเล็ท (TrueMoney)</option>
           </select>
@@ -217,14 +207,14 @@
       <button class="btn-main mt-3" onclick="submitData()">เริ่มการตรวจสอบ</button>
     </div>
 
-    <!-- PAGE 4: หน้ารออนุมัติ -->
+    <!-- PAGE 4: หน้ารออนุมัติสัญญา -->
     <div id="page-pending" class="page-section">
       <div class="blue-status-card mb-3">
         <div class="spinner-border text-light my-3" style="width: 3rem; height: 3rem;" role="status"></div>
         <h5 class="fw-bold">อยู่ในระหว่างการอนุมัติ</h5>
         <div class="small opacity-75">ระบบกำลังดำเนินการตรวจสอบข้อมูลของคุณ</div>
-        <button class="btn btn-sm btn-light text-primary fw-bold mt-3 px-3 rounded-pill" onclick="simulateAdminApprove()">
-          <i class="bi bi-shield-check me-1"></i> [จำลอง] แอดมินกดอนุมัติสัญญา
+        <button class="btn btn-sm btn-light text-primary fw-bold mt-3 px-3 rounded-pill" onclick="simulateAdminApproveLoan()">
+          <i class="bi bi-shield-check me-1"></i> [จำลองหลังบ้าน] แอดมินอนุมัติสัญญา
         </button>
       </div>
 
@@ -240,53 +230,75 @@
       </div>
     </div>
 
-    <!-- PAGE 5: หน้าทำรายการชำระเงิน (ขึ้นอยู่กับสถานะอนุมัติจริง) -->
+    <!-- PAGE 5: หน้าทำรายการชำระเงิน -->
     <div id="page-history" class="page-section">
       <h6 class="fw-bold mb-3"><i class="bi bi-wallet2 me-2"></i>ทำรายการชำระเงิน</h6>
       
-      <!-- การ์ด 1: แสดงกรณีสัญญายังไม่อนุมัติ -->
+      <!-- เคส 1: สัญญายังไม่อนุมัติ -->
       <div id="historyPendingCard" class="card-box text-center py-4">
         <i class="bi bi-clock-history text-warning display-4"></i>
         <h6 class="fw-bold mt-2">ยังไม่มีสัญญาที่อนุมัติ</h6>
         <p class="small text-muted mb-0">เมนูการชำระเงินจะเปิดใช้งานอัตโนมัติ เมื่อผลการอนุมัติสินเชื่อของคุณสำเร็จแล้วครับ</p>
       </div>
 
-      <!-- การ์ด 2: แสดงเมื่อสัญญาสมบูรณ์และอนุมัติแล้ว -->
+      <!-- เคส 2: สัญญาอนุมัติแล้ว (ฟอร์มชำระเงิน) -->
       <div id="paymentActiveCard" class="card-box d-none">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>สัญญาอนุมัติแล้ว</span>
-          <span class="text-muted extra-small">งวดชำระประจำวัน</span>
-        </div>
         
-        <div class="p-3 bg-light rounded text-center mb-3">
-          <div class="small text-muted">ยอดที่ต้องชำระวันนี้</div>
-          <div class="h3 fw-bold text-primary my-1" id="payAmountDisplay">฿ 171.42</div>
-          <div class="extra-small text-danger">*ชำระก่อนเวลา 18:00 น. เพื่อหลีกเลี่ยงค่าปรับ late fee 50 บาท</div>
-        </div>
-
-        <div class="mb-3">
-          <label class="small fw-bold text-muted mb-1">เลือกประเภทการชำระ:</label>
-          <select id="payOptionSelect" class="form-select form-select-sm" onchange="updatePayOption()">
-            <option value="171.42">ชำระค่างวดปกติ (เงินต้น + ดอกเบี้ย) - ฿171.42</option>
-            <option value="20.00">ชำระเฉพาะดอกเบี้ยรายวัน - ฿20.00</option>
-            <option value="1000.00">ชำระปิดยอดทั้งหมด - ฿1,000.00</option>
-          </select>
-        </div>
-
-        <!-- ฟอร์มแนบสลิปชำระเงินจริง -->
-        <div class="mb-3">
-          <label class="small fw-bold text-muted mb-1">แนบสลิปการโอนเงิน (Slip Upload):</label>
-          <div class="upload-area" onclick="document.getElementById('slipFileInput').click()">
-            <i class="bi bi-file-earmark-arrow-up fs-2 text-primary"></i>
-            <div class="small fw-bold text-primary mt-1" id="slipUploadText">คลิกเพื่อเลือกไฟล์/ถ่ายภาพสลิป</div>
-            <input type="file" id="slipFileInput" class="d-none" accept="image/*" onchange="onSlipSelected(this)">
-          </div>
-          <div id="slipPreviewBox" class="mt-2 text-center d-none">
-            <img id="slipPreviewImg" src="" class="img-thumbnail" style="max-height: 150px;">
+        <!-- สถานะย่อย: เมื่อแนบสลิปแล้วและกำลัง "รอแอดมินตรวจสอบสลิป" -->
+        <div id="slipPendingBox" class="alert alert-warning text-center p-3 mb-3 d-none">
+          <div class="spinner-border spinner-border-sm text-warning me-2" role="status"></div>
+          <strong class="d-block mt-1">ส่งสลิปแล้ว - อยู่ระหว่างการตรวจสอบ</strong>
+          <span class="extra-small text-muted d-block mt-1">แอดมินหลังบ้านกำลังตรวจสอบความถูกต้องของยอดเงิน <br>ยอดเงินต้นและดอกเบี้ยจะยังไม่ถูกตัดจนกว่าแอดมินจะอนุมัติครับ</span>
+          
+          <!-- ปุ่มจำลองระบบหลังบ้านสำหรับทดสอบ -->
+          <div class="mt-3 pt-2 border-top">
+            <div class="extra-small text-dark fw-bold mb-2">[จำลองหลังบ้านแอดมิน]</div>
+            <button class="btn btn-sm btn-success rounded-pill px-3 me-1" onclick="simulateAdminApprovePayment(true)">
+              <i class="bi bi-check-lg"></i> อนุมัติการชำระ
+            </button>
+            <button class="btn btn-sm btn-danger rounded-pill px-3" onclick="simulateAdminApprovePayment(false)">
+              <i class="bi bi-x-lg"></i> ปฏิเสธสลิป
+            </button>
           </div>
         </div>
 
-        <button class="btn-main" onclick="submitSlipPayment()"><i class="bi bi-send me-1"></i> ยืนยันการชำระเงิน (ส่งสลิป)</button>
+        <div id="paymentFormBody">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>สัญญาอนุมัติแล้ว</span>
+            <span class="text-muted extra-small">งวดชำระประจำวัน</span>
+          </div>
+          
+          <div class="p-3 bg-light rounded text-center mb-3">
+            <div class="small text-muted">ยอดที่ต้องชำระวันนี้</div>
+            <div class="h3 fw-bold text-primary my-1" id="payAmountDisplay">฿ 171.42</div>
+            <div class="extra-small text-danger">*ชำระก่อนเวลา 18:00 น. เพื่อหลีกเลี่ยงค่าปรับ late fee 50 บาท</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="small fw-bold text-muted mb-1">เลือกประเภทการชำระ:</label>
+            <select id="payOptionSelect" class="form-select form-select-sm" onchange="updatePayOption()">
+              <option value="171.42">ชำระค่างวดปกติ (เงินต้น + ดอกเบี้ย) - ฿171.42</option>
+              <option value="20.00">ชำระเฉพาะดอกเบี้ยรายวัน - ฿20.00</option>
+              <option value="1000.00">ชำระปิดยอดทั้งหมด - ฿1,000.00</option>
+            </select>
+          </div>
+
+          <!-- แนบสลิปจริง -->
+          <div class="mb-3">
+            <label class="small fw-bold text-muted mb-1">แนบสลิปการโอนเงิน (Slip Upload):</label>
+            <div class="upload-area" onclick="document.getElementById('slipFileInput').click()">
+              <i class="bi bi-file-earmark-arrow-up fs-2 text-primary"></i>
+              <div class="small fw-bold text-primary mt-1" id="slipUploadText">คลิกเพื่อเลือกไฟล์/ถ่ายภาพสลิป</div>
+              <input type="file" id="slipFileInput" class="d-none" accept="image/*" onchange="onSlipSelected(this)">
+            </div>
+            <div id="slipPreviewBox" class="mt-2 text-center d-none">
+              <img id="slipPreviewImg" src="" class="img-thumbnail" style="max-height: 150px;">
+            </div>
+          </div>
+
+          <button class="btn-main" onclick="submitSlipForReview()"><i class="bi bi-send me-1"></i> ส่งสลิปให้แอดมินตรวจสอบ</button>
+        </div>
+
       </div>
     </div>
 
@@ -354,10 +366,10 @@
         </div>
       </div>
 
-      <!-- ประวัติใบเสร็จรับเงิน (กดดูสลิปอิเล็กทรอนิกส์ได้) -->
+      <!-- ประวัติใบเสร็จรับเงิน -->
       <div class="card-box">
         <h6 class="fw-bold mb-1"><i class="bi bi-receipt-cutoff text-success me-2"></i>ประวัติใบเสร็จชำระเงิน</h6>
-        <div class="extra-small text-muted mb-3">*คลิกที่รายการใบเสร็จเพื่อดูสลิปใบเสร็จรับเงินอิเล็กทรอนิกส์</div>
+        <div class="extra-small text-muted mb-3">*เฉพาะรายการที่แอดมินอนุมัติชำระเงินแล้วเท่านั้น</div>
         <div id="receiptList">
           <div class="text-center text-muted py-3 extra-small" id="noReceiptText">ยังไม่มีประวัติการชำระเงิน</div>
         </div>
@@ -367,7 +379,7 @@
 
   </div>
 
-  <!-- Modal ใบเสร็จรับเงินอิเล็กทรอนิกส์ (E-Receipt Modal) -->
+  <!-- Modal ใบเสร็จรับเงินอิเล็กทรอนิกส์ -->
   <div class="modal fade" id="receiptModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 bg-transparent">
@@ -383,11 +395,11 @@
             <div class="small">
               <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted">วันที่-เวลาชำระ:</span>
-                <span class="fw-bold text-dark" id="recModalDate">21 ส.ค. 2026 - 10:30 น.</span>
+                <span class="fw-bold text-dark" id="recModalDate">-</span>
               </div>
               <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted">ผู้ชำระเงิน:</span>
-                <span class="fw-bold text-dark" id="recModalCustomer">นายสมชาย ใจดี</span>
+                <span class="fw-bold text-dark" id="recModalCustomer">-</span>
               </div>
               <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted">ช่องทางชำระ:</span>
@@ -400,15 +412,15 @@
             <div class="small">
               <div class="d-flex justify-content-between mb-1">
                 <span>จำนวนเงินที่ชำระ:</span>
-                <span class="fw-bold text-success" id="recModalPaidAmount">฿ 171.42</span>
+                <span class="fw-bold text-success" id="recModalPaidAmount">฿ 0.00</span>
               </div>
               <div class="d-flex justify-content-between mb-1 text-muted extra-small">
                 <span>- หักเงินต้น:</span>
-                <span id="recModalDeductPrincipal">฿ 142.86</span>
+                <span id="recModalDeductPrincipal">฿ 0.00</span>
               </div>
               <div class="d-flex justify-content-between mb-1 text-muted extra-small">
                 <span>- หักดอกเบี้ย:</span>
-                <span id="recModalDeductInterest">฿ 28.56</span>
+                <span id="recModalDeductInterest">฿ 0.00</span>
               </div>
             </div>
 
@@ -417,11 +429,11 @@
             <div class="small">
               <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted">ยอดเงินต้นคงเหลือ:</span>
-                <span class="fw-bold text-danger" id="recModalRemainPrincipal">฿ 857.14</span>
+                <span class="fw-bold text-danger" id="recModalRemainPrincipal">฿ 0.00</span>
               </div>
               <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted">สถานะการชำระ:</span>
-                <span class="badge bg-success">ชำระอนุมัติเรียบร้อย</span>
+                <span class="badge bg-success">อนุมัติเรียบร้อย</span>
               </div>
             </div>
 
@@ -455,16 +467,16 @@
     let receiptModalObj = null;
 
     let userId = localStorage.getItem('loan_user_id') || ('USR-' + Math.floor(100000 + Math.random() * 900000));
-    let loanApproved = localStorage.getItem('loan_approved') === 'true'; // สถานะอนุมัติสัญญาจริง
+    let loanApproved = localStorage.getItem('loan_approved') === 'true'; 
     let userStatus = localStorage.getItem('loan_status') || 'NONE'; 
+    let slipPending = localStorage.getItem('slip_pending') === 'true'; // สถานะรอแอดมินตรวจสลิป
+    let pendingPayAmount = parseFloat(localStorage.getItem('pending_pay_amount') || '0'); // ยอดที่ส่งตรวจ
+
     let currentLoanAmount = parseFloat(localStorage.getItem('loan_amount') || '1000');
-    
-    // ข้อมูลยอดเงินสินเชื่อ
     let remainingPrincipal = parseFloat(localStorage.getItem('rem_principal') || currentLoanAmount);
     let remainingInterest = parseFloat(localStorage.getItem('rem_interest') || (currentLoanAmount * 0.20));
     let totalPaid = parseFloat(localStorage.getItem('total_paid') || '0');
 
-    // เก็บรายการใบเสร็จ
     let receiptsHistory = JSON.parse(localStorage.getItem('receipts_data') || '[]');
 
     localStorage.setItem('loan_user_id', userId);
@@ -525,13 +537,21 @@
         goToPage('page-pending');
       }
 
-      // ตรวจสอบสัญญาว่าอนุมัติแล้วหรือยัง เพื่อปรับหน้าชำระเงิน
       if(loanApproved) {
         document.getElementById('historyPendingCard').classList.add('d-none');
         document.getElementById('paymentActiveCard').classList.remove('d-none');
       } else {
         document.getElementById('historyPendingCard').classList.remove('d-none');
         document.getElementById('paymentActiveCard').classList.add('d-none');
+      }
+
+      // ตรวจสอบว่ามีสลิปรอตะรวจหรือไม่
+      if(slipPending) {
+        document.getElementById('slipPendingBox').classList.remove('d-none');
+        document.getElementById('paymentFormBody').classList.add('d-none');
+      } else {
+        document.getElementById('slipPendingBox').classList.add('d-none');
+        document.getElementById('paymentFormBody').classList.remove('d-none');
       }
     }
 
@@ -589,8 +609,7 @@
       goToPage('page-pending');
     }
 
-    // ฟังก์ชันจำลองแอดมินกดอนุมัติสัญญา
-    function simulateAdminApprove() {
+    function simulateAdminApproveLoan() {
       loanApproved = true;
       userStatus = 'APPROVED';
       localStorage.setItem('loan_approved', 'true');
@@ -620,61 +639,84 @@
       document.getElementById('payAmountDisplay').innerText = '฿ ' + parseFloat(selectedVal).toFixed(2);
     }
 
-    function submitSlipPayment() {
+    // เมื่อลูกค้านำส่งสลิป -> ปรับสถานะเป็น "รอการตรวจสอบ" (ยังไม่ตัดเงิน)
+    function submitSlipForReview() {
       if(!pickedSlipFile) {
         alert('กรุณาแนบไฟล์สลิปการโอนเงินก่อนส่งชำระครับ');
         return;
       }
 
-      const payAmt = parseFloat(document.getElementById('payOptionSelect').value);
-      
-      // คำนวณยอดเงินต้น/ดอกเบี้ย
-      let interestPaid = Math.min(remainingInterest, payAmt * 0.15);
-      let principalPaid = payAmt - interestPaid;
+      pendingPayAmount = parseFloat(document.getElementById('payOptionSelect').value);
+      slipPending = true;
 
-      remainingPrincipal = Math.max(0, remainingPrincipal - principalPaid);
-      remainingInterest = Math.max(0, remainingInterest - interestPaid);
-      totalPaid += payAmt;
+      localStorage.setItem('slip_pending', 'true');
+      localStorage.setItem('pending_pay_amount', pendingPayAmount);
 
-      // บันทึกคำนวณลง LocalStorage
-      localStorage.setItem('rem_principal', remainingPrincipal);
-      localStorage.setItem('rem_interest', remainingInterest);
-      localStorage.setItem('total_paid', totalPaid);
+      alert("ส่งสลิปเรียบร้อยแล้ว! ระบบกำลังส่งข้อมูลให้แอดมินหลังบ้านตรวจสอบความถูกต้อง ยอดเงินยืมจะถูกหักทันทีเมื่อแอดมินอนุมัติครับ");
+      checkApplicationStatus();
+    }
 
-      // สร้างข้อมูลใบเสร็จใหม่
-      const now = new Date();
-      const recId = 'REC-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + Math.floor(100+Math.random()*900);
-      const dateStr = now.toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'numeric'}) + ' - ' + now.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}) + ' น.';
+    // จำลองแอดมินหลังบ้านกดอนุมัติหรือปฏิเสธสลิป
+    function simulateAdminApprovePayment(isApproved) {
+      if(isApproved) {
+        // แอดมินอนุมัติ: ดำเนินการตัดเงินยืมจริง
+        let interestPaid = Math.min(remainingInterest, pendingPayAmount * 0.15);
+        let principalPaid = pendingPayAmount - interestPaid;
 
-      const newReceipt = {
-        id: recId,
-        date: dateStr,
-        amount: payAmt,
-        deductPrincipal: principalPaid,
-        deductInterest: interestPaid,
-        remainPrincipal: remainingPrincipal,
-        customerName: localStorage.getItem('user_fullname') || 'ผู้ใช้งาน'
-      };
+        remainingPrincipal = Math.max(0, remainingPrincipal - principalPaid);
+        remainingInterest = Math.max(0, remainingInterest - interestPaid);
+        totalPaid += pendingPayAmount;
 
-      receiptsHistory.unshift(newReceipt);
-      localStorage.setItem('receipts_data', JSON.stringify(receiptsHistory));
+        localStorage.setItem('rem_principal', remainingPrincipal);
+        localStorage.setItem('rem_interest', remainingInterest);
+        localStorage.setItem('total_paid', totalPaid);
 
-      // รีเซ็ตฟอร์มแนบสลิป
+        // ออกใบเสร็จ E-Receipt
+        const now = new Date();
+        const recId = 'REC-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + Math.floor(100+Math.random()*900);
+        const dateStr = now.toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'numeric'}) + ' - ' + now.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}) + ' น.';
+
+        const newReceipt = {
+          id: recId,
+          date: dateStr,
+          amount: pendingPayAmount,
+          deductPrincipal: principalPaid,
+          deductInterest: interestPaid,
+          remainPrincipal: remainingPrincipal,
+          customerName: localStorage.getItem('user_fullname') || 'ผู้ใช้งาน'
+        };
+
+        receiptsHistory.unshift(newReceipt);
+        localStorage.setItem('receipts_data', JSON.stringify(receiptsHistory));
+
+        alert("แอดมินยืนยันยอดชำระถูกต้อง! ตัดยอดเงินยืมสำเร็จ และส่งใบเสร็จไปที่หน้าโปรไฟล์ของคุณแล้วครับ");
+      } else {
+        alert("แอดมินปฏิเสธสลิป (เนื่องจากยอดเงินไม่ตรง หรือสลิปไม่ถูกต้อง) ระบบยังไม่ได้หักยอดเงินยืม กรุณาแนบสลิปใหม่อีกครั้ง");
+      }
+
+      // รีเซ็ตสถานะสลิป
+      slipPending = false;
+      pendingPayAmount = 0;
       pickedSlipFile = null;
+
+      localStorage.setItem('slip_pending', 'false');
+      localStorage.setItem('pending_pay_amount', '0');
+
       document.getElementById('slipFileInput').value = '';
       document.getElementById('slipUploadText').innerText = 'คลิกเพื่อเลือกไฟล์/ถ่ายภาพสลิป';
       document.getElementById('slipPreviewBox').classList.add('d-none');
 
-      alert("แจ้งชำระเงินและแนบสลิปสำเร็จ! ระบบสร้างใบเสร็จเรียบร้อยแล้ว");
-      
+      checkApplicationStatus();
       updateDashboardData();
       renderReceiptsList();
-      switchTab('page-profile');
+
+      if(isApproved) {
+        switchTab('page-profile');
+      }
     }
 
     function updateDashboardData() {
       const initialTotal = currentLoanAmount + (currentLoanAmount * 0.20);
-      const currentBalance = remainingPrincipal + remainingInterest;
       let percent = 0;
       
       if(initialTotal > 0) {
@@ -708,7 +750,7 @@
             </div>
             <div class="text-end">
               <div class="fw-bold text-success">+ ฿ ${rec.amount.toFixed(2)}</div>
-              <span class="badge bg-success-subtle text-success extra-small" style="font-size:10px;">สำเร็จ</span>
+              <span class="badge bg-success-subtle text-success extra-small" style="font-size:10px;">อนุมัติแล้ว</span>
             </div>
           </div>
         `;
