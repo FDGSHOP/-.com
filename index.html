@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>พร้อมพ์โลน - บริการสินเชื่อ</title>
+  <title>สินเชื่อเพื่อคนพะเยา</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   <style>
     :root {
       --bg-main: #f4f6fb;
       --primary-blue: #2f73f6;
-      --header-bg: #92b8ff;
+      --header-bg: #2f73f6;
     }
     body {
       background-color: var(--bg-main);
@@ -115,10 +115,12 @@
 </head>
 <body>
 
-  <!-- Top Bar -->
+  <!-- Top Bar: ปรับชื่อแอปและปุ่มติดตั้งแอป -->
   <div class="top-bar">
-    <div><i class="bi bi-chevron-left me-2"></i> พร้อมพ์โลน</div>
-    <div class="badge bg-white text-dark rounded-pill px-3 py-1"><i class="bi bi-headset me-1"></i> ติดต่อแอดมิน</div>
+    <div class="fw-bold"><i class="bi bi-geo-alt-fill text-warning me-1"></i> สินเชื่อเพื่อคนพะเยา</div>
+    <button class="btn btn-sm btn-light text-primary rounded-pill px-3 fw-bold" onclick="installAppAlert()">
+      <i class="bi bi-download me-1"></i> ติดตั้งแอปพลิเคชัน
+    </button>
   </div>
 
   <div class="container py-3">
@@ -242,41 +244,139 @@
       </div>
     </div>
 
-    <!-- PAGE 5: รายการชำระ / ประวัติการกู้ -->
+    <!-- PAGE 5: รายการชำระเงิน (หน้าหลักการชำระ) -->
     <div id="page-history" class="page-section">
-      <h6 class="fw-bold mb-3"><i class="bi bi-receipt me-2"></i>รายการชำระเงิน</h6>
+      <h6 class="fw-bold mb-3"><i class="bi bi-wallet2 me-2"></i>ทำรายการชำระเงิน</h6>
       
       <div id="historyPendingCard" class="card-box text-center py-4">
         <div class="spinner-border text-warning my-2" role="status"></div>
-        <h6 class="fw-bold">กำลังรอผลการอนุมัติ</h6>
-        <p class="small text-muted mb-0">รายการสินเชื่อของคุณอยู่ระหว่างการตรวจสอบ เมื่ออนุมัติแล้วจะสามารถชำระเงินได้ที่นี่</p>
+        <h6 class="fw-bold">กำลังรอผลการอนุมัติสินเชื่อ</h6>
+        <p class="small text-muted mb-0">เมื่อได้รับการอนุมัติสัญญาแล้ว สามารถเลือกรูปแบบและแจ้งโอนเงินชำระได้ที่หน้านี้ครับ</p>
+      </div>
+
+      <!-- สิมมูเลทหน้าชำระเมื่ออนุมัติสัญญาแล้ว -->
+      <div id="paymentActiveCard" class="card-box">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>สัญญาอนุมัติแล้ว</span>
+          <span class="text-muted extra-small">งวดชำระประจำวัน</span>
+        </div>
+        <div class="mb-3">
+          <label class="small fw-bold text-muted mb-1">เลือกประเภทการชำระ:</label>
+          <select id="payOptionSelect" class="form-select form-select-sm">
+            <option value="full">สแกนจ่าย (เงินต้น + ดอกเบี้ยประจำวัน)</option>
+            <option value="interest">สแกนจ่าย (เฉพาะดอกลอย)</option>
+          </select>
+        </div>
+        <div class="p-3 bg-light rounded text-center mb-3">
+          <div class="small text-muted">ยอดที่ต้องชำระวันนี้</div>
+          <div class="h3 fw-bold text-primary my-1">฿ 171.42</div>
+          <div class="extra-small text-danger">*ชำระก่อนเวลา 18:00 น. เพื่อหลีกเลี่ยงค่าปรับ late fee 50 บาท</div>
+        </div>
+        <button class="btn-main" onclick="simulatePaymentSuccess()">แนบสลิป & แจ้งชำระเงิน</button>
       </div>
     </div>
 
-    <!-- PAGE 6: หน้าโปรไฟล์ -->
+    <!-- PAGE 6: หน้าโปรไฟล์ (จัดเต็ม: ข้อมูลผู้กู้ + ติดต่อแอดมิน + แดชบอร์ดสถานะชำระ + ประวัติใบเสร็จ) -->
     <div id="page-profile" class="page-section">
-      <div class="card-box text-center py-3">
-        <div class="display-4 text-primary mb-1"><i class="bi bi-person-circle"></i></div>
-        <h5 class="fw-bold mb-1" id="profileName">ผู้ใช้งานทั่วไป</h5>
-        <div class="badge bg-light text-dark border px-3 py-2 my-1">
-          User ID: <span class="fw-bold text-primary" id="profileUserId">USR-XXXXXX</span>
-        </div>
-      </div>
-
+      
+      <!-- ข้อมูลผู้กู้ + ปุ่มติดต่อเจ้าหน้าที่ -->
       <div class="card-box">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="fw-bold mb-0"><i class="bi bi-card-list me-1"></i>ข้อมูลผู้กู้</h6>
-          <button class="btn btn-outline-primary btn-sm rounded-pill" onclick="openEditModal()"><i class="bi bi-pencil-square"></i> แจ้งเปลี่ยนบัญชี</button>
+          <div class="d-flex align-items-center">
+            <i class="bi bi-person-circle fs-2 text-primary me-2"></i>
+            <div>
+              <h6 class="fw-bold mb-0" id="profileName">ผู้ใช้งานทั่วไป</h6>
+              <span class="extra-small text-muted" id="profileUserId">USR-XXXXXX</span>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline-headset text-success border-success rounded-pill" onclick="contactAdmin()">
+            <i class="bi bi-headset me-1"></i> ติดต่อเจ้าหน้าที่
+          </button>
         </div>
+        <hr class="my-2">
         <div class="small text-muted mb-1">เบอร์โทรศัพท์ (ล็อก): <span id="profilePhone" class="text-dark fw-bold">-</span></div>
         <div class="small text-muted mb-1">เลขบัตรประชาชน: <span id="profileIdCard" class="text-dark fw-bold">-</span></div>
-        <div class="small text-muted mb-1">ธนาคารรับเงิน: <span id="profileBank" class="text-dark fw-bold">-</span></div>
+        <div class="small text-muted mb-2">ธนาคารรับเงิน: <span id="profileBank" class="text-dark fw-bold">-</span></div>
         
-        <!-- แถบเตือนเมื่อส่งเรื่องขอเปลี่ยนบัญชีแล้ว -->
-        <div id="bankPendingAlert" class="alert alert-warning extra-small mt-2 p-2 d-none mb-0" style="font-size: 12px;">
+        <button class="btn btn-sm btn-light text-primary w-100 fw-bold border" onclick="openEditModal()">
+          <i class="bi bi-pencil-square me-1"></i> แจ้งขอเปลี่ยนบัญชีรับเงิน
+        </button>
+
+        <div id="bankPendingAlert" class="alert alert-warning extra-small mt-2 p-2 d-none mb-0" style="font-size: 11px;">
           <i class="bi bi-hourglass-split me-1"></i> ส่งเรื่องขอเปลี่ยนบัญชีแล้ว อยู่ระหว่างรอแอดมินอนุมัติ
         </div>
       </div>
+
+      <!-- แดชบอร์ดสรุปสถานะการชำระเงิน (เปอร์เซ็นต์, ยอดเงินต้น, ดอกเบี้ย, ยอดต้องชำระพรุ่งนี้) -->
+      <div class="card-box">
+        <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-primary me-2"></i>ภาพรวมการชำระสินเชื่อ</h6>
+        
+        <div class="mb-3">
+          <div class="d-flex justify-content-between small mb-1">
+            <span class="text-muted">ความคืบหน้าการชำระคืน:</span>
+            <span class="fw-bold text-primary" id="payPercentText">28.5%</span>
+          </div>
+          <div class="progress" style="height: 10px;">
+            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" id="payProgressBar" role="progressbar" style="width: 28.5%;"></div>
+          </div>
+        </div>
+
+        <div class="row g-2 text-center">
+          <div class="col-6">
+            <div class="p-2 bg-light rounded">
+              <div class="extra-small text-muted">ยอดเงินต้นคงเหลือ</div>
+              <div class="fw-bold text-danger" id="profileRemainingPrincipal">฿ 1,000</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-2 bg-light rounded">
+              <div class="extra-small text-muted">ดอกเบี้ยคงเหลือ</div>
+              <div class="fw-bold text-warning" id="profileRemainingInterest">฿ 142</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-2 bg-light rounded">
+              <div class="extra-small text-muted">ชำระแล้วสะสม</div>
+              <div class="fw-bold text-success" id="profilePaidTotal">฿ 342.84</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-2 bg-light rounded border border-warning">
+              <div class="extra-small text-muted fw-bold text-dark">ยอดต้องชำระพรุ่งนี้</div>
+              <div class="fw-bold text-primary" id="profileNextPayAmount">฿ 171.42</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ประวัติใบเสร็จรับเงิน (รายการที่อนุมัติแล้ว) -->
+      <div class="card-box">
+        <h6 class="fw-bold mb-3"><i class="bi bi-receipt-cutoff text-success me-2"></i>ประวัติใบเสร็จชำระเงิน</h6>
+        <div id="receiptList">
+          <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+            <div>
+              <div class="fw-bold small text-dark"><i class="bi bi-file-earmark-check text-success me-1"></i>ใบเสร็จ #REC-002</div>
+              <div class="extra-small text-muted">21 ส.ค. 2026 - 14:30 น. (อนุมัติแล้ว)</div>
+            </div>
+            <div class="text-end">
+              <div class="fw-bold text-success">+ ฿ 171.42</div>
+              <span class="badge bg-success-subtle text-success extra-small" style="font-size:10px;">ชำระสำเร็จ</span>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+            <div>
+              <div class="fw-bold small text-dark"><i class="bi bi-file-earmark-check text-success me-1"></i>ใบเสร็จ #REC-001</div>
+              <div class="extra-small text-muted">20 ส.ค. 2026 - 10:15 น. (อนุมัติแล้ว)</div>
+            </div>
+            <div class="text-end">
+              <div class="fw-bold text-success">+ ฿ 171.42</div>
+              <span class="badge bg-success-subtle text-success extra-small" style="font-size:10px;">ชำระสำเร็จ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -356,7 +456,7 @@
   <!-- Bottom Nav Bar -->
   <div class="bottom-nav">
     <div class="nav-item-btn" onclick="switchTab('page-history', this)">
-      <i class="bi bi-receipt d-block fs-5"></i>รายการชำระ
+      <i class="bi bi-receipt d-block fs-5"></i>ชำระเงิน
     </div>
     <div class="nav-item-btn active" onclick="switchTab('page-select', this)">
       <div class="center-fab"><i class="bi bi-wallet2 fs-5"></i></div>ขอสินเชื่อ
@@ -383,6 +483,14 @@
       loadSavedUserData();
       checkApplicationStatus();
     };
+
+    function installAppAlert() {
+      alert("ระบบทำการเพิ่มแอปพลิเคชันลงในหน้าจอหลัก (Home Screen) ของคุณเรียบร้อยแล้ว!");
+    }
+
+    function contactAdmin() {
+      alert("กำลังเชื่อมต่อไปยังไลน์แอดมิน/เจ้าหน้าที่บริการลูกค้า พะเยา...");
+    }
 
     function onSelectAmountChange() {
       const val = document.getElementById('loanAmountSelect').value;
@@ -494,6 +602,10 @@
 
       document.getElementById('pendingAmount').innerText = '฿ ' + currentLoanAmount.toLocaleString();
       goToPage('page-pending');
+    }
+
+    function simulatePaymentSuccess() {
+      alert("แนบสลิปเรียบร้อย! เมื่อแอดมินกดยืนยันการชำระ ใบเสร็จและสถานะเปอร์เซ็นต์จะถูกอัปเดตไปที่หน้าโปรไฟล์ของคุณทันทีครับ");
     }
 
     function openEditModal() {
