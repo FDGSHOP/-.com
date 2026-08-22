@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>สินเชื่อเพื่อคนพะเยา - Customer Portal</title>
+    <title>สมัครสินเชื่อเพื่อคนพะเยา - Customer Registration</title>
     
-    <!-- Tailwind CSS, Lucide Icons, QR Generator, SweetAlert2 -->
+    <!-- Tailwind CSS, Lucide Icons, SweetAlert2 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -21,317 +20,342 @@
 
         /* Full Background Image Setup */
         body {
-            background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), 
+            background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.9)), 
                         url('https://img2.pic.in.th/42c86449-2059-49f5-8453-17ad89e54349.jpg') no-repeat center center fixed;
             background-size: cover;
             color: #0f172a;
             min-height: 100vh;
         }
 
-        /* Card Highlight & Glassmorphism */
         .glass-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
 
-        .card-selectable {
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid #cbd5e1;
+        .input-custom {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.875rem;
+            border: 1px solid #cbd5e1;
+            background-color: #f8fafc;
+            font-size: 0.875rem;
+            color: #0f172a;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-custom:focus {
+            border-color: #2563eb;
             background-color: #ffffff;
-        }
-        
-        .card-selectable.active {
-            border-color: #2563eb !important;
-            background-color: #eff6ff !important;
-            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .modal-bg {
-            background-color: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(6px);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
     </style>
 </head>
-<body class="pb-12 selection:bg-blue-600 selection:text-white">
+<body class="py-8 px-4 selection:bg-blue-600 selection:text-white">
 
     <!-- Header Section -->
-    <header class="w-full bg-slate-900/90 backdrop-blur-md text-white sticky top-0 z-30 shadow-md border-b border-slate-700/50">
-        <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <!-- Logo Image -->
-                <img src="https://img2.pic.in.th/42c86449-2059-49f5-8453-17ad89e54349.jpg" 
-                     alt="สินเชื่อเพื่อคนพะเยา" 
-                     class="w-11 h-11 rounded-xl object-cover border-2 border-white/20 shadow-md">
-                <div>
-                    <h1 class="font-bold text-base md:text-lg leading-tight text-white">สินเชื่อเพื่อคนพะเยา</h1>
-                    <p class="text-xs text-blue-400 font-medium">ระบบบริการชำระหนี้สินเชื่อออนไลน์</p>
-                </div>
-            </div>
-            <span class="text-[11px] bg-blue-600/30 text-blue-300 border border-blue-500/30 px-3 py-1 rounded-full font-semibold shadow-inner">
-                พร้อมเพย์: 0658351446
-            </span>
-        </div>
+    <header class="max-w-xl mx-auto text-center mb-6 text-white space-y-2">
+        <img src="https://img2.pic.in.th/42c86449-2059-49f5-8453-17ad89e54349.jpg" 
+             alt="สินเชื่อเพื่อคนพะเยา" 
+             class="w-16 h-16 rounded-2xl object-cover mx-auto border-2 border-white/20 shadow-xl">
+        <h1 class="text-2xl font-bold tracking-tight">สินเชื่อเพื่อคนพะเยา</h1>
+        <p class="text-xs text-blue-300 font-medium">แบบฟอร์มลงทะเบียนขออนุมัติวงเงินสินเชื่อ (เฉพาะชาวพะเยา)</p>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="max-w-2xl mx-auto px-4 mt-6">
+    <!-- Main Form Box -->
+    <main class="max-w-xl mx-auto glass-container rounded-3xl p-6 md:p-8 shadow-2xl border border-white/40 space-y-6">
 
-        <!-- User Information Dashboard Card -->
-        <div class="bg-slate-900/90 backdrop-blur-md text-white rounded-3xl p-6 shadow-2xl relative overflow-hidden border border-slate-700/80 mb-6">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+        <form id="loan-register-form" onsubmit="handleRegistration(event)" class="space-y-5">
             
-            <div class="flex justify-between items-start border-b border-slate-700/80 pb-4 mb-4 relative z-10">
+            <!-- Section 1: ข้อมูลการขอวงเงิน -->
+            <div class="border-b border-slate-200 pb-4">
+                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-3">
+                    <i data-lucide="wallet" class="w-5 h-5 text-blue-600"></i>
+                    1. เลือกวงเงินกู้ที่ต้องการ
+                </h2>
                 <div>
-                    <span class="text-xs text-slate-400 block mb-1">รหัสบัญชีสินเชื่อ (UID)</span>
-                    <span id="user-uid" class="font-mono text-lg font-bold text-blue-400">UID-PY-8892</span>
-                </div>
-                <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-1 rounded-full font-bold">
-                    สถานะ: ปกติ
-                </span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 text-sm relative z-10">
-                <div>
-                    <span class="text-slate-400 text-xs block">ชื่อ-นามสกุล ผู้กู้</span>
-                    <span class="font-bold text-slate-100">นายสมชาย ใจดี</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 text-xs block">ยอดหนี้คงเหลือรวม</span>
-                    <span class="font-bold text-xl text-white">12,000 <span class="text-xs font-normal text-slate-400">บาท</span></span>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">ระบุวงเงินกู้ (บาท) <span class="text-red-500">*</span></label>
+                    <select id="loan-amount" class="input-custom font-bold text-blue-600" required>
+                        <!-- Dynamic options via JS (1,000 - 10,000 Step 500) -->
+                    </select>
+                    <p class="text-[11px] text-slate-500 mt-1">* วงเงินเริ่มต้น 1,000 บาท สูงสุดไม่เกิน 10,000 บาท</p>
                 </div>
             </div>
-        </div>
 
-        <!-- Repayment Action Box (Glass Container) -->
-        <div class="glass-container rounded-3xl p-6 shadow-2xl border border-white/40 space-y-6">
-            <div>
-                <h2 class="text-lg font-bold text-slate-900">เลือกรูปแบบการชำระเงิน</h2>
-                <p class="text-xs text-slate-500">คลิกเลือกการ์ดตัวเลือกที่ต้องการชำระเงิน</p>
-            </div>
+            <!-- Section 2: ข้อมูลส่วนตัว & อาชีพ -->
+            <div class="border-b border-slate-200 pb-4 space-y-3">
+                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-1">
+                    <i data-lucide="user" class="w-5 h-5 text-blue-600"></i>
+                    2. ข้อมูลส่วนตัวผู้กู้
+                </h2>
 
-            <!-- Payment Options Card Selection -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                <!-- Option 1: Full Payment Card -->
-                <div id="card-option-full" 
-                     onclick="selectPaymentOption('FULL', 400, this)" 
-                     class="card-selectable active p-5 rounded-2xl cursor-pointer relative shadow-sm">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">ยอดชำระต่องวด</span>
-                        <i data-lucide="check-circle-2" class="w-5 h-5 text-blue-600 icon-check"></i>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
+                        <input type="text" id="fullname" placeholder="นายสมชาย ใจดี" class="input-custom" required>
                     </div>
-                    <div class="text-2xl font-bold text-slate-900 mb-1">400 <span class="text-xs text-slate-500 font-normal">บาท</span></div>
-                    <p class="text-xs text-slate-500">ชำระค่างวดปกติ (เงินต้น + ดอกเบี้ย)</p>
-                </div>
-
-                <!-- Option 2: Interest Only Card -->
-                <div id="card-option-interest" 
-                     onclick="selectPaymentOption('INTEREST', 67, this)" 
-                     class="card-selectable p-5 rounded-2xl cursor-pointer relative shadow-sm">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">จ่ายเฉพาะดอกเบี้ย</span>
-                        <i data-lucide="circle" class="w-5 h-5 text-slate-300 icon-check"></i>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">เบอร์โทรศัพท์ติดต่อ <span class="text-red-500">*</span></label>
+                        <input type="tel" id="phone" maxlength="10" placeholder="0812345678" class="input-custom font-mono" required>
                     </div>
-                    <div class="text-2xl font-bold text-slate-900 mb-1">67 <span class="text-xs text-slate-500 font-normal">บาท</span></div>
-                    <p class="text-xs text-slate-500">ต่ออายุสัญญา (รักษาประวัติ)</p>
                 </div>
 
-            </div>
-
-            <!-- Action Button -->
-            <button onclick="openPaymentModal()" 
-                    class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-base rounded-2xl shadow-xl shadow-blue-600/30 transition flex items-center justify-center gap-2">
-                <i data-lucide="qr-code" class="w-5 h-5"></i>
-                <span>กดเพื่อสร้าง QR Code ชำระเงิน (<span id="btn-amount-display">400</span> บาท)</span>
-            </button>
-        </div>
-
-    </main>
-
-    <!-- Modal Pop-up QR Code -->
-    <div id="payment-modal" class="fixed inset-0 z-50 modal-bg hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl relative space-y-5 animate-in fade-in zoom-in duration-200">
-            
-            <!-- Close Modal Button -->
-            <button onclick="closePaymentModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-
-            <div class="text-center border-b border-slate-100 pb-3">
-                <h3 class="text-lg font-bold text-slate-900">สแกนชำระเงิน พร้อมเพย์</h3>
-                <p class="text-xs text-slate-500">สินเชื่อเพื่อคนพะเยา</p>
-            </div>
-
-            <!-- QR Display Box -->
-            <div class="bg-slate-900 rounded-2xl p-5 text-center text-white space-y-3 shadow-inner">
-                <div class="inline-block bg-white p-3 rounded-xl shadow-md">
-                    <div id="qrcode-container"></div>
-                </div>
                 <div>
-                    <span class="text-xs text-slate-400 block">เบอร์พร้อมเพย์</span>
-                    <span class="font-mono font-bold text-lg text-blue-400">065-835-1446</span>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">เลขบัตรประจำตัวประชาชน (13 หลัก) <span class="text-red-500">*</span></label>
+                    <input type="text" id="id-card-no" maxlength="13" placeholder="1569900000000" class="input-custom font-mono" required>
                 </div>
-                <div class="bg-slate-800/80 border border-slate-700 py-2 px-4 rounded-xl inline-block">
-                    <span class="text-xs text-slate-400">ยอดเงินที่ต้องชำระ: </span>
-                    <span id="modal-pay-amount" class="font-bold text-emerald-400 text-base">400 บาท</span>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">อาชีพปัจจุบัน <span class="text-red-500">*</span></label>
+                    <select id="occupation" class="input-custom" required>
+                        <option value="" disabled selected>-- เลือกอาชีพ --</option>
+                        <option value="พ่อค้า / แม่ค้า / ค้าขาย">พ่อค้า / แม่ค้า / ค้าขาย</option>
+                        <option value="รับจ้างทั่วไป / รายวัน">รับจ้างทั่วไป / รายวัน</option>
+                        <option value="เกษตรกร / ทำสวน / ทำไร่">เกษตรกร / ทำสวน / ทำไร่</option>
+                        <option value="พนักงานบริษัทเอกชน">พนักงานบริษัทเอกชน</option>
+                        <option value="ข้าราชการ / รัฐวิสาหกิจ">ข้าราชการ / รัฐวิสาหกิจ</option>
+                        <option value="อาชีพอิสระ / ฟรีแลนซ์">อาชีพอิสระ / ฟรีแลนซ์</option>
+                        <option value="รับราชการบำนาญ">รับราชการบำนาญ</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- File Upload Section -->
-            <div class="space-y-3">
-                <label class="block text-xs font-bold text-slate-700">แนบหลักฐานการโอนเงิน (สลิป):</label>
-                
-                <!-- Styled File Upload Input -->
-                <div class="relative">
-                    <input type="file" id="slip-file-input" accept="image/*" onchange="handleFileSelect(this)" class="hidden">
-                    <label for="slip-file-input" class="flex items-center justify-between border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 p-3.5 rounded-2xl cursor-pointer transition">
+            <!-- Section 3: ที่อยู่ในจังหวัดพะเยา -->
+            <div class="border-b border-slate-200 pb-4 space-y-3">
+                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-1">
+                    <i data-lucide="map-pin" class="w-5 h-5 text-blue-600"></i>
+                    3. ที่อยู่ตามทะเบียนบ้าน (จ.พะเยา)
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">อำเภอ <span class="text-red-500">*</span></label>
+                        <select id="district" onchange="updateSubDistricts()" class="input-custom" required>
+                            <option value="" disabled selected>-- เลือกอำเภอ --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ตำบล <span class="text-red-500">*</span></label>
+                        <select id="sub-district" class="input-custom" required disabled>
+                            <option value="" disabled selected>-- เลือกตำบล --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">รายละเอียดที่อยู่ (บ้านเลขที่ / หมู่บ้าน / ซอย / ถนน) <span class="text-red-500">*</span></label>
+                    <input type="text" id="address-detail" placeholder="123/4 หมู่ 5" class="input-custom" required>
+                </div>
+            </div>
+
+            <!-- Section 4: บัญชีธนาคารรับเงิน -->
+            <div class="border-b border-slate-200 pb-4 space-y-3">
+                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-1">
+                    <i data-lucide="building-2" class="w-5 h-5 text-blue-600"></i>
+                    4. บัญชีธนาคารสำหรับรับเงินกู้
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ธนาคาร <span class="text-red-500">*</span></label>
+                        <select id="bank-name" class="input-custom" required>
+                            <option value="" disabled selected>-- เลือกธนาคาร --</option>
+                            <option value="ธนาคารกสิกรไทย (KBANK)">ธนาคารกสิกรไทย (KBANK)</option>
+                            <option value="ธนาคารไทยพาณิชย์ (SCB)">ธนาคารไทยพาณิชย์ (SCB)</option>
+                            <option value="ธนาคารกรุงไทย (KTB)">ธนาคารกรุงไทย (KTB)</option>
+                            <option value="ธนาคารกรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
+                            <option value="ธนาคารออมสิน (GSB)">ธนาคารออมสิน (GSB)</option>
+                            <option value="ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร (BAAC)">ธนาคารเพื่อการเกษตรฯ (ธ.ก.ส.)</option>
+                            <option value="ธนาคารกรุงศรีอยุธยา (BAY)">ธนาคารกรุงศรีอยุธยา (BAY)</option>
+                            <option value="ธนาคารทหารไทยธนชาต (ttb)">ธนาคารทหารไทยธนชาต (ttb)</option>
+                            <option value="ธนาคารอาคารสงเคราะห์ (GHB)">ธนาคารอาคารสงเคราะห์ (GHB)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">เลขที่บัญชีธนาคาร <span class="text-red-500">*</span></label>
+                        <input type="text" id="bank-acc-no" placeholder="0000000000" class="input-custom font-mono" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: อัปโหลดเอกสารยืนยันตัวตน (KYC) -->
+            <div class="border-b border-slate-200 pb-4 space-y-3">
+                <h2 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-1">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-blue-600"></i>
+                    5. แนบเอกสารยืนยันตัวตน (KYC)
+                </h2>
+
+                <!-- Upload 1: หน้าบัตรประชาชน -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">1) รูปถ่ายหน้าบัตรประชาชน <span class="text-red-500">*</span></label>
+                    <input type="file" id="file-id-card" accept="image/*" onchange="previewFile(this, 'label-id-card')" class="hidden" required>
+                    <label for="file-id-card" class="flex items-center justify-between border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 p-3 rounded-2xl cursor-pointer transition">
                         <div class="flex items-center gap-2 text-slate-600">
-                            <i data-lucide="upload-cloud" class="w-5 h-5 text-blue-600"></i>
-                            <span id="file-label-text" class="text-xs font-semibold truncate max-w-[200px]">คลิกเลือกไฟล์สลิป...</span>
+                            <i data-lucide="image" class="w-5 h-5 text-blue-600"></i>
+                            <span id="label-id-card" class="text-xs font-semibold truncate max-w-[220px]">อัปโหลดภาพหน้าบัตรประชาชน...</span>
                         </div>
-                        <span class="bg-blue-600 text-white text-xs px-3 py-1 rounded-xl font-bold">เลือกไฟล์</span>
+                        <span class="bg-blue-600 text-white text-xs px-3 py-1 rounded-xl font-bold">เลือกรูป</span>
                     </label>
                 </div>
 
-                <!-- Progress Bar Loader -->
-                <div id="progress-container" class="hidden space-y-1.5 pt-1">
-                    <div class="flex justify-between text-xs font-bold">
-                        <span id="progress-status-text" class="text-blue-600">กำลังอัปโหลด...</span>
-                        <span id="progress-percent" class="text-slate-700">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                        <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-150 w-0"></div>
-                    </div>
+                <!-- Upload 2: รูปใบหน้าคู่บัตรประชาชน -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">2) รูปถ่ายใบหน้าผู้กู้คู่กับบัตรประชาชน <span class="text-red-500">*</span></label>
+                    <input type="file" id="file-face-card" accept="image/*" onchange="previewFile(this, 'label-face-card')" class="hidden" required>
+                    <label for="file-face-card" class="flex items-center justify-between border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 p-3 rounded-2xl cursor-pointer transition">
+                        <div class="flex items-center gap-2 text-slate-600">
+                            <i data-lucide="camera" class="w-5 h-5 text-blue-600"></i>
+                            <span id="label-face-card" class="text-xs font-semibold truncate max-w-[220px]">อัปโหลดภาพใบหน้าถือบัตร...</span>
+                        </div>
+                        <span class="bg-blue-600 text-white text-xs px-3 py-1 rounded-xl font-bold">เลือกรูป</span>
+                    </label>
                 </div>
-
-                <button id="btn-submit-slip" disabled onclick="processUploadAndPayment()" class="w-full py-3.5 bg-slate-300 text-slate-500 font-bold text-sm rounded-2xl cursor-not-allowed transition flex items-center justify-center gap-2">
-                    <i data-lucide="check-circle" class="w-4 h-4"></i>
-                    <span>ยืนยันการแจ้งชำระเงิน</span>
-                </button>
             </div>
 
-        </div>
-    </div>
+            <!-- Section 6: ยอมรับเงื่อนไขและข้อตกลง -->
+            <div class="space-y-3">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs text-slate-600 space-y-1">
+                    <p class="font-bold text-slate-900">ข้อตกลงและเงื่อนไขการขอสินเชื่อ:</p>
+                    <p>1. ผู้กู้ต้องมีภูมิลำเนาหรือประกอบอาชีพอยู่ในจังหวัดพะเยาเท่านั้น</p>
+                    <p>2. ข้อมูลและเอกสารที่แนบมาทั้งหมดเป็นความจริง หากตรวจพบข้อมูลเท็จ ระบบจะระงับการอนุมัติทันที</p>
+                </div>
+
+                <div class="flex items-start gap-2 pt-1">
+                    <input type="checkbox" id="accept-terms" class="w-4 h-4 mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" required>
+                    <label for="accept-terms" class="text-xs text-slate-700 cursor-pointer font-medium">
+                        ข้าพเจ้ายินยอมตามข้อตกลงและรับรองว่าข้อมูลข้างต้นเป็นความจริงทุกประการ
+                    </label>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="btn-submit-form" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-base rounded-2xl shadow-xl shadow-blue-600/30 transition flex items-center justify-center gap-2">
+                <i data-lucide="send" class="w-5 h-5"></i>
+                <span>ส่งข้อมูลสมัครสินเชื่อ</span>
+            </button>
+
+        </form>
+
+    </main>
 
     <!-- JavaScript Engine -->
     <script>
-        let currentSelectedAmount = 400;
-        let selectedPayMode = 'FULL';
+        // Phayao Districts & Sub-districts Mapping Data
+        const phayaoData = {
+            "อำเภอเมืองพะเยา": ["เวียง", "แม่ต๋ำ", "บ้านต๋อม", "บ้านสาง", "ท่าวังทอง", "บ้านตุ่น", "บ้านใหม่", "จำป่าหวาย", "แม่กา", "แม่นาเรือ", "แม่ปอน", "สันปูม่วง", "ตาดควัน", "ทุ่งกล้วย", "นาจำปา"],
+            "อำเภอดอกคำใต้": ["ดอนศรีชุม", "ดอกคำใต้", "สว่างอารมณ์", "ป่าซาง", "บ้านถ้ำ", "หนองหล่ม", "ดงสุวรรณ", "บุญเกิด", "ป่าแฝก", "บัวสบ", "แสงอรุณ", "คือเวียง"],
+            "อำเภอเชียงคำ": ["หย่วน", "เชียงบาน", "ร่มเย็น", "น้ำแวน", "ฝายกวาง", "เจดีย์คำ", "แม่ลาว", "เวียง", "อ่างทอง", "ทุ่งผาสุก"],
+            "อำเภอปง": ["ปง", "นาปรัง", "ผาช้างน้อย", "ทุ่งนากอก", "งิม", "ออย", "ขุนควร"],
+            "อำเภอจุน": ["ลอ", "ทุ่งรวงทอง", "ห้วยข้าวก่ำ", "ห้วยยางขาม", "จุน", "ป่าข่า", "พุทธบาท"],
+            "อำเภอเชียงม่วน": ["เชียงม่วน", "บ้านมาง", "สระ"],
+            "อำเภอแม่ใจ": ["แม่ใจ", "ศรีถ้อย", "ป่าศักดิ์", "บ้านเหล่า", "แม่สุก", "เจริญราษฎร์"],
+            "อำเภอภูซาง": ["ภูซาง", "ป่าสัก", "ทุ่งกล้วย", "ห้วยยางขาม", "สบบง"],
+            "อำเภอภูกามยาว": ["ดงเจน", "แม่อิง", "ห้วยแก้ว"]
+        };
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
+            initLoanAmountOptions();
+            initDistrictOptions();
         });
 
-        // Toggle Active Card Logic
-        function selectPaymentOption(mode, amount, element) {
-            selectedPayMode = mode;
-            currentSelectedAmount = amount;
+        // 1. Generate Loan Amounts (1,000 to 10,000 Step 500)
+        function initLoanAmountOptions() {
+            const select = document.getElementById('loan-amount');
+            select.innerHTML = '';
+            for (let amt = 1000; amt <= 10000; amt += 500) {
+                const opt = document.createElement('option');
+                opt.value = amt;
+                opt.innerText = `${amt.toLocaleString()} บาท`;
+                select.appendChild(opt);
+            }
+        }
 
-            document.querySelectorAll('.card-selectable').forEach(card => {
-                card.classList.remove('active');
-                const icon = card.querySelector('.icon-check');
-                if (icon) {
-                    icon.setAttribute('data-lucide', 'circle');
-                    icon.classList.remove('text-blue-600');
-                    icon.classList.add('text-slate-300');
-                }
+        // 2. Populate Districts
+        function initDistrictOptions() {
+            const districtSelect = document.getElementById('district');
+            Object.keys(phayaoData).forEach(district => {
+                const opt = document.createElement('option');
+                opt.value = district;
+                opt.innerText = district;
+                districtSelect.appendChild(opt);
             });
+        }
 
-            element.classList.add('active');
-            const targetIcon = element.querySelector('.icon-check');
-            if (targetIcon) {
-                targetIcon.setAttribute('data-lucide', 'check-circle-2');
-                targetIcon.classList.remove('text-slate-300');
-                targetIcon.classList.add('text-blue-600');
+        // 3. Dynamic Sub-district dropdown based on selected District
+        function updateSubDistricts() {
+            const districtVal = document.getElementById('district').value;
+            const subDistrictSelect = document.getElementById('sub-district');
+            
+            subDistrictSelect.innerHTML = '<option value="" disabled selected>-- เลือกตำบล --</option>';
+            subDistrictSelect.disabled = false;
+
+            if (phayaoData[districtVal]) {
+                phayaoData[districtVal].forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub;
+                    opt.innerText = `ตำบล${sub}`;
+                    subDistrictSelect.appendChild(opt);
+                });
             }
-
-            document.getElementById('btn-amount-display').innerText = amount.toLocaleString();
-            lucide.createIcons();
         }
 
-        // Open Modal Pop-up & Generate PromptPay QR
-        function openPaymentModal() {
-            document.getElementById('modal-pay-amount').innerText = `${currentSelectedAmount.toLocaleString()} บาท`;
-            
-            const qrContainer = document.getElementById('qrcode-container');
-            qrContainer.innerHTML = '';
-            
-            const qr = qrcode(0, 'M');
-            qr.addData(`PROMPTPAY:0658351446:AMOUNT:${currentSelectedAmount}`);
-            qr.make();
-            qrContainer.innerHTML = qr.createImgTag(5);
-
-            document.getElementById('payment-modal').classList.remove('hidden');
-        }
-
-        function closePaymentModal() {
-            document.getElementById('payment-modal').classList.add('hidden');
-            resetUploadForm();
-        }
-
-        // File Selection Event
-        function handleFileSelect(input) {
+        // 4. File Input Name Preview
+        function previewFile(input, labelId) {
             if (input.files && input.files[0]) {
-                const fileName = input.files[0].name;
-                document.getElementById('file-label-text').innerText = fileName;
-                
-                const btn = document.getElementById('btn-submit-slip');
-                btn.disabled = false;
-                btn.className = "w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-2xl shadow-lg cursor-pointer transition flex items-center justify-center gap-2";
+                document.getElementById(labelId).innerText = input.files[0].name;
             }
         }
 
-        // Progress Bar 0 - 100% Simulation
-        function processUploadAndPayment() {
-            const progressContainer = document.getElementById('progress-container');
-            const progressBar = document.getElementById('progress-bar');
-            const progressPercent = document.getElementById('progress-percent');
-            const progressStatusText = document.getElementById('progress-status-text');
-            const submitBtn = document.getElementById('btn-submit-slip');
+        // 5. Form Submission Handler
+        function handleRegistration(e) {
+            e.preventDefault();
 
-            progressContainer.classList.remove('hidden');
-            submitBtn.disabled = true;
-            
-            let percent = 0;
-            const interval = setInterval(() => {
-                percent += 5;
-                progressBar.style.width = `${percent}%`;
-                progressPercent.innerText = `${percent}%`;
+            const formData = {
+                amount: document.getElementById('loan-amount').value,
+                fullname: document.getElementById('fullname').value,
+                phone: document.getElementById('phone').value,
+                idCard: document.getElementById('id-card-no').value,
+                occupation: document.getElementById('occupation').value,
+                district: document.getElementById('district').value,
+                subDistrict: document.getElementById('sub-district').value,
+                addressDetail: document.getElementById('address-detail').value,
+                bankName: document.getElementById('bank-name').value,
+                bankAccNo: document.getElementById('bank-acc-no').value,
+                status: "PENDING_APPROVAL"
+            };
 
-                if (percent >= 100) {
-                    clearInterval(interval);
-                    
-                    progressStatusText.innerHTML = `<span class="flex items-center gap-1 text-emerald-600"><i data-lucide="check-circle-2" class="w-4 h-4"></i> อัปโหลดสำเร็จ!</span>`;
-                    lucide.createIcons();
+            Swal.fire({
+                title: 'ยืนยันการสมัครสินเชื่อ?',
+                text: `ขออนุมัติวงเงินจำนวน ${parseInt(formData.amount).toLocaleString()} บาท`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'ยืนยันส่งข้อมูล',
+                cancelButtonText: 'แก้ไขข้อมูล'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'กำลังส่งข้อมูล...',
+                        text: 'กรุณารอสักครู่ระบบกำลังบันทึกข้อมูลและแนบเอกสาร',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
 
                     setTimeout(() => {
-                        closePaymentModal();
-                        
                         Swal.fire({
                             icon: 'success',
-                            title: 'ชำระเงินสำเร็จ!',
-                            text: `ระบบได้รับหลักฐานการชำระเงินจำนวน ${currentSelectedAmount.toLocaleString()} บาท เรียบร้อยแล้ว`,
+                            title: 'ส่งข้อมูลสมัครเรียบร้อย!',
+                            text: 'ระบบส่งเรื่องให้แอดมินตรวจสอบแล้ว คุณสามารถติดตามสถานะอนุมัติได้ในระบบ',
                             confirmButtonColor: '#2563eb',
                             confirmButtonText: 'ตกลง'
                         });
-
-                    }, 800);
+                    }, 1500);
                 }
-            }, 50);
-        }
-
-        function resetUploadForm() {
-            document.getElementById('slip-file-input').value = '';
-            document.getElementById('file-label-text').innerText = 'คลิกเลือกไฟล์สลิป...';
-            document.getElementById('progress-container').classList.add('hidden');
-            document.getElementById('progress-bar').style.width = '0%';
-            document.getElementById('progress-percent').innerText = '0%';
-            
-            const btn = document.getElementById('btn-submit-slip');
-            btn.disabled = true;
-            btn.className = "w-full py-3.5 bg-slate-300 text-slate-500 font-bold text-sm rounded-2xl cursor-not-allowed transition flex items-center justify-center gap-2";
+            });
         }
     </script>
 </body>
