@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ระบบขออนุมัติสินเชื่อและชำระเงิน (Customer Portal)</title>
+    <title>สินเชื่อเพื่อคนพะเยา - Customer Portal</title>
     
-    <!-- Tailwind CSS & Lucide Icons -->
+    <!-- Tailwind CSS, Lucide Icons, QR Generator, SweetAlert2 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
@@ -21,356 +19,319 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Full Background Image Setup */
         body {
-            background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)), 
+            background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), 
                         url('https://img2.pic.in.th/42c86449-2059-49f5-8453-17ad89e54349.jpg') no-repeat center center fixed;
             background-size: cover;
+            color: #0f172a;
             min-height: 100vh;
         }
 
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .glass-card {
-            background: rgba(15, 23, 42, 0.7);
+        /* Card Highlight & Glassmorphism */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
-        .terms-scroll-box {
-            max-height: 220px;
-            overflow-y: auto;
-            scrollbar-width: thin;
+        .card-selectable {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid #cbd5e1;
+            background-color: #ffffff;
+        }
+        
+        .card-selectable.active {
+            border-color: #2563eb !important;
+            background-color: #eff6ff !important;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .modal-bg {
+            background-color: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(6px);
         }
     </style>
 </head>
-<body class="text-slate-800 antialiased selection:bg-blue-600 selection:text-white pb-10">
+<body class="pb-12 selection:bg-blue-600 selection:text-white">
 
-    <!-- Header Bar -->
-    <header class="w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-700/50 sticky top-0 z-40 px-4 py-3">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
+    <!-- Header Section -->
+    <header class="w-full bg-slate-900/90 backdrop-blur-md text-white sticky top-0 z-30 shadow-md border-b border-slate-700/50">
+        <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-bold text-lg shadow-lg border border-slate-600">
-                    <i data-lucide="building-2" class="w-5 h-5"></i>
-                </div>
+                <!-- Logo Image -->
+                <img src="https://img2.pic.in.th/42c86449-2059-49f5-8453-17ad89e54349.jpg" 
+                     alt="สินเชื่อเพื่อคนพะเยา" 
+                     class="w-11 h-11 rounded-xl object-cover border-2 border-white/20 shadow-md">
                 <div>
-                    <h1 class="text-white font-bold text-base md:text-lg leading-tight">ระบบบริการขออนุมัติสินเชื่อ</h1>
-                    <p class="text-slate-400 text-xs">Customer Financial Portal</p>
+                    <h1 class="font-bold text-base md:text-lg leading-tight text-white">สินเชื่อเพื่อคนพะเยา</h1>
+                    <p class="text-xs text-blue-400 font-medium">ระบบบริการชำระหนี้สินเชื่อออนไลน์</p>
                 </div>
             </div>
+            <span class="text-[11px] bg-blue-600/30 text-blue-300 border border-blue-500/30 px-3 py-1 rounded-full font-semibold shadow-inner">
+                พร้อมเพย์: 0658351446
+            </span>
         </div>
     </header>
 
-    <!-- Container -->
-    <main class="max-w-3xl mx-auto px-4 mt-6">
+    <!-- Main Content Container -->
+    <main class="max-w-2xl mx-auto px-4 mt-6">
 
-        <!-- STEP 1: Terms & PDPA -->
-        <div id="view-terms" class="glass-panel rounded-3xl p-6 md:p-8 shadow-2xl space-y-6">
-            <div class="border-b border-slate-200/80 pb-4">
-                <span class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 font-bold text-xs px-3 py-1 rounded-full mb-2">
-                    <i data-lucide="shield-alert" class="w-4 h-4"></i> เงื่อนไขและข้อตกลงสำคัญ (PDPA & Agreement)
-                </span>
-                <h2 class="text-xl md:text-2xl font-bold text-slate-900">หนังสือยินยอมเปิดเผยข้อมูลและรับทราบดอกเบี้ย</h2>
-                <p class="text-slate-500 text-xs md:text-sm mt-1">กรุณาเลื่อนอ่านเงื่อนไขด้านล่างให้สุดเพื่อเปิดใช้งานปุ่มยินยอม</p>
-            </div>
-
-            <div id="terms-box" onscroll="handleTermsScroll(this)" class="terms-scroll-box bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs text-slate-600 space-y-3 leading-relaxed">
-                <p class="font-bold text-slate-800 text-sm">1. การยินยอมเปิดเผยข้อมูลส่วนบุคคล (PDPA Consent)</p>
-                <p>ข้าพเจ้ายินยอมให้บริษัทจัดเก็บ รวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลเพื่อวัตถุประสงค์ในการตรวจสอบตัวตน การพิจารณาอนุมัติวงเงินสินเชื่อ และประสานงานกับแอดมินและไรเดอร์</p>
-                
-                <p class="font-bold text-slate-800 text-sm">2. ข้อตกลงอัตราดอกเบี้ยและเงื่อนไขการกู้ยืม</p>
-                <p>ข้าพเจ้ารับทราบและยินยอมชำระดอกเบี้ยในอัตรา <strong>ร้อยละ 20% (20%)</strong> ของยอดวงเงินสินเชื่อที่ได้รับอนุมัติ โดยคำนวณรวมกับเงินต้นและหารเป็นยอดต่องวด</p>
-
-                <p class="font-bold text-slate-800 text-sm">3. เงื่อนไขการพิจารณาวงเงิน</p>
-                <p>วงเงินที่ยื่นขอเป็นเพียงยอดขออนุมัติเบื้องต้น ยอดอนุมัติจริงขึ้นอยู่กับการพิจารณาของแอดมิน (Admin)</p>
-                
-                <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 font-medium text-center">
-                    --- อ่านมาถึงส่วนท้ายของเงื่อนไขบริการแล้ว ---
-                </div>
-            </div>
-
-            <!-- Auto CAPTCHA -->
-            <div class="space-y-2 pt-2 border-t border-slate-100">
-                <label class="flex items-center gap-2.5 opacity-60" id="label-cap1">
-                    <input type="checkbox" id="cap1" disabled class="w-4 h-4 text-blue-600 rounded">
-                    <span class="text-xs font-medium text-slate-700">1. อ่านและยอมรับข้อตกลงคุ้มครองข้อมูลส่วนบุคคล (PDPA)</span>
-                </label>
-                <label class="flex items-center gap-2.5 opacity-60" id="label-cap2">
-                    <input type="checkbox" id="cap2" disabled class="w-4 h-4 text-blue-600 rounded">
-                    <span class="text-xs font-medium text-slate-700">2. ยินยอมและรับทราบอัตราดอกเบี้ยร้อยละ 20%</span>
-                </label>
-                <label class="flex items-center gap-2.5 opacity-60" id="label-cap3">
-                    <input type="checkbox" id="cap3" disabled class="w-4 h-4 text-blue-600 rounded">
-                    <span class="text-xs font-medium text-slate-700">3. ยืนยันข้อมูลเป็นความจริง (Auto CAPTCHA)</span>
-                </label>
-            </div>
-
-            <button id="btn-accept-terms" disabled onclick="acceptTermsAndProceed()" class="w-full py-3.5 bg-slate-300 text-slate-500 font-bold text-sm rounded-2xl cursor-not-allowed transition flex items-center justify-center gap-2">
-                <i data-lucide="lock" class="w-4 h-4"></i>
-                <span>กรุณาเลื่อนอ่านเงื่อนไขให้สุดเพื่อดำเนินการต่อ</span>
-            </button>
-        </div>
-
-        <!-- STEP 2: Application Form -->
-        <div id="view-form" class="hidden glass-panel rounded-3xl p-6 md:p-8 shadow-2xl space-y-6">
-            <div class="border-b border-slate-200/80 pb-4">
-                <h2 class="text-2xl font-bold text-slate-900">แบบฟอร์มขออนุมัติสินเชื่อ</h2>
-                <p class="text-slate-500 text-xs md:text-sm mt-1">กรอกข้อมูลเพื่อขอออก UID ประจำตัว</p>
-            </div>
-
-            <form onsubmit="handleFormSubmit(event)" class="space-y-5">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
-                        <input type="text" id="fullName" required placeholder="นาย สมชาย ใจดี" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">เลขบัตรประชาชน <span class="text-red-500">*</span></label>
-                        <input type="text" id="idCard" maxlength="13" required placeholder="1234567890123" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์ <span class="text-red-500">*</span></label>
-                        <input type="tel" id="phone" required placeholder="0812345678" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">อาชีพปัจจุบัน <span class="text-red-500">*</span></label>
-                        <input type="text" id="occupation" required placeholder="ค้าขาย / พนักงานบริษัท" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">วงเงินที่ต้องการยื่นขอ (บาท) <span class="text-red-500">*</span></label>
-                        <input type="number" id="requestedAmount" required min="1000" placeholder="10000" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm">
-                        <span class="text-[11px] text-amber-600 mt-1 block">* ยอดเงินจริงขึ้นอยู่กับ Admin อนุมัติ</span>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">รูปแบบการชำระ <span class="text-red-500">*</span></label>
-                        <select id="paymentCycle" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold">
-                            <option value="รายวัน">ชำระเป็นรายวัน (ทุกวัน)</option>
-                            <option value="ทุกๆ 3 วัน">ชำระทุกๆ 3 วัน</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-base rounded-2xl shadow-xl transition">
-                    ยืนยันสมัครขออนุมัติสินเชื่อ
-                </button>
-            </form>
-        </div>
-
-        <!-- STEP 3: Customer Dashboard & QR Code -->
-        <div id="view-dashboard" class="hidden space-y-6">
+        <!-- User Information Dashboard Card -->
+        <div class="bg-slate-900/90 backdrop-blur-md text-white rounded-3xl p-6 shadow-2xl relative overflow-hidden border border-slate-700/80 mb-6">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
             
-            <!-- User Profile Card -->
-            <div class="glass-card rounded-3xl p-6 text-white relative shadow-2xl border border-slate-700">
-                <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-600 flex items-center justify-center text-blue-400 font-bold">
-                            <i data-lucide="user" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <h3 id="card-name" class="font-bold text-base text-white">--</h3>
-                            <p id="card-occupation" class="text-xs text-slate-400">อาชีพ: --</p>
-                        </div>
-                    </div>
-                    <span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs px-3 py-1 rounded-full font-semibold">
-                        (รอการอนุมัติ)
-                    </span>
+            <div class="flex justify-between items-start border-b border-slate-700/80 pb-4 mb-4 relative z-10">
+                <div>
+                    <span class="text-xs text-slate-400 block mb-1">รหัสบัญชีสินเชื่อ (UID)</span>
+                    <span id="user-uid" class="font-mono text-lg font-bold text-blue-400">UID-PY-8892</span>
                 </div>
-
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <span class="text-slate-400 block">UID ประจำตัว:</span>
-                        <span id="card-uid" class="font-mono text-amber-400 font-bold text-sm">UID-XXXXXX</span>
-                    </div>
-                    <div>
-                        <span class="text-slate-400 block">วงเงินยื่นขอ:</span>
-                        <span id="card-amount" class="font-bold text-white text-sm">-- ฿</span>
-                        <span class="text-[10px] text-amber-300 block">(รอการอนุมัติ)</span>
-                    </div>
-                </div>
+                <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-1 rounded-full font-bold">
+                    สถานะ: ปกติ
+                </span>
             </div>
 
-            <!-- Repayment Progress & Payment Engine -->
-            <div id="repayment-section" class="glass-panel rounded-3xl p-6 shadow-2xl space-y-6">
-                <h3 class="font-bold text-slate-900 text-base border-b pb-3">กระดานติดตามการชำระสินเชื่อ (คิดดอกเบี้ย 20%)</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm relative z-10">
+                <div>
+                    <span class="text-slate-400 text-xs block">ชื่อ-นามสกุล ผู้กู้</span>
+                    <span class="font-bold text-slate-100">นายสมชาย ใจดี</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 text-xs block">ยอดหนี้คงเหลือรวม</span>
+                    <span class="font-bold text-xl text-white">12,000 <span class="text-xs font-normal text-slate-400">บาท</span></span>
+                </div>
+            </div>
+        </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
-                    <div class="bg-slate-50 border p-3 rounded-2xl">
-                        <span class="text-[11px] text-slate-500 block">ยอดรวม + ดอก 20%</span>
-                        <span id="stat-total" class="text-sm font-bold text-slate-900">12,000 ฿</span>
+        <!-- Repayment Action Box (Glass Container) -->
+        <div class="glass-container rounded-3xl p-6 shadow-2xl border border-white/40 space-y-6">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">เลือกรูปแบบการชำระเงิน</h2>
+                <p class="text-xs text-slate-500">คลิกเลือกการ์ดตัวเลือกที่ต้องการชำระเงิน</p>
+            </div>
+
+            <!-- Payment Options Card Selection -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                <!-- Option 1: Full Payment Card -->
+                <div id="card-option-full" 
+                     onclick="selectPaymentOption('FULL', 400, this)" 
+                     class="card-selectable active p-5 rounded-2xl cursor-pointer relative shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">ยอดชำระต่องวด</span>
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-blue-600 icon-check"></i>
                     </div>
-                    <div class="bg-slate-50 border p-3 rounded-2xl">
-                        <span class="text-[11px] text-slate-500 block">ยอดคงเหลือ</span>
-                        <span id="stat-remaining" class="text-sm font-bold text-red-600">12,000 ฿</span>
-                    </div>
-                    <div class="col-span-2 sm:col-span-1 bg-blue-50 border border-blue-200 p-3 rounded-2xl">
-                        <span class="text-[11px] text-blue-700 font-bold block">ยอดต้องชำระวันพรุ่งนี้</span>
-                        <span id="stat-next-due" class="text-sm font-bold text-blue-900">400 ฿</span>
-                    </div>
+                    <div class="text-2xl font-bold text-slate-900 mb-1">400 <span class="text-xs text-slate-500 font-normal">บาท</span></div>
+                    <p class="text-xs text-slate-500">ชำระค่างวดปกติ (เงินต้น + ดอกเบี้ย)</p>
                 </div>
 
-                <!-- Payment Options -->
-                <div class="space-y-3">
-                    <label class="block text-xs font-bold text-slate-800">เลือกรูปแบบการชำระ:</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <button id="opt-full" onclick="selectPayOption('FULL')" class="p-3.5 rounded-2xl border-2 border-blue-600 bg-blue-50 text-left font-bold text-xs text-blue-900">
-                            1. ค่างวดปกติ (ต้น + ดอก): <span id="opt-full-amount">400 บาท</span>
-                        </button>
-                        <button id="opt-interest" onclick="selectPayOption('INTEREST')" class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50 text-left font-bold text-xs text-slate-700 opacity-80">
-                            2. จ่ายเฉพาะดอกเบี้ย (กันปรับ): <span id="opt-interest-amount">67 บาท</span>
-                        </button>
+                <!-- Option 2: Interest Only Card -->
+                <div id="card-option-interest" 
+                     onclick="selectPaymentOption('INTEREST', 67, this)" 
+                     class="card-selectable p-5 rounded-2xl cursor-pointer relative shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">จ่ายเฉพาะดอกเบี้ย</span>
+                        <i data-lucide="circle" class="w-5 h-5 text-slate-300 icon-check"></i>
                     </div>
-                </div>
-
-                <!-- QR Payment Box -->
-                <div class="bg-slate-900 rounded-3xl p-5 text-white space-y-4">
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                        <span id="qr-pay-type" class="text-xs font-bold text-emerald-400">สแกนชำระเงินค่างวดปกติ</span>
-                        <div class="text-right">
-                            <span class="text-[10px] text-amber-400 block font-semibold">เวลาชำระเงินคงเหลือ</span>
-                            <span id="timer-display" class="font-mono text-base font-bold text-amber-300">05:00</span>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col items-center justify-center space-y-2">
-                        <div class="bg-white p-3 rounded-2xl">
-                            <div id="payment-qrcode"></div>
-                        </div>
-                        <span id="tx-tag" class="font-mono text-xs text-amber-400 font-bold">TX-UID-XXXX</span>
-                    </div>
-
-                    <div class="pt-2 border-t border-slate-800 space-y-2">
-                        <label class="block text-xs font-semibold text-slate-300">แนบสลิปการโอนเงิน (Upload Slip):</label>
-                        <input type="file" id="slip-file" accept="image/*" class="w-full text-xs text-slate-400">
-                        <button onclick="alert('ส่งสลิปชำระเงินให้ Admin / Rider ตรวจสอบเรียบร้อยแล้ว')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl">
-                            ส่งหลักฐานการชำระเงิน
-                        </button>
-                    </div>
+                    <div class="text-2xl font-bold text-slate-900 mb-1">67 <span class="text-xs text-slate-500 font-normal">บาท</span></div>
+                    <p class="text-xs text-slate-500">ต่ออายุสัญญา (รักษาประวัติ)</p>
                 </div>
 
             </div>
 
+            <!-- Action Button -->
+            <button onclick="openPaymentModal()" 
+                    class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-base rounded-2xl shadow-xl shadow-blue-600/30 transition flex items-center justify-center gap-2">
+                <i data-lucide="qr-code" class="w-5 h-5"></i>
+                <span>กดเพื่อสร้าง QR Code ชำระเงิน (<span id="btn-amount-display">400</span> บาท)</span>
+            </button>
         </div>
 
     </main>
 
-    <!-- Script Logic -->
+    <!-- Modal Pop-up QR Code -->
+    <div id="payment-modal" class="fixed inset-0 z-50 modal-bg hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl relative space-y-5 animate-in fade-in zoom-in duration-200">
+            
+            <!-- Close Modal Button -->
+            <button onclick="closePaymentModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="text-center border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-900">สแกนชำระเงิน พร้อมเพย์</h3>
+                <p class="text-xs text-slate-500">สินเชื่อเพื่อคนพะเยา</p>
+            </div>
+
+            <!-- QR Display Box -->
+            <div class="bg-slate-900 rounded-2xl p-5 text-center text-white space-y-3 shadow-inner">
+                <div class="inline-block bg-white p-3 rounded-xl shadow-md">
+                    <div id="qrcode-container"></div>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block">เบอร์พร้อมเพย์</span>
+                    <span class="font-mono font-bold text-lg text-blue-400">065-835-1446</span>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 py-2 px-4 rounded-xl inline-block">
+                    <span class="text-xs text-slate-400">ยอดเงินที่ต้องชำระ: </span>
+                    <span id="modal-pay-amount" class="font-bold text-emerald-400 text-base">400 บาท</span>
+                </div>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="space-y-3">
+                <label class="block text-xs font-bold text-slate-700">แนบหลักฐานการโอนเงิน (สลิป):</label>
+                
+                <!-- Styled File Upload Input -->
+                <div class="relative">
+                    <input type="file" id="slip-file-input" accept="image/*" onchange="handleFileSelect(this)" class="hidden">
+                    <label for="slip-file-input" class="flex items-center justify-between border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 p-3.5 rounded-2xl cursor-pointer transition">
+                        <div class="flex items-center gap-2 text-slate-600">
+                            <i data-lucide="upload-cloud" class="w-5 h-5 text-blue-600"></i>
+                            <span id="file-label-text" class="text-xs font-semibold truncate max-w-[200px]">คลิกเลือกไฟล์สลิป...</span>
+                        </div>
+                        <span class="bg-blue-600 text-white text-xs px-3 py-1 rounded-xl font-bold">เลือกไฟล์</span>
+                    </label>
+                </div>
+
+                <!-- Progress Bar Loader -->
+                <div id="progress-container" class="hidden space-y-1.5 pt-1">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span id="progress-status-text" class="text-blue-600">กำลังอัปโหลด...</span>
+                        <span id="progress-percent" class="text-slate-700">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-150 w-0"></div>
+                    </div>
+                </div>
+
+                <button id="btn-submit-slip" disabled onclick="processUploadAndPayment()" class="w-full py-3.5 bg-slate-300 text-slate-500 font-bold text-sm rounded-2xl cursor-not-allowed transition flex items-center justify-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <span>ยืนยันการแจ้งชำระเงิน</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript Engine -->
     <script>
+        let currentSelectedAmount = 400;
         let selectedPayMode = 'FULL';
-        let countdownInterval;
-        let timeLeft = 300;
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
-            checkAppFlow();
         });
 
-        function checkAppFlow() {
-            const savedData = localStorage.getItem('customer_loan_info');
-            if (savedData) {
-                document.getElementById('view-terms').classList.add('hidden');
-                document.getElementById('view-form').classList.add('hidden');
-                document.getElementById('view-dashboard').classList.remove('hidden');
-                renderDashboard(JSON.parse(savedData));
-            }
-        }
-
-        function handleTermsScroll(element) {
-            const isAtBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 10;
-            if (isAtBottom) {
-                document.getElementById('cap1').checked = true;
-                document.getElementById('cap2').checked = true;
-                document.getElementById('cap3').checked = true;
-
-                const btn = document.getElementById('btn-accept-terms');
-                btn.disabled = false;
-                btn.className = "w-full py-3.5 bg-blue-600 text-white font-bold text-sm rounded-2xl shadow-lg";
-                btn.innerHTML = `<span>ยินยอมและดำเนินการต่อ</span>`;
-            }
-        }
-
-        function acceptTermsAndProceed() {
-            document.getElementById('view-terms').classList.add('hidden');
-            document.getElementById('view-form').classList.remove('hidden');
-        }
-
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            const uid = `UID-${Date.now().toString(36).toUpperCase()}`;
-
-            const customerData = {
-                uid: uid,
-                fullName: document.getElementById('fullName').value.trim(),
-                idCard: document.getElementById('idCard').value.trim(),
-                phone: document.getElementById('phone').value.trim(),
-                occupation: document.getElementById('occupation').value.trim(),
-                requestedAmount: Number(document.getElementById('requestedAmount').value),
-                paymentCycle: document.getElementById('paymentCycle').value,
-                paidAmount: 0
-            };
-
-            localStorage.setItem('customer_loan_info', JSON.stringify(customerData));
-            checkAppFlow();
-        }
-
-        function renderDashboard(data) {
-            document.getElementById('card-uid').innerText = data.uid;
-            document.getElementById('card-name').innerText = data.fullName;
-            document.getElementById('card-occupation').innerText = `อาชีพ: ${data.occupation}`;
-            document.getElementById('card-amount').innerText = `${data.requestedAmount.toLocaleString()} ฿`;
-
-            const principal = data.requestedAmount;
-            const interest = principal * 0.20;
-            const totalLoan = principal + interest;
-            const daysCount = data.paymentCycle === 'รายวัน' ? 30 : 10;
-
-            document.getElementById('stat-total').innerText = `${totalLoan.toLocaleString()} ฿`;
-            document.getElementById('stat-remaining').innerText = `${(totalLoan - data.paidAmount).toLocaleString()} ฿`;
-            document.getElementById('stat-next-due').innerText = `${Math.ceil(totalLoan / daysCount).toLocaleString()} ฿`;
-
-            document.getElementById('opt-full-amount').innerText = `${Math.ceil(totalLoan / daysCount).toLocaleString()} บาท`;
-            document.getElementById('opt-interest-amount').innerText = `${Math.ceil(interest / daysCount).toLocaleString()} บาท`;
-
-            startQRTimer(data.uid);
-        }
-
-        function selectPayOption(mode) {
+        // Toggle Active Card Logic
+        function selectPaymentOption(mode, amount, element) {
             selectedPayMode = mode;
-            const data = JSON.parse(localStorage.getItem('customer_loan_info'));
-            startQRTimer(data.uid);
-        }
+            currentSelectedAmount = amount;
 
-        function startQRTimer(uid) {
-            clearInterval(countdownInterval);
-            timeLeft = 300;
-            generateDynamicQR(uid);
-
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-                const secs = (timeLeft % 60).toString().padStart(2, '0');
-                document.getElementById('timer-display').innerText = `${mins}:${secs}`;
-
-                if (timeLeft <= 0) {
-                    startQRTimer(uid);
+            document.querySelectorAll('.card-selectable').forEach(card => {
+                card.classList.remove('active');
+                const icon = card.querySelector('.icon-check');
+                if (icon) {
+                    icon.setAttribute('data-lucide', 'circle');
+                    icon.classList.remove('text-blue-600');
+                    icon.classList.add('text-slate-300');
                 }
-            }, 1000);
+            });
+
+            element.classList.add('active');
+            const targetIcon = element.querySelector('.icon-check');
+            if (targetIcon) {
+                targetIcon.setAttribute('data-lucide', 'check-circle-2');
+                targetIcon.classList.remove('text-slate-300');
+                targetIcon.classList.add('text-blue-600');
+            }
+
+            document.getElementById('btn-amount-display').innerText = amount.toLocaleString();
+            lucide.createIcons();
         }
 
-        function generateDynamicQR(uid) {
-            const txTag = `TX-${uid}-${Date.now().toString(36).toUpperCase()}`;
-            document.getElementById('tx-tag').innerText = txTag;
-
-            const qrContainer = document.getElementById('payment-qrcode');
+        // Open Modal Pop-up & Generate PromptPay QR
+        function openPaymentModal() {
+            document.getElementById('modal-pay-amount').innerText = `${currentSelectedAmount.toLocaleString()} บาท`;
+            
+            const qrContainer = document.getElementById('qrcode-container');
             qrContainer.innerHTML = '';
+            
             const qr = qrcode(0, 'M');
-            qr.addData(`PROMPTPAY:${txTag}:${selectedPayMode}`);
+            qr.addData(`PROMPTPAY:0658351446:AMOUNT:${currentSelectedAmount}`);
             qr.make();
-            qrContainer.innerHTML = qr.createImgTag(4);
+            qrContainer.innerHTML = qr.createImgTag(5);
+
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+            resetUploadForm();
+        }
+
+        // File Selection Event
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const fileName = input.files[0].name;
+                document.getElementById('file-label-text').innerText = fileName;
+                
+                const btn = document.getElementById('btn-submit-slip');
+                btn.disabled = false;
+                btn.className = "w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-2xl shadow-lg cursor-pointer transition flex items-center justify-center gap-2";
+            }
+        }
+
+        // Progress Bar 0 - 100% Simulation
+        function processUploadAndPayment() {
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercent = document.getElementById('progress-percent');
+            const progressStatusText = document.getElementById('progress-status-text');
+            const submitBtn = document.getElementById('btn-submit-slip');
+
+            progressContainer.classList.remove('hidden');
+            submitBtn.disabled = true;
+            
+            let percent = 0;
+            const interval = setInterval(() => {
+                percent += 5;
+                progressBar.style.width = `${percent}%`;
+                progressPercent.innerText = `${percent}%`;
+
+                if (percent >= 100) {
+                    clearInterval(interval);
+                    
+                    progressStatusText.innerHTML = `<span class="flex items-center gap-1 text-emerald-600"><i data-lucide="check-circle-2" class="w-4 h-4"></i> อัปโหลดสำเร็จ!</span>`;
+                    lucide.createIcons();
+
+                    setTimeout(() => {
+                        closePaymentModal();
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'ชำระเงินสำเร็จ!',
+                            text: `ระบบได้รับหลักฐานการชำระเงินจำนวน ${currentSelectedAmount.toLocaleString()} บาท เรียบร้อยแล้ว`,
+                            confirmButtonColor: '#2563eb',
+                            confirmButtonText: 'ตกลง'
+                        });
+
+                    }, 800);
+                }
+            }, 50);
+        }
+
+        function resetUploadForm() {
+            document.getElementById('slip-file-input').value = '';
+            document.getElementById('file-label-text').innerText = 'คลิกเลือกไฟล์สลิป...';
+            document.getElementById('progress-container').classList.add('hidden');
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('progress-percent').innerText = '0%';
+            
+            const btn = document.getElementById('btn-submit-slip');
+            btn.disabled = true;
+            btn.className = "w-full py-3.5 bg-slate-300 text-slate-500 font-bold text-sm rounded-2xl cursor-not-allowed transition flex items-center justify-center gap-2";
         }
     </script>
 </body>
