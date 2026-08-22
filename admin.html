@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -583,7 +583,7 @@
         <div class="bg-white rounded-2xl max-w-sm w-full p-8 text-center space-y-6">
             <div id="progress-container" class="space-y-4">
                 <div class="w-20 h-20 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <h4 class="font-bold text-lg text-slate-800">กำลังส่งยอดเงินคืนบริษัท...</h4>
+                <h4 class="font-bold text-lg text-slate-800">กำลังส่งยอดเงินสดคืนบริษัท...</h4>
                 <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                     <div id="progress-bar-fill" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
                 </div>
@@ -688,6 +688,9 @@
         let remittances = [];
         let remittanceHistory = [];
         let activeAdminSlipCustId = null;
+
+        // Google Apps Script Endpoint URL
+        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbytOKzmcfiVcwYN6erCU3fhV6-PdRyTJznmYhrww1T5g1lXdzkiW_w_3u7Bjl2UxTUCTw/exec";[cite: 6]
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
