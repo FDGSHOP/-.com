@@ -1,36 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>แอดมินมอนิเตอร์ & จัดการอนุมัติสินเชื่อ</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 <body class="p-4 bg-light">
 
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>🛠️ แอดมินมอนิเตอร์ & จัดการอนุมัติสินเชื่อ</h2>
-    <button onclick="loadAdminData()" class="btn btn-primary">🔄 ดึงข้อมูลล่าสุด</button>
+    <button onclick="loadAdminData()" class="btn btn-primary fw-bold">🔄 ดึงข้อมูลล่าสุด</button>
   </div>
 
   <div class="card shadow-sm">
     <div class="card-body">
-      <table class="table table-hover align-middle">
-        <thead class="table-dark">
-          <tr>
-            <th>User ID</th>
-            <th>ชื่อ-นามสกุล</th>
-            <th>ยอดกู้ + ดอกเบี้ย</th>
-            <th>รอบการชำระ</th>
-            <th>ยอดจ่าย/งวด</th>
-            <th>เอกสารแนบ</th>
-            <th>สถานะปัจจุบัน</th>
-            <th>การจัดการ (Action)</th>
-          </tr>
-        </thead>
-        <tbody id="adminTableBody">
-          <tr><td colspan="8" class="text-center">กำลังโหลดข้อมูล...</td></tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-dark text-center">
+            <tr>
+              <th>User ID</th>
+              <th>ชื่อ-นามสกุล</th>
+              <th>ยอดกู้ + ดอกเบี้ย</th>
+              <th>รอบการชำระ</th>
+              <th>ยอดจ่าย/งวด</th>
+              <th>เอกสารแนบ</th>
+              <th>สถานะปัจจุบัน</th>
+              <th>การจัดการ (Action)</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody">
+            <tr><td colspan="8" class="text-center py-4">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -39,6 +44,9 @@
   window.onload = loadAdminData;
 
   function loadAdminData() {
+    const tbody = document.getElementById('adminTableBody');
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><div class="spinner-border text-primary"></div> กำลังดึงข้อมูลล่าสุด...</td></tr>';
+    
     google.script.run.withSuccessHandler(renderTable).getAdminDashboard();
   }
 
@@ -46,8 +54,8 @@
     const tbody = document.getElementById('adminTableBody');
     tbody.innerHTML = '';
 
-    if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="text-center">ไม่พบรายการข้อมูล</td></tr>';
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">ไม่พบรายการข้อมูลคำขอสินเชื่อ</td></tr>';
       return;
     }
 
@@ -55,19 +63,22 @@
       let badgeClass = item.status === 'APPROVED' ? 'bg-success' : (item.status === 'PENDING' ? 'bg-warning text-dark' : 'bg-danger');
       
       let tr = document.createElement('tr');
+      tr.className = 'text-center';
       tr.innerHTML = `
         <td><strong>${item.userId}</strong></td>
-        <td>${item.fullname}</td>
-        <td>${item.amount} + ${item.interest} (${item.total})</td>
+        <td class="text-start">${item.fullname}</td>
+        <td>฿ ${Number(item.amount).toLocaleString()} + ฿ ${Number(item.interest).toLocaleString()} (<strong class="text-primary">฿ ${Number(item.total).toLocaleString()}</strong>)</td>
         <td>${item.payType}</td>
-        <td>${item.dailyAmount}</td>
-        <td><a href="${item.fileUrl}" target="_blank" class="btn btn-sm btn-outline-info">🖼️ เปิดไฟล์แนบ</a></td>
-        <td><span class="badge ${badgeClass}">${item.status}</span></td>
+        <td class="fw-bold text-danger">฿ ${item.dailyAmount}</td>
+        <td>
+          ${item.fileUrl ? `<a href="${item.fileUrl}" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-image"></i> เปิดดูเอกสาร</a>` : '<span class="text-muted">-</span>'}
+        </td>
+        <td><span class="badge ${badgeClass} fs-6">${item.status}</span></td>
         <td>
           ${item.status === 'PENDING' ? `
-            <button onclick="changeStatus('${item.userId}', 'APPROVED')" class="btn btn-sm btn-success me-1">อนุมัติ</button>
-            <button onclick="changeStatus('${item.userId}', 'REJECTED')" class="btn btn-sm btn-danger">ไม่อนุมัติ</button>
-          ` : '<span class="text-muted">จัดการแล้ว</span>'}
+            <button onclick="changeStatus('${item.userId}', 'APPROVED')" class="btn btn-sm btn-success me-1 fw-bold">อนุมัติ</button>
+            <button onclick="changeStatus('${item.userId}', 'REJECTED')" class="btn btn-sm btn-danger fw-bold">ไม่อนุมัติ</button>
+          ` : '<span class="text-muted extra-small">จัดการเรียบร้อยแล้ว</span>'}
         </td>
       `;
       tbody.appendChild(tr);
@@ -75,9 +86,14 @@
   }
 
   function changeStatus(userId, newStatus) {
-    if (confirm(`ยืนยันการเปลี่ยนสถานะ ${userId} เป็น ${newStatus}?`)) {
+    if (confirm(`ยืนยันการเปลี่ยนสถานะของ ${userId} เป็น ${newStatus}?`)) {
       google.script.run.withSuccessHandler(res => {
-        if (res.success) loadAdminData();
+        if (res.success) {
+          alert('บันทึกการเปลี่ยนสถานะสำเร็จ');
+          loadAdminData();
+        } else {
+          alert('เกิดข้อผิดพลาด: ' + res.message);
+        }
       }).updateStatus(userId, newStatus);
     }
   }
