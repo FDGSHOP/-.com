@@ -8,50 +8,61 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    body { background-color: #f8fafc; font-family: -apple-system, sans-serif; font-size: 14px; }
+    body { background-color: #f8fafc; font-size: 13px; }
     .top-navbar { background: #0f172a; color: white; padding: 12px 20px; }
-    .card-stat { background: white; border-radius: 12px; padding: 16px; border: 1px solid #e2e8f0; }
-    .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 16px; }
-    .badge-pending { background: #fef3c7; color: #d97706; }
-    .badge-approved { background: #dcfce7; color: #15803d; }
-    .badge-rejected { background: #fee2e2; color: #b91c1c; }
+    .card-box { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 16px; margin-bottom: 16px; }
   </style>
 </head>
 <body>
 
   <div class="top-navbar d-flex justify-content-between align-items-center">
-    <div class="fw-bold"><i class="bi bi-shield-lock-fill text-warning me-1"></i> Admin Portal - สินเชื่อเพื่อคนพะเยา</div>
+    <div class="fw-bold"><i class="bi bi-shield-lock-fill text-warning me-1"></i> Admin Portal</div>
     <button class="btn btn-sm btn-outline-light" onclick="loadAdminData()"><i class="bi bi-arrow-clockwise"></i> รีเฟรชข้อมูล</button>
   </div>
 
-  <div class="container-fluid py-4">
+  <div class="container-fluid py-3">
 
-    <!-- ตารางรายชื่อผู้สมัครสินเชื่อ -->
-    <div class="table-container">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="fw-bold m-0"><i class="bi bi-people-fill text-primary"></i> รายการคำขอกู้และอนุมัติสัญญา</h6>
-        <input type="text" id="searchBox" class="form-control form-control-sm w-25" placeholder="ค้นหา UID / ชื่อ / เบอร์โทร..." onkeyup="filterTable()">
-      </div>
-
+    <!-- ตรวจสลิปชำระเงินของลูกค้า -->
+    <div class="card-box">
+      <h6 class="fw-bold text-danger mb-2"><i class="bi bi-clock-history"></i> รายการสลิปรอตรวจสอบชำระเงิน</h6>
       <div class="table-responsive">
-        <table class="table table-hover align-middle" id="loanTable">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>UID ลูกค้า</th>
+              <th>ยอดเงิน</th>
+              <th>ภาพสลิป</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPendingPayments">
+            <tr><td colspan="5" class="text-center">กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- รายการขอกู้ -->
+    <div class="card-box">
+      <h6 class="fw-bold text-primary mb-2"><i class="bi bi-people-fill"></i> รายการคำขอกู้สินเชื่อ</h6>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
           <thead class="table-light">
             <tr>
               <th>UID</th>
               <th>ชื่อ-นามสกุล</th>
               <th>เบอร์โทร</th>
-              <th>ยอดกู้ (บาท)</th>
-              <th>ค่างวด/วัน</th>
+              <th>ยอดกู้</th>
+              <th>ธนาคารลูกค้า</th>
               <th>พิกัด GPS</th>
-              <th>เอกสารประกอบ</th>
+              <th>เอกสาร</th>
               <th>สถานะ</th>
-              <th class="text-center">จัดการ</th>
+              <th>อนุมัติ/แนบหลักฐานโอนเงิน</th>
             </tr>
           </thead>
-          <tbody id="loanTableBody">
-            <tr>
-              <td colspan="9" class="text-center py-4 text-muted">กำลังโหลดข้อมูล...</td>
-            </tr>
+          <tbody id="tbodyLoans">
+            <tr><td colspan="9" class="text-center">กำลังโหลด...</td></tr>
           </tbody>
         </table>
       </div>
@@ -59,101 +70,99 @@
 
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    let allLoansData = [];
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbytQBC8d-itL6Qy8dEududMb-sJ554-Wzbyjgcptfn87D0pdvP_F2vbPzrA-6M3-N-ugw/exec";
 
-    window.onload = function() {
-      loadAdminData();
-    };
+    window.onload = function() { loadAdminData(); };
 
-    // 1. ดึงข้อมูลผู้กู้ทั้งหมด
     function loadAdminData() {
       Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-      google.script.run.withSuccessHandler(data => {
+      fetch(`${WEB_APP_URL}?action=getAdminDashboard`)
+      .then(res => res.json())
+      .then(data => {
         Swal.close();
-        allLoansData = data;
-        renderTable(data);
-      }).getAdminDashboard();
+        renderPendingPayments(data.pendingPayments);
+        renderLoans(data.loans);
+      });
     }
 
-    // 2. แสดงผลข้อมูลลงในตาราง
-    function renderTable(data) {
-      const tbody = document.getElementById('loanTableBody');
+    function renderPendingPayments(list) {
+      const tbody = document.getElementById('tbodyPendingPayments');
       tbody.innerHTML = '';
-
-      if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">ไม่พบข้อมูลการสมัคร</td></tr>';
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">ไม่มีรายการสลิปค้างตรวจสอบ</td></tr>';
         return;
       }
-
-      data.forEach(item => {
-        let statusBadge = '';
-        if (item.status === 'APPROVED') statusBadge = '<span class="badge badge-approved">อนุมัติแล้ว</span>';
-        else if (item.status === 'REJECTED') statusBadge = '<span class="badge badge-rejected">ไม่อนุมัติ</span>';
-        else statusBadge = '<span class="badge badge-pending">รออนุมัติ</span>';
-
-        const gpsLink = item.gps ? `<a href="https://maps.google.com/?q=${item.gps}" target="_blank" class="btn btn-xs btn-outline-danger"><i class="bi bi-geo-alt"></i> ดูแผนที่</a>` : '-';
-        const docLink = item.fileUrl ? `<a href="${item.fileUrl}" target="_blank" class="btn btn-xs btn-outline-primary"><i class="bi bi-file-image"></i> ดูรูปเอกสาร</a>` : '-';
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="fw-bold text-primary">${item.userId}</td>
-          <td>${item.fullname}</td>
-          <td>${item.phone}</td>
-          <td>฿ ${Number(item.amount).toLocaleString()}</td>
-          <td>฿ ${Number(item.dailyAmount).toLocaleString()}</td>
-          <td>${gpsLink}</td>
-          <td>${docLink}</td>
-          <td>${statusBadge}</td>
-          <td class="text-center">
-            ${item.status === 'PENDING' ? `
-              <button class="btn btn-sm btn-success me-1" onclick="changeStatus('${item.userId}', 'APPROVED')">อนุมัติ</button>
-              <button class="btn btn-sm btn-danger" onclick="changeStatus('${item.userId}', 'REJECTED')">ปฏิเสธ</button>
-            ` : `<span class="text-muted small">ทำรายการแล้ว</span>`}
-          </td>
+      list.forEach(p => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${p.txId}</td>
+            <td class="fw-bold text-primary">${p.uid}</td>
+            <td>฿ ${Number(p.amount).toLocaleString()}</td>
+            <td><a href="${p.slipUrl}" target="_blank" class="btn btn-xs btn-outline-primary">ดูสลิป</a></td>
+            <td><button class="btn btn-sm btn-success" onclick="approvePayment('${p.txId}')">อนุมัติและหักลบยอดอัตโนมัติ</button></td>
+          </tr>
         `;
-        tbody.appendChild(tr);
       });
     }
 
-    // 3. กดอนุมัติ หรือ ปฏิเสธ
-    function changeStatus(userId, newStatus) {
-      const actionText = newStatus === 'APPROVED' ? 'อนุมัติสัญญา' : 'ปฏิเสธคำขอ';
-      
-      Swal.fire({
-        title: `ยืนยันการ${actionText}?`,
-        text: `คุณกำลังทำการ${actionText} สำหรับ UID: ${userId}`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'ยืนยัน',
-        cancelButtonText: 'ยกเลิก'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          Swal.fire({ title: 'กำลังอัปเดตสถานะ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-          
-          google.script.run.withSuccessHandler(res => {
-            if (res.success) {
-              Swal.fire({ icon: 'success', title: 'ทำรายการสำเร็จ', timer: 1200, showConfirmButton: false });
-              loadAdminData();
-            } else {
-              Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
-            }
-          }).updateStatus(userId, newStatus);
-        }
+    function renderLoans(loans) {
+      const tbody = document.getElementById('tbodyLoans');
+      tbody.innerHTML = '';
+      loans.forEach(l => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="fw-bold">${l.userId}</td>
+            <td>${l.fullname}</td>
+            <td>${l.phone}</td>
+            <td>฿ ${Number(l.amount).toLocaleString()}</td>
+            <td>${l.bank} <br><small class="text-muted">${l.bankAcc}</small></td>
+            <td><a href="https://maps.google.com/?q=${l.gps}" target="_blank" class="btn btn-xs btn-outline-danger">แผนที่</a></td>
+            <td><a href="${l.fileUrl}" target="_blank" class="btn btn-xs btn-outline-info">เอกสาร</a></td>
+            <td><span class="badge bg-secondary">${l.status}</span></td>
+            <td>
+              ${l.status === 'PENDING' ? `
+                <input type="file" id="slipFile_${l.userId}" class="form-control form-control-sm mb-1" accept="image/*">
+                <button class="btn btn-sm btn-success w-100" onclick="approveLoan('${l.userId}')">อนุมัติ & ส่งสลิปโอน</button>
+              ` : '<span class="text-success fw-bold">อนุมัติแล้ว</span>'}
+            </td>
+          </tr>
+        `;
       });
     }
 
-    // 4. ระบบค้นหาข้อมูลในตาราง
-    function filterTable() {
-      const text = document.getElementById('searchBox').value.toLowerCase();
-      const filtered = allLoansData.filter(item => 
-        item.userId.toLowerCase().includes(text) ||
-        item.fullname.toLowerCase().includes(text) ||
-        item.phone.includes(text)
-      );
-      renderTable(filtered);
+    function approvePayment(txId) {
+      Swal.fire({ title: 'กำลังอนุมัติค่างวด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'approvePayment', txId: txId })
+      })
+      .then(res => res.json())
+      .then(() => {
+        Swal.fire({ icon: 'success', title: 'ตัดยอดเงินสำเร็จ!' });
+        loadAdminData();
+      });
+    }
+
+    function approveLoan(userId) {
+      const fileInput = document.getElementById(`slipFile_${userId}`);
+      if (!fileInput.files[0]) return Swal.fire('เตือน', 'กรุณาแนบภาพสลิปการโอนเงินให้ลูกค้าก่อนกดอนุมัติครับ', 'warning');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        Swal.fire({ title: 'กำลังบันทึกอนุมัติ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        fetch(WEB_APP_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'updateStatus', userId: userId, newStatus: 'APPROVED', transferSlipUrl: e.target.result })
+        })
+        .then(res => res.json())
+        .then(() => {
+          Swal.fire({ icon: 'success', title: 'อนุมัติสัญญาเรียบร้อย!' });
+          loadAdminData();
+        });
+      };
+      reader.readAsDataURL(fileInput.files[0]);
     }
   </script>
 </body>
