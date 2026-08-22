@@ -4,51 +4,57 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>สินเชื่อเพื่อคนพะเยา</title>
-  
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1e5bb8">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <style>
     :root { --main-blue: #1e5bb8; --bg-gray: #f4f6fb; }
-    body { background-color: var(--bg-gray); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-bottom: 90px; user-select: none; }
-    .top-bar { background: var(--main-blue); color: white; padding: 12px 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    body { background-color: var(--bg-gray); font-family: -apple-system, sans-serif; padding-bottom: 90px; user-select: none; }
+    .top-bar { background: var(--main-blue); color: white; padding: 12px 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
     .card-box { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .upload-zone { position: relative; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; background: #f8fafc; cursor: pointer; }
-    .btn-remove-img { position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; cursor: pointer; z-index: 10; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     .btn-main { background: var(--main-blue); color: white; border-radius: 25px; padding: 12px; font-weight: bold; width: 100%; border: none; }
-    .btn-main:disabled { background: #94a3b8; }
-    .a4-paper { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); font-size: 13px; line-height: 1.6; color: #1e293b; }
-    .signature-pad { border: 2px dashed #cbd5e1; border-radius: 8px; background: #fff; touch-action: none; width: 100%; height: 120px; }
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+    
+    /* Floating LINE OA Button */
+    .btn-line-float { position: fixed; bottom: 80px; right: 16px; z-index: 999; background: #06C755; color: white; border-radius: 50px; padding: 10px 18px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 12px rgba(6,199,85,0.4); display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .btn-line-float:hover { color: white; }
+
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; color: #94a3b8; display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; border-top-left-radius: 16px; border-top-right-radius: 16px; }
     .nav-item-btn { text-align: center; font-size: 11px; cursor: pointer; color: #94a3b8; }
     .nav-item-btn.active { color: #38bdf8; font-weight: bold; }
-    .page-section { display: none; }
-    .page-section.active { display: block; }
-    .extra-small { font-size: 11px; }
+    .upload-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 16px; text-align: center; background: #f8fafc; cursor: pointer; position: relative; }
+    .signature-pad { border: 2px dashed #cbd5e1; border-radius: 8px; background: #fff; touch-action: none; width: 100%; height: 120px; }
   </style>
 </head>
 <body>
 
   <div class="top-bar">
     <div><i class="bi bi-wallet2 me-1 text-warning"></i> สินเชื่อเพื่อคนพะเยา</div>
-    <button id="btnPwaInstall" class="btn btn-sm btn-warning fw-bold rounded-pill" onclick="installPWA()">
-      <i class="bi bi-download"></i> ติดตั้งแอป
-    </button>
+    <span class="badge bg-light text-dark" id="topUserBadge">ผู้ใช้งานทั่วไป</span>
   </div>
+
+  <!-- Floating LINE Support -->
+  <a href="https://line.me/ti/p/@YOUR_LINE_OA" target="_blank" class="btn-line-float">
+    <i class="bi bi-line fs-5"></i> ติดต่อแอดมิน
+  </a>
 
   <div class="container py-3">
 
-    <!-- PAGE 1: เลือกวงเงิน -->
-    <div id="page-select" class="page-section active">
-      <div id="activeContractAlert" class="alert alert-warning fw-bold small d-none mb-3">
-        <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> ท่านมีสัญญาที่กำลังผ่อนชำระอยู่ ไม่สามารถยื่นกู้ซ้ำได้จนกว่าจะปิดสัญญาเดิม
+    <!-- PAGE 0: เข้าสู่ระบบอัตโนมัติด้วย UID / เลขบัตร -->
+    <div id="page-login" class="page-section active">
+      <div class="card-box text-center py-4">
+        <h5 class="fw-bold mb-3"><i class="bi bi-shield-lock-fill text-primary"></i> ยืนยันตัวตนผู้ใช้งาน</h5>
+        <p class="small text-muted">หากเคยยื่นขอสินเชื่อแล้ว กรอกเลขบัตรประชาชนเพื่อเข้าสู่ระบบ</p>
+        <input type="text" id="loginNationalId" class="form-control text-center fs-5 mb-3" placeholder="เลขบัตรประชาชน 13 หลัก" maxlength="13">
+        <button class="btn-main mb-2" onclick="loginWithNationalId()">เข้าสู่ระบบ</button>
+        <button class="btn btn-link text-decoration-none small" onclick="switchTab('page-select')">ขอกู้ครั้งแรก (ลงทะเบียนใหม่)</button>
       </div>
+    </div>
 
+    <!-- PAGE 1: เลือกวงเงิน -->
+    <div id="page-select" class="page-section">
       <div class="card-box bg-primary text-white text-center p-3">
         <div class="small opacity-75">ตารางคำนวณยอดชำระแบบประมาณการ</div>
         <div class="h2 fw-bold my-1" id="calcDisplayAmount">฿ 3,000</div>
@@ -57,9 +63,8 @@
 
       <div class="card-box">
         <h6 class="fw-bold mb-3"><i class="bi bi-calculator text-primary me-1"></i>เงื่อนไขการขอสินเชื่อ</h6>
-        
         <div class="mb-3">
-          <label class="small fw-bold">1. วงเงินกู้ที่ต้องการ:</label>
+          <label class="small fw-bold">วงเงินกู้ที่ต้องการ:</label>
           <select id="selectAmount" class="form-select fw-bold text-primary" onchange="calculateLoan()">
             <option value="1000">1,000 บาท</option>
             <option value="2000">2,000 บาท</option>
@@ -68,10 +73,9 @@
             <option value="10000">10,000 บาท</option>
           </select>
         </div>
-
         <div class="row g-2 mb-3">
           <div class="col-6">
-            <label class="small fw-bold">2. ระยะเวลากู้:</label>
+            <label class="small fw-bold">ระยะเวลากู้:</label>
             <select id="selectDays" class="form-select" onchange="calculateLoan()">
               <option value="7">7 วัน</option>
               <option value="15">15 วัน</option>
@@ -79,275 +83,130 @@
             </select>
           </div>
           <div class="col-6">
-            <label class="small fw-bold">3. รอบชำระเงิน:</label>
+            <label class="small fw-bold">รอบชำระเงิน:</label>
             <select id="selectFreq" class="form-select" onchange="calculateLoan()">
               <option value="1" selected>ชำระทุกวัน</option>
               <option value="3">ชำระทุก 3 วัน</option>
             </select>
           </div>
         </div>
-
-        <button id="btnNextToForm" class="btn-main mt-2" onclick="switchTab('page-form')">ถัดไป: กรอกข้อมูลผู้กู้</button>
+        <button class="btn-main" onclick="switchTab('page-form')">ถัดไป: กรอกข้อมูลส่วนตัว</button>
       </div>
     </div>
 
     <!-- PAGE 2: กรอกข้อมูลผู้กู้ -->
     <div id="page-form" class="page-section">
       <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-person-vcard text-primary me-1"></i>ข้อมูลผู้ขอสินเชื่อ</h6>
-        
-        <div class="mb-2">
-          <label class="small text-muted">ชื่อ - นามสกุลผู้กู้ *</label>
-          <input type="text" id="inpName" class="form-control form-control-sm" placeholder="นายสมชาย ค้าขายดี" onchange="autoSave()">
-        </div>
+        <h6 class="fw-bold mb-3"><i class="bi bi-person-vcard text-primary me-1"></i>ข้อมูลผู้ขอสินเชื่อ (กรอกครั้งแรก)</h6>
+        <div class="mb-2"><input type="text" id="inpName" class="form-control form-control-sm" placeholder="ชื่อ-นามสกุล"></div>
+        <div class="mb-2"><input type="text" id="inpNationalID" class="form-control form-control-sm" maxlength="13" placeholder="เลขบัตรประชาชน 13 หลัก"></div>
+        <div class="mb-2"><input type="tel" id="inpPhone" class="form-control form-control-sm" maxlength="10" placeholder="เบอร์โทรศัพท์"></div>
 
-        <div class="mb-2">
-          <label class="small text-muted">เลขบัตรประชาชน (13 หลัก) *</label>
-          <input type="text" id="inpNationalID" class="form-control form-control-sm" maxlength="17" placeholder="X-XXXX-XXXXX-XX-X" oninput="formatNationalID(this)" onchange="autoSave()">
-        </div>
-
-        <div class="mb-3">
-          <label class="small text-muted">เบอร์โทรศัพท์มือถือ (10 หลัก) *</label>
-          <input type="tel" id="inpPhone" class="form-control form-control-sm" maxlength="12" placeholder="0XX-XXX-XXXX" oninput="formatPhone(this)" onchange="autoSave()">
-        </div>
-
-        <div class="p-2 border rounded bg-light mb-3">
-          <div class="small fw-bold text-primary mb-1"><i class="bi bi-house-door-fill"></i> ที่อยู่ปัจจุบัน (จ.พะเยา)</div>
-          <input type="text" id="inpHomeAddr" class="form-control form-control-sm mb-2" placeholder="บ้านเลขที่ / หมู่บ้าน / ถนน" onchange="autoSave()">
-          <div class="row g-2">
-            <div class="col-6">
-              <select id="homeDistrict" class="form-select form-select-sm" onchange="updateSubDistricts('homeDistrict', 'homeSubDistrict'); autoSave();">
-                <option value="">-- เลือกอำเภอ --</option>
-              </select>
-            </div>
-            <div class="col-6">
-              <select id="homeSubDistrict" class="form-select form-select-sm" onchange="autoSave()">
-                <option value="">-- เลือกตำบล --</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="p-2 border border-warning rounded bg-warning bg-opacity-10 mb-3">
-          <div class="small fw-bold text-dark mb-1"><i class="bi bi-shop text-danger"></i> สถานที่ค้าขาย / หน้าร้าน</div>
-          <input type="text" id="inpShopName" class="form-control form-control-sm mb-2" placeholder="ชื่อร้าน / ตลาด / ที่ตั้งแผงค้าขาย" onchange="autoSave()">
-          <div class="row g-2 mb-2">
-            <div class="col-6">
-              <select id="workDistrict" class="form-select form-select-sm" onchange="updateSubDistricts('workDistrict', 'workSubDistrict'); autoSave();">
-                <option value="">-- เลือกอำเภอ --</option>
-              </select>
-            </div>
-            <div class="col-6">
-              <select id="workSubDistrict" class="form-select form-select-sm" onchange="autoSave()">
-                <option value="">-- เลือกตำบล --</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="input-group input-group-sm">
+        <div class="p-2 border rounded bg-light mb-2">
+          <div class="small fw-bold text-danger mb-1"><i class="bi bi-geo-alt-fill"></i> ปักหมุดพิกัด GPS ร้านค้า</div>
+          <div class="input-group input-group-sm mb-1">
             <input type="text" id="inpGps" class="form-control" placeholder="พิกัด GPS หน้าร้าน" readonly>
-            <button class="btn btn-outline-danger fw-bold" type="button" onclick="getCurrentLocation()">
-              <i class="bi bi-geo-alt-fill"></i> ปักหมุด GPS
+            <button class="btn btn-outline-danger" type="button" onclick="getCurrentLocationWithLoading()">
+              <i class="bi bi-pin-map-fill"></i> ปักหมุด
             </button>
           </div>
         </div>
 
-        <div class="mb-2">
-          <label class="small text-muted">ธนาคารรับเงิน *</label>
-          <select id="inpBank" class="form-select form-select-sm" onchange="autoSave()">
-            <option value="">-- เลือกธนาคาร --</option>
-            <option value="กสิกรไทย">ธนาคารกสิกรไทย</option>
-            <option value="ไทยพาณิชย์">ธนาคารไทยพาณิชย์</option>
-            <option value="กรุงไทย">ธนาคารกรุงไทย</option>
-            <option value="กรุงเทพ">ธนาคารกรุงเทพ</option>
-            <option value="ออมสิน">ธนาคารออมสิน</option>
-            <option value="ธ.ก.ส.">ธนาคาร ธ.ก.ส.</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="small text-muted">เลขที่บัญชีธนาคาร *</label>
-          <input type="text" id="inpBankAcc" class="form-control form-control-sm" placeholder="ระบุเฉพาะตัวเลข" oninput="formatBankAcc(this)" onchange="autoSave()">
+        <div class="row g-2 mb-2">
+          <div class="col-6"><input type="text" id="inpBank" class="form-control form-control-sm" placeholder="ธนาคารรับเงิน"></div>
+          <div class="col-6"><input type="text" id="inpBankAcc" class="form-control form-control-sm" placeholder="เลขบัญชี"></div>
         </div>
 
-        <button class="btn-main" onclick="goToUploadPage()">ถัดไป: แนบรูปภาพเอกสาร</button>
+        <button class="btn-main" onclick="switchTab('page-upload')">ถัดไป: แนบรูปเอกสาร</button>
       </div>
     </div>
 
     <!-- PAGE 3: แนบรูปภาพ -->
     <div id="page-upload" class="page-section">
       <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-camera-fill text-primary me-1"></i>แนบภาพถ่ายเอกสาร (ประทับลายน้ำอัตโนมัติ)</h6>
-
+        <h6 class="fw-bold mb-3"><i class="bi bi-camera-fill text-primary me-1"></i>แนบภาพถ่ายเอกสาร</h6>
         <div class="mb-3">
-          <label class="small fw-bold text-muted mb-1">1. ถ่ายภาพหน้าบัตรประชาชน *</label>
-          <div class="upload-zone" id="zone1" onclick="document.getElementById('file1').click()">
-            <span id="label1" class="small text-muted"><i class="bi bi-card-heading fs-3 d-block"></i> แตะเพื่อเลือกภาพหน้าบัตร</span>
-            <img id="preview1" class="img-fluid d-none rounded" style="max-height: 140px;">
-            <div id="btnRemove1" class="btn-remove-img d-none" onclick="removeImage(event, 1)">✕</div>
+          <div class="upload-zone" onclick="document.getElementById('file1').click()">
+            <span id="label1" class="small text-muted">ถ่ายภาพหน้าบัตรประชาชน</span>
+            <img id="preview1" class="img-fluid d-none rounded" style="max-height: 120px;">
           </div>
           <input type="file" id="file1" class="d-none" accept="image/*" onchange="processImageWithWatermark(this, 1)">
         </div>
 
         <div class="mb-3">
-          <label class="small fw-bold text-muted mb-1">2. ถ่ายรูปใบหน้าคู่กับบัตรประชาชน *</label>
-          <div class="upload-zone" id="zone2" onclick="document.getElementById('file2').click()">
-            <span id="label2" class="small text-muted"><i class="bi bi-person-bounding-box fs-3 d-block"></i> แตะเพื่อถ่ายรูปคู่บัตร</span>
-            <img id="preview2" class="img-fluid d-none rounded" style="max-height: 140px;">
-            <div id="btnRemove2" class="btn-remove-img d-none" onclick="removeImage(event, 2)">✕</div>
+          <div class="upload-zone" onclick="document.getElementById('file2').click()">
+            <span id="label2" class="small text-muted">ถ่ายรูปคู่กับบัตรประชาชน</span>
+            <img id="preview2" class="img-fluid d-none rounded" style="max-height: 120px;">
           </div>
           <input type="file" id="file2" class="d-none" accept="image/*" onchange="processImageWithWatermark(this, 2)">
         </div>
 
-        <button class="btn-main" onclick="goToContractPage()">ถัดไป: ตรวจสอบและเซ็นสัญญา</button>
+        <button class="btn-main" onclick="goToContractPage()">ถัดไป: เซ็นสัญญา</button>
       </div>
     </div>
 
-    <!-- PAGE 3.5: สัญญา + เซ็นชื่อ -->
+    <!-- PAGE 4: สัญญา + เซ็นชื่อ -->
     <div id="page-contract" class="page-section">
-      <div class="a4-paper mb-3">
-        <div class="text-center mb-3">
-          <h5 class="fw-bold mb-1">หนังสือสัญญากู้ยืมเงินอิเล็กทรอนิกส์</h5>
-          <div class="extra-small text-muted">โครงการสินเชื่อเพื่อคนพะเยา</div>
-          <hr class="my-2">
-        </div>
-
-        <div class="mb-2">
-          ข้าพเจ้า <strong id="docContractName" class="text-primary">-</strong> ถือบัตรประชาชนเลขที่ <span id="docContractID">-</span> 
-          ตกลงทำสัญญากู้ยืมเงินจำนวน <strong id="docContractAmount" class="text-danger">-</strong> บาท กับผู้ให้อยู่ภายใต้เงื่อนไขดอกเบี้ยและการผ่อนชำระตามที่ระบบกำหนด
-        </div>
-
-        <div class="mb-2">
-          ข้าพเจ้าขอรับรองว่าข้อมูล สถานที่ประกอบอาชีพ/หน้าร้าน และพิกัด GPS ที่ระบุไว้เป็นความจริงทุกประการ
-        </div>
-
-        <div class="form-check my-3 border p-2 rounded bg-light">
-          <input class="form-check-input ms-1" type="checkbox" id="chkPdpa" onchange="toggleSubmitBtn()">
-          <label class="form-check-label extra-small text-dark ms-2 fw-bold" for="chkPdpa">
-            ข้าพเจ้ายินยอมให้ใช้ข้อมูลส่วนบุคคลและตำแหน่ง GPS เพื่อการพิจารณาสินเชื่อตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA)
-          </label>
-        </div>
-
-        <div class="border rounded p-2 bg-light text-center">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="extra-small fw-bold text-muted"><i class="bi bi-pencil-fill"></i> ลายมือชื่อผู้กู้:</span>
-            <button class="btn btn-sm btn-link text-danger p-0 extra-small text-decoration-none" onclick="clearSignature()">ล้างลายเซ็น</button>
-          </div>
-          <canvas id="signaturePad" class="signature-pad mb-1"></canvas>
-          <div class="extra-small text-muted">(ลงลายมือชื่ออิเล็กทรอนิกส์เพื่อแนบในสัญญา)</div>
-        </div>
-      </div>
-
-      <button id="btnSubmitApp" class="btn-main" disabled onclick="submitApplication()">ยืนยันส่งข้อมูลสมัครสินเชื่อ</button>
-    </div>
-
-    <!-- PAGE 4: สถานะคำขอ -->
-    <div id="page-status" class="page-section">
-      <div class="card-box text-center py-4">
-        <div id="statusPendingBox">
-          <div class="spinner-border text-primary my-2" style="width: 3rem; height: 3rem;"></div>
-          <h5 class="fw-bold mt-2">อยู่ในระหว่างการพิจารณา</h5>
-          <p class="small text-muted">ข้อมูลของคุณถูกส่งไปยังแอดมินเรียบร้อยแล้ว กำลังรอการอนุมัติ...</p>
-        </div>
-
-        <div id="statusApprovedBox" class="d-none">
-          <i class="bi bi-check-circle-fill text-success display-1"></i>
-          <h4 class="fw-bold text-success mt-2">อนุมัติสัญญาเรียบร้อย!</h4>
-          <p class="small text-muted mb-3">ระบบกำลังดำเนินการโอนเงินเข้าบัญชีของคุณ</p>
-          <button class="btn-main" onclick="switchTab('page-payment')">ไปหน้าตารางส่งเงินรายวัน</button>
-        </div>
-
-        <div id="statusRejectedBox" class="d-none">
-          <i class="bi bi-x-circle-fill text-danger display-1"></i>
-          <h4 class="fw-bold text-danger mt-2">ไม่อนุมัติคำขอ</h4>
-          <p class="small text-muted mb-3">เนื่องจากข้อมูลไม่ผ่านเงื่อนไขการพิจารณา</p>
-          <button class="btn btn-outline-secondary rounded-pill" onclick="resetToReApply()">ลองยื่นใหม่อีกครั้ง</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- PAGE 5: ตารางส่งเงิน & PromptPay QR -->
-    <div id="page-payment" class="page-section">
       <div class="card-box">
-        <h6 class="fw-bold mb-2"><i class="bi bi-receipt text-primary me-1"></i>ชำระค่างวดประจำวัน</h6>
-        
-        <div id="serverTimeBanner" class="p-2 bg-light border rounded mb-3 text-center extra-small">
-          <i class="bi bi-clock-history"></i> เวลา Server กลาง: <strong id="clockDisplay">กำลังโหลด...</strong>
+        <h6 class="fw-bold text-center">หนังสือสัญญากู้ยืมเงินอิเล็กทรอนิกส์</h6>
+        <p class="small text-muted">ข้าพเจ้าขอรับรองว่าข้อมูลพิกัด GPS และรูปถ่ายเป็นความจริงทุกประการ</p>
+        <canvas id="signaturePad" class="signature-pad mb-2"></canvas>
+        <button class="btn btn-sm btn-link text-danger w-100 mb-2" onclick="clearSignature()">ล้างลายเซ็น</button>
+        <button class="btn-main" onclick="submitApplicationWithLoading()">ยืนยันส่งข้อมูลสมัครสินเชื่อ</button>
+      </div>
+    </div>
+
+    <!-- PAGE 5: Dashboard สรุปยอดชำระ & Progress Bar -->
+    <div id="page-dashboard" class="page-section">
+      <div class="card-box bg-white border border-primary">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold m-0 text-primary"><i class="bi bi-pie-chart-fill"></i> ภาพรวมสัญญาเงินกู้</h6>
+          <span class="badge bg-success" id="dashStatus">อนุมัติแล้ว</span>
         </div>
 
-        <div class="p-3 bg-primary bg-opacity-10 rounded text-center mb-3">
-          <div class="small text-muted">ยอดค่างวดปกติ (เงินต้น + ดอกเบี้ย)</div>
-          <div class="h3 fw-bold text-primary my-1" id="payAmountDue">฿ 120.00</div>
-          <div class="extra-small text-muted">ยอดเฉพาะดอกเบี้ย (ดอกลอย): <strong id="payInterestOnly" class="text-danger">฿ 20.00</strong></div>
-        </div>
-
-        <div class="mb-3">
-          <label class="small fw-bold text-muted mb-1">เลือกรูปแบบการชำระเงิน:</label>
-          <div class="form-check border p-2 rounded mb-2">
-            <input class="form-check-input ms-1" type="radio" name="payType" id="payFull" value="FULL" checked onchange="updatePaySummary()">
-            <label class="form-check-label small fw-bold ms-2" for="payFull">
-              ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)
-            </label>
+        <!-- Progress Bar % -->
+        <div class="mb-2">
+          <div class="d-flex justify-content-between extra-small fw-bold mb-1">
+            <span>ความคืบหน้าการผ่อนชำระ</span>
+            <span id="dashPercentText">0%</span>
           </div>
-          <div class="form-check border p-2 rounded">
-            <input class="form-check-input ms-1" type="radio" name="payType" id="payInterest" value="INTEREST" onchange="updatePaySummary()">
-            <label class="form-check-label small fw-bold ms-2 text-danger" for="payInterest">
-              ชำระเฉพาะดอกเบี้ย (ดอกลอย - ไม่ตัดเงินต้น)
-            </label>
+          <div class="progress" style="height: 12px;">
+            <div id="dashProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;"></div>
           </div>
         </div>
 
-        <div class="p-2 bg-warning bg-opacity-10 border border-warning rounded mb-3 extra-small">
+        <div class="row g-2 text-center my-2 extra-small">
+          <div class="col-6">
+            <div class="p-2 bg-light rounded">
+              <span class="text-muted d-block">ยอดกู้ + ดอกเบี้ยรวม</span>
+              <strong class="fs-6" id="dashTotalAmount">฿ 0.00</strong>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-2 bg-light rounded">
+              <span class="text-muted d-block">ยอดเงินคงค้าง</span>
+              <strong class="fs-6 text-danger" id="dashRemaining">฿ 0.00</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-2 border border-warning rounded bg-warning bg-opacity-10 mb-2 extra-small">
           <div class="d-flex justify-content-between mb-1">
-            <span>ยอดชำระที่เลือก:</span>
-            <strong id="summaryBasePay">฿ 120.00</strong>
+            <span>ยอดต้องชำระวันนี้ (รวมค่าปรับถ้ามี):</span>
+            <strong class="text-danger" id="dashPayToday">฿ 0.00</strong>
           </div>
-          <div class="d-flex justify-content-between mb-1 text-danger" id="rowFine" style="display: none;">
-            <span>ค่าปรับส่งเกินเวลา (หลัง 18:00 น.):</span>
-            <strong id="summaryFine">฿ 50.00</strong>
-          </div>
-          <div id="fineReasonText" class="text-danger fw-bold my-1" style="display: none;">
-            * เหตุผลค่าปรับ: ส่งสลิปชำระเงินเกินเวลา 18:00 น.
+          <div class="d-flex justify-content-between mb-1">
+            <span>ยอดชำระในวันพรุ่งนี้:</span>
+            <strong id="dashPayTomorrow">฿ 0.00</strong>
           </div>
           <hr class="my-1">
-          <div class="d-flex justify-content-between fw-bold fs-6 text-dark">
-            <span>รวมยอดชำระสุทธิ:</span>
-            <span class="text-primary" id="summaryTotalPay">฿ 120.00</span>
+          <div class="d-flex justify-content-between fw-bold text-success">
+            <span>ต้องการ "ปิดสัญญาในวันนี้" จ่ายรวม:</span>
+            <span id="dashPayCloseContract">฿ 0.00</span>
           </div>
         </div>
 
-        <button class="btn-main mb-3" onclick="openQrModal()"><i class="bi bi-qr-code-scan me-1"></i> กดชำระเงิน (สร้าง PromptPay QR)</button>
-      </div>
-    </div>
-
-    <!-- PAGE 6: โปรไฟล์ & ประวัติ -->
-    <div id="page-profile" class="page-section">
-      <div class="card-box">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="fw-bold m-0"><i class="bi bi-person-badge-fill text-primary me-1"></i>ข้อมูลโปรไฟล์ผู้กู้</h6>
-          <span class="badge bg-secondary" id="profUid">UID: PY-0000</span>
-        </div>
-        <div class="small mb-1"><strong>ชื่อ-นามสกุล:</strong> <span id="profName">-</span></div>
-        <div class="small mb-1"><strong>เบอร์โทรศัพท์:</strong> <span id="profPhone">-</span></div>
-        <div class="small mb-1"><strong>เลขบัตรประชาชน:</strong> <span id="profID">-</span></div>
-        <div class="small mb-1"><strong>สถานะสัญญา:</strong> <span id="profLoanStatus" class="badge bg-success">ปกติ</span></div>
-      </div>
-
-      <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติการชำระเงิน</h6>
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered extra-small text-center align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>วันที่/เวลา</th>
-                <th>ประเภท</th>
-                <th>จำนวนเงิน</th>
-              </tr>
-            </thead>
-            <tbody id="payHistoryList">
-              <tr><td colspan="3" class="text-muted py-3">ยังไม่มีประวัติการชำระเงิน</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <button class="btn-main" onclick="openQrModal()"><i class="bi bi-qr-code-scan me-1"></i> สแกนจ่ายค่างวดวันนี้</button>
       </div>
     </div>
 
@@ -358,31 +217,25 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content text-center">
         <div class="modal-header bg-primary text-white py-2">
-          <h6 class="modal-title fw-bold"><i class="bi bi-qr-code"></i> PromptPay QR Code</h6>
+          <h6 class="modal-title fw-bold"><i class="bi bi-qr-code"></i> สแกนชำระเงิน</h6>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="extra-small text-muted mb-1">สแกนชำระเงินผ่านแอปธนาคาร</div>
-          <div class="fw-bold text-primary mb-2" id="modalPayTypeTitle">ชำระเต็มงวด</div>
-          
-          <img id="imgPromptPayQr" src="" class="img-fluid border p-2 rounded mb-2" style="max-width: 220px;" alt="PromptPay QR">
-          
+          <img id="imgPromptPayQr" src="" class="img-fluid border p-2 rounded mb-2" style="max-width: 200px;" alt="PromptPay QR">
           <div class="h4 fw-bold text-danger my-1" id="modalQrAmount">฿ 0.00</div>
-          <div class="extra-small text-muted mb-3">บัญชีรับเงิน PromptPay: <strong>0658351446</strong></div>
+          
+          <!-- ปุ่มดาวน์โหลด QR -->
+          <a id="btnDownloadQr" href="" download="PromptPay_QR.png" class="btn btn-sm btn-outline-primary rounded-pill mb-3">
+            <i class="bi bi-download"></i> บันทึกรูป QR Code ลงเครื่อง
+          </a>
 
           <div class="text-start border-top pt-2">
-            <label class="small fw-bold text-muted mb-1">แนบสลิปการโอนเงินเพื่อยืนยัน:</label>
-            <div class="upload-zone p-2" id="zoneSlip" onclick="document.getElementById('fileSlip').click()">
-              <span id="labelSlip" class="extra-small text-muted"><i class="bi bi-file-earmark-arrow-up fs-4 d-block"></i> เลือกไฟล์สลิปการโอน</span>
-              <img id="previewSlip" class="img-fluid d-none rounded" style="max-height: 120px;">
-              <div id="btnRemoveSlip" class="btn-remove-img d-none" onclick="removeImage(event, 'Slip')">✕</div>
-            </div>
-            <input type="file" id="fileSlip" class="d-none" accept="image/*" onchange="processImageWithWatermark(this, 'Slip')">
+            <label class="small fw-bold text-muted mb-1">แนบสลิปการโอนเงิน:</label>
+            <input type="file" id="fileSlip" class="form-control form-control-sm" accept="image/*" onchange="processImageWithWatermark(this, 'Slip')">
           </div>
         </div>
         <div class="modal-footer py-2">
-          <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">ปิด</button>
-          <button type="button" class="btn btn-success btn-sm rounded-pill fw-bold" onclick="submitPaymentSlip()">ส่งสลิปชำระเงิน</button>
+          <button type="button" class="btn btn-success btn-sm w-100 fw-bold" onclick="submitSlipWithLoading()">ส่งสลิปยืนยันการชำระเงิน</button>
         </div>
       </div>
     </div>
@@ -393,231 +246,84 @@
     <div class="nav-item-btn active" id="navSelect" onclick="switchTab('page-select')">
       <i class="bi bi-calculator d-block fs-5"></i> ขอสินเชื่อ
     </div>
-    <div class="nav-item-btn" id="navPayment" onclick="switchTab('page-payment')">
-      <i class="bi bi-receipt d-block fs-5"></i> ตารางส่งเงิน
-    </div>
-    <div class="nav-item-btn" id="navProfile" onclick="switchTab('page-profile')">
-      <i class="bi bi-person d-block fs-5"></i> โปรไฟล์
+    <div class="nav-item-btn" id="navDash" onclick="loadDashboardData()">
+      <i class="bi bi-pie-chart d-block fs-5"></i> ยอดคงเหลือ
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const PROMPTPAY_PHONE = "0658351446";
-    const phayaoData = {
-      "เมืองพะเยา": ["เวียง", "แม่ต๋ำ", "ท่าวังทอง", "บ้านต๋อม", "บ้านต๊ำ", "ท่าจำปี", "บ้านตุ่น", "แม่นาเรือ", "จำป่าหวาย", "แม่ปืม", "แม่กา", "แม่ใส", "บ้านสาง", "สันป่าม่วง", "บ้านใหม่"],
-      "ดอกคำใต้": ["ดอนศรีชุม", "ดอกคำใต้", "ห้วยลาน", "สันโค้ง", "ป่าซาง", "หนองหล่ม", "ดอนงิ้ว", "บ้านถ้ำ", "บุญเกิด", "สว่าง", "คือเวียง", "ดงสุวรรณ"],
-      "แม่ใจ": ["ศรีถ้อย", "แม่ใจ", "ป่าแฝก", "เจริญราษฎร์", "บ้านเหล่า", "แม่สุก"],
-      "จุน": ["ห้วยข้าวก่ำ", "จุน", "ห้วยยางขาม", "ลอ", "ทุ่งรวงทอง", "หงส์หิน", "พระธาตุขิงแกง"],
-      "ปง": ["ปง", "นาปรัง", "งิม", "ผาช้างน้อย", "ควร", "ออย", "ขุนควร"],
-      "เชียงคำ": ["หย่วน", "ทุ่งกล้วย", "ร่มเย็น", "แม่ลาว", "น้ำแวน", "ฝายกวาง", "เจดีย์คำ", "เชียงบาน", "ทุ่งผาสุก", "อ่างทอง"],
-      "เชียงม่วน": ["เชียงม่วน", "บ้านสระ", "บ้านมาง"],
-      "ภูซาง": ["ภูซาง", "ป่าสัก", "ทุ่งกล้วย", "สบบง", "เชียงแรง"],
-      "ภูกามยาว": ["แม่อิง", "ดงเจน", "ห้วยแก้ว"]
-    };
-
     let fileStore = {};
-    let deferredPrompt;
     let canvas, ctx, isDrawing = false;
-    let currentServerTime = new Date();
-    let isLateFine = false;
-
-    let userProfile = {
-      uid: localStorage.getItem('user_uid') || "",
-      loanStatus: "NOT_APPLIED"
-    };
+    let currentUser = JSON.parse(localStorage.getItem('user_profile') || '{}');
 
     window.onload = function() {
-      initDistrictDropdown('homeDistrict');
-      initDistrictDropdown('workDistrict');
       initSignaturePad();
       calculateLoan();
-      startServerClock();
+      if (currentUser.uid) {
+        document.getElementById('topUserBadge').innerText = "UID: " + currentUser.uid;
+        loadDashboardData();
+      }
     };
 
-    function startServerClock() {
-      setInterval(() => {
-        currentServerTime.setSeconds(currentServerTime.getSeconds() + 1);
-        const hours = currentServerTime.getHours();
-        const mins = String(currentServerTime.getMinutes()).padStart(2, '0');
-        const secs = String(currentServerTime.getSeconds()).padStart(2, '0');
-        document.getElementById('clockDisplay').innerText = `${hours}:${mins}:${secs} น.`;
-        isLateFine = hours >= 18;
-        updatePaySummary();
-      }, 1000);
-    }
+    // 1. ระบบปักหมุด GPS พร้อม Loading
+    function getCurrentLocationWithLoading() {
+      Swal.fire({
+        title: 'กำลังค้นหาพิกัด GPS...',
+        text: 'โปรดยืนยันการอนุญาตสิทธิ์พิกัดบนมือถือ',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
 
-    function initSignaturePad() {
-      canvas = document.getElementById('signaturePad');
-      ctx = canvas.getContext('2d');
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#0f172a';
-
-      canvas.addEventListener('touchstart', startDrawing);
-      canvas.addEventListener('touchmove', draw);
-      canvas.addEventListener('touchend', stopDrawing);
-      canvas.addEventListener('mousedown', startDrawing);
-      canvas.addEventListener('mousemove', draw);
-      canvas.addEventListener('mouseup', stopDrawing);
-    }
-
-    function startDrawing(e) {
-      isDrawing = true;
-      ctx.beginPath();
-      const pos = getPos(e);
-      ctx.moveTo(pos.x, pos.y);
-    }
-
-    function draw(e) {
-      if (!isDrawing) return;
-      e.preventDefault();
-      const pos = getPos(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-    }
-
-    function stopDrawing() { isDrawing = false; }
-
-    function getPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return { x: clientX - rect.left, y: clientY - rect.top };
-    }
-
-    function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-
-    function getCurrentLocation() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             document.getElementById('inpGps').value = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
-            alert('ปักหมุด GPS สำเร็จ!');
+            Swal.fire({
+              icon: 'success',
+              title: 'ปักหมุดพิกัดสำเร็จ!',
+              timer: 1500,
+              showConfirmButton: false
+            });
           },
-          () => alert('กรุณาเปิด GPS บนมือถือครับ')
+          (err) => {
+            Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถค้นหาพิกัดได้ กรุณาเปิด GPS', 'error');
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
         );
       }
     }
 
-    function processImageWithWatermark(input, id) {
-      const file = input.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = function() {
-          const canvasObj = document.createElement('canvas');
-          const MAX_WIDTH = 1000;
-          const scale = MAX_WIDTH / img.width;
-          
-          canvasObj.width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
-          canvasObj.height = img.width > MAX_WIDTH ? img.height * scale : img.height;
-
-          const ctxObj = canvasObj.getContext('2d');
-          ctxObj.drawImage(img, 0, 0, canvasObj.width, canvasObj.height);
-
-          const text = "ใช้สำหรับสินเชื่อเพื่อคนพะเยาเท่านั้น";
-          const fontSize = Math.floor(canvasObj.width / 20);
-          ctxObj.save();
-          ctxObj.translate(canvasObj.width / 2, canvasObj.height / 2);
-          ctxObj.rotate(-Math.PI / 6);
-          ctxObj.font = `bold ${fontSize}px sans-serif`;
-          ctxObj.fillStyle = "rgba(220, 38, 38, 0.45)";
-          ctxObj.textAlign = "center";
-          ctxObj.fillText(text, 0, 0);
-          ctxObj.restore();
-
-          const compressedUrl = canvasObj.toDataURL('image/jpeg', 0.7);
-          document.getElementById('preview' + id).src = compressedUrl;
-          document.getElementById('preview' + id).classList.remove('d-none');
-          document.getElementById('label' + id).classList.add('d-none');
-          document.getElementById('btnRemove' + id).classList.remove('d-none');
-
-          fileStore[id] = compressedUrl;
-        };
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function removeImage(e, id) {
-      e.stopPropagation();
-      delete fileStore[id];
-      document.getElementById('file' + id).value = '';
-      document.getElementById('preview' + id).classList.add('d-none');
-      document.getElementById('label' + id).classList.remove('d-none');
-      document.getElementById('btnRemove' + id).classList.add('d-none');
-    }
-
-    function calculateLoan() {
-      const amount = parseFloat(document.getElementById('selectAmount').value);
-      const days = parseInt(document.getElementById('selectDays').value);
-      const freq = parseInt(document.getElementById('selectFreq').value);
-
-      const totalPay = amount * 1.20;
-      const totalInstallments = Math.ceil(days / freq);
-      const payPer = totalPay / totalInstallments;
-      const interestPer = (amount * 0.20) / totalInstallments;
-
-      document.getElementById('calcDisplayAmount').innerText = '฿ ' + amount.toLocaleString();
-      document.getElementById('calcDisplaySummary').innerText = `จ่ายงวดละ ฿ ${payPer.toFixed(2)} (${totalInstallments} งวด / ดอกเบี้ย 20%)`;
-      document.getElementById('payAmountDue').innerText = `฿ ${payPer.toFixed(2)}`;
-      document.getElementById('payInterestOnly').innerText = `฿ ${interestPer.toFixed(2)}`;
-
-      updatePaySummary();
-    }
-
-    function updatePaySummary() {
-      const isInterestOnly = document.getElementById('payInterest').checked;
-      const basePay = isInterestOnly ? 
-        parseFloat(document.getElementById('payInterestOnly').innerText.replace('฿ ', '')) : 
-        parseFloat(document.getElementById('payAmountDue').innerText.replace('฿ ', ''));
-
-      const fine = isLateFine ? 50 : 0;
-      const total = basePay + fine;
-
-      document.getElementById('summaryBasePay').innerText = `฿ ${basePay.toFixed(2)}`;
-      document.getElementById('summaryFine').innerText = `฿ ${fine.toFixed(2)}`;
-      document.getElementById('summaryTotalPay').innerText = `฿ ${total.toFixed(2)}`;
-
-      document.getElementById('rowFine').style.display = isLateFine ? 'flex' : 'none';
-      document.getElementById('fineReasonText').style.display = isLateFine ? 'block' : 'none';
-    }
-
-    function goToUploadPage() {
-      if (!document.getElementById('inpName').value || !document.getElementById('inpNationalID').value) {
-        alert('กรุณากรอกข้อมูลให้ครบถ้วนครับ');
+    // 2. ระบบล็อกอินด้วยเลขบัตรประชาชน
+    function loginWithNationalId() {
+      const id = document.getElementById('loginNationalId').value;
+      if (id.length < 13) {
+        Swal.fire('คำเตือน', 'กรุณากรอกเลขบัตรประชาชน 13 หลัก', 'warning');
         return;
       }
-      switchTab('page-upload');
+
+      Swal.fire({ title: 'กำลังตรวจสอบข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(res => {
+        if (res.exists) {
+          currentUser = res.user;
+          localStorage.setItem('user_profile', JSON.stringify(currentUser));
+          document.getElementById('topUserBadge').innerText = "UID: " + currentUser.uid;
+          Swal.fire({ icon: 'success', title: 'เข้าสู่ระบบสำเร็จ', timer: 1200, showConfirmButton: false });
+          loadDashboardData();
+        } else {
+          Swal.fire('ไม่พบข้อมูล', 'ท่านยังไม่ได้สมัครสินเชื่อ สามารถกดขอกู้ครั้งแรกได้ครับ', 'info');
+        }
+      }).checkExistingUser(id);
     }
 
-    function goToContractPage() {
-      if (!fileStore[1] || !fileStore[2]) {
-        alert('กรุณาแนบภาพบัตรประชาชนและภาพถ่ายคู่บัตรให้ครบถ้วนครับ');
-        return;
-      }
-      document.getElementById('docContractName').innerText = document.getElementById('inpName').value;
-      document.getElementById('docContractID').innerText = document.getElementById('inpNationalID').value;
-      document.getElementById('docContractAmount').innerText = document.getElementById('selectAmount').value + " บาท";
-
-      switchTab('page-contract');
-      setTimeout(initSignaturePad, 200);
-    }
-
-    function toggleSubmitBtn() {
-      document.getElementById('btnSubmitApp').disabled = !document.getElementById('chkPdpa').checked;
-    }
-
-    // ส่งข้อมูลไปยัง Google Apps Script
-    function submitApplication() {
+    // 3. ยื่นกู้ส่งข้อมูลไป Apps Script
+    function submitApplicationWithLoading() {
       const payload = {
         fullname: document.getElementById('inpName').value,
-        nationalId: document.getElementById('inpNationalID').value.replace(/\D/g, ''),
-        phone: document.getElementById('inpPhone').value.replace(/\D/g, ''),
+        nationalId: document.getElementById('inpNationalID').value,
+        phone: document.getElementById('inpPhone').value,
         amount: document.getElementById('selectAmount').value,
         days: document.getElementById('selectDays').value,
         freq: document.getElementById('selectFreq').value,
@@ -630,89 +336,132 @@
         signature: canvas.toDataURL()
       };
 
-      switchTab('page-status');
+      Swal.fire({ title: 'กำลังบันทึกข้อมูลคำขอ...', text: 'กรุณารอประมาณ 3-5 วินาที', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
       google.script.run.withSuccessHandler(res => {
-        if(res.success) {
-          userProfile.uid = res.uid;
-          localStorage.setItem('user_uid', res.uid);
-          document.getElementById('profName').innerText = payload.fullname;
-          document.getElementById('profPhone').innerText = payload.phone;
-          document.getElementById('profID').innerText = payload.nationalId;
-          document.getElementById('profUid').innerText = "UID: " + res.uid;
+        if (res.success) {
+          currentUser = { uid: res.uid };
+          localStorage.setItem('user_profile', JSON.stringify(currentUser));
+          Swal.fire({ icon: 'success', title: 'ยื่นคำขอสำเร็จ!', text: 'UID ของคุณคือ ' + res.uid, confirmButtonText: 'ไปหน้าตารางชำระเงิน' })
+            .then(() => loadDashboardData());
         } else {
-          alert("เกิดข้อผิดพลาด: " + res.error);
+          Swal.fire('เกิดข้อผิดพลาด', res.error, 'error');
         }
       }).submitApplicationFromClient(payload);
     }
 
-    function openQrModal() {
-      const totalPayStr = document.getElementById('summaryTotalPay').innerText.replace('฿ ', '');
-      const isInterestOnly = document.getElementById('payInterest').checked;
-
-      const qrUrl = `https://promptpay.io/${PROMPTPAY_PHONE}/${totalPayStr}.png`;
-      document.getElementById('imgPromptPayQr').src = qrUrl;
-      document.getElementById('modalQrAmount').innerText = `฿ ${totalPayStr}`;
-      document.getElementById('modalPayTypeTitle').innerText = isInterestOnly ? "ชำระเฉพาะดอกเบี้ย (ดอกลอย)" : "ชำระเต็มงวด";
-
-      const modal = new bootstrap.Modal(document.getElementById('qrModal'));
-      modal.show();
-    }
-
-    function submitPaymentSlip() {
-      if (!fileStore['Slip']) {
-        alert('กรุณาแนบภาพสลิปการโอนเงินก่อนส่งครับ');
+    // 4. ดึงข้อมูล Dashboard & Progress Bar
+    function loadDashboardData() {
+      if (!currentUser.uid) {
+        switchTab('page-login');
         return;
       }
 
+      switchTab('page-dashboard');
+      Swal.fire({ title: 'กำลังดึงข้อมูลค่างวด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(res => {
+        Swal.close();
+        if (res.success) {
+          document.getElementById('dashStatus').innerText = res.status;
+          document.getElementById('dashPercentText').innerText = res.progressPercent + '%';
+          document.getElementById('dashProgressBar').style.width = res.progressPercent + '%';
+
+          document.getElementById('dashTotalAmount').innerText = '฿ ' + res.totalAmount.toLocaleString();
+          document.getElementById('dashRemaining').innerText = '฿ ' + res.remainingBalance.toLocaleString();
+          document.getElementById('dashPayToday').innerText = '฿ ' + res.payTodayTotal.toFixed(2);
+          document.getElementById('dashPayTomorrow').innerText = '฿ ' + res.payTomorrowBase.toFixed(2);
+          document.getElementById('dashPayCloseContract').innerText = '฿ ' + res.payCloseContractTotal.toFixed(2);
+        }
+      }).getUserLoanSummary(currentUser.uid);
+    }
+
+    function openQrModal() {
+      const amountStr = document.getElementById('dashPayToday').innerText.replace('฿ ', '');
+      const qrUrl = `https://promptpay.io/${PROMPTPAY_PHONE}/${amountStr}.png`;
+      document.getElementById('imgPromptPayQr').src = qrUrl;
+      document.getElementById('btnDownloadQr').href = qrUrl;
+      document.getElementById('modalQrAmount').innerText = `฿ ${amountStr}`;
+
+      new bootstrap.Modal(document.getElementById('qrModal')).show();
+    }
+
+    function submitSlipWithLoading() {
+      if (!fileStore['Slip']) {
+        Swal.fire('เตือน', 'กรุณาแนบภาพสลิปการโอนก่อนส่งครับ', 'warning');
+        return;
+      }
+
+      Swal.fire({ title: 'กำลังส่งสลิปชำระเงิน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
       const payload = {
-        uid: userProfile.uid || "PY-GUEST",
-        paymentType: document.getElementById('payInterest').checked ? "INTEREST" : "FULL",
-        baseAmount: document.getElementById('summaryBasePay').innerText.replace('฿ ', ''),
-        fine: isLateFine ? "50" : "0",
-        totalPaid: document.getElementById('summaryTotalPay').innerText.replace('฿ ', ''),
-        slipBase64: fileStore['Slip'],
-        reinvest: true
+        uid: currentUser.uid,
+        paymentType: 'FULL',
+        baseAmount: document.getElementById('dashPayToday').innerText.replace('฿ ', ''),
+        fine: '0',
+        totalPaid: document.getElementById('dashPayToday').innerText.replace('฿ ', ''),
+        slipBase64: fileStore['Slip']
       };
 
       google.script.run.withSuccessHandler(res => {
         if (res.success) {
-          alert('ส่งสลิปชำระเงินเรียบร้อยแล้ว!');
+          Swal.fire({ icon: 'success', title: 'ส่งสลิปเรียบร้อยแล้ว!', text: 'แอดมินจะทำการตรวจสอบยอดเงินครับ' });
           bootstrap.Modal.getInstance(document.getElementById('qrModal')).hide();
-          removeImage(new Event('click'), 'Slip');
+          loadDashboardData();
         } else {
-          alert('เกิดข้อผิดพลาด: ' + res.error);
+          Swal.fire(' Error', res.error, 'error');
         }
       }).submitPaymentTransaction(payload);
     }
 
-    function initDistrictDropdown(id) {
-      const distSelect = document.getElementById(id);
-      distSelect.innerHTML = '<option value="">-- เลือกอำเภอ --</option>';
-      Object.keys(phayaoData).forEach(d => distSelect.innerHTML += `<option value="${d}">${d}</option>`);
+    function calculateLoan() {
+      const amount = parseFloat(document.getElementById('selectAmount').value);
+      const totalPay = amount * 1.20;
+      document.getElementById('calcDisplayAmount').innerText = '฿ ' + amount.toLocaleString();
+      document.getElementById('calcDisplaySummary').innerText = `จ่ายยอดรวม ฿ ${totalPay.toLocaleString()} (ดอกเบี้ย 20%)`;
     }
 
-    function updateSubDistricts(distId, subId) {
-      const dist = document.getElementById(distId).value;
-      const subSelect = document.getElementById(subId);
-      subSelect.innerHTML = '<option value="">-- เลือกตำบล --</option>';
-      if (dist && phayaoData[dist]) {
-        phayaoData[dist].forEach(s => subSelect.innerHTML += `<option value="${s}">${s}</option>`);
-      }
+    function initSignaturePad() {
+      canvas = document.getElementById('signaturePad');
+      ctx = canvas.getContext('2d');
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      ctx.lineWidth = 2;
+      canvas.addEventListener('touchstart', (e) => { isDrawing = true; ctx.beginPath(); });
+      canvas.addEventListener('touchmove', (e) => {
+        if (!isDrawing) return;
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+        ctx.stroke();
+      });
+      canvas.addEventListener('touchend', () => isDrawing = false);
     }
 
-    function formatNationalID(input) { input.value = input.value.replace(/\D/g, ''); }
-    function formatPhone(input) { input.value = input.value.replace(/\D/g, ''); }
-    function formatBankAcc(input) { input.value = input.value.replace(/\D/g, ''); }
-    function autoSave() {}
+    function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+    function processImageWithWatermark(input, id) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        fileStore[id] = e.target.result;
+        if (id !== 'Slip') {
+          document.getElementById('preview' + id).src = e.target.result;
+          document.getElementById('preview' + id).classList.remove('d-none');
+          document.getElementById('label' + id).classList.add('d-none');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
 
     function switchTab(pageId) {
       document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.nav-item-btn').forEach(n => n.classList.remove('active'));
       document.getElementById(pageId).classList.add('active');
-      if (pageId === 'page-select') document.getElementById('navSelect').classList.add('active');
-      if (pageId === 'page-payment') document.getElementById('navPayment').classList.add('active');
-      if (pageId === 'page-profile') document.getElementById('navProfile').classList.add('active');
+    }
+
+    function goToContractPage() {
+      switchTab('page-contract');
+      setTimeout(initSignaturePad, 200);
     }
   </script>
 </body>
