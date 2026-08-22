@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -161,7 +161,7 @@
                     <label for="reg-agree" class="text-xs text-slate-600 cursor-pointer">ยอมรับเงื่อนไข สัญญา และเป็นผู้มีภูมิลำเนาใน จ.พะเยา จริง</label>
                 </div>
 
-                <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg transition">
+                <button type="submit" id="btn-submit-reg" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg transition">
                     ส่งข้อมูลขออนุมัติวงเงิน
                 </button>
             </form>
@@ -288,7 +288,7 @@
                     <span id="lbl-pay-slip" class="text-slate-500">เลือกไฟล์รูปสลิป...</span>
                     <span class="bg-blue-600 text-white px-3 py-1 rounded-lg font-bold">เลือกไฟล์</span>
                 </label>
-                <button onclick="submitPaymentSlip()" class="w-full py-3 bg-blue-600 text-white font-bold text-sm rounded-xl shadow-md">
+                <button onclick="submitPaymentSlip()" id="btn-submit-slip" class="w-full py-3 bg-blue-600 text-white font-bold text-sm rounded-xl shadow-md">
                     ส่งสลิปชำระเงิน
                 </button>
             </div>
@@ -321,6 +321,9 @@
 
     <!-- Script Engine -->
     <script>
+        // กำหนด URL ของ Google Apps Script ที่คุณให้มา
+        const API_URL = "https://script.google.com/macros/s/AKfycbytOKzmcfiVcwYN6erCU3fhV6-PdRyTJznmYhrww1T5g1lXdzkiW_w_3u7Bjl2UxTUCTw/exec";
+
         const phayaoDistricts = {
             "อำเภอเมืองพะเยา": ["เวียง", "แม่ต๋ำ", "บ้านต๋อม", "บ้านสาง", "ท่าวังทอง", "บ้านตุ่น", "บ้านใหม่", "จำป่าหวาย", "แม่กา", "แม่นาเรือ", "แม่ปอน", "สันปูม่วง", "ตาดควัน", "ทุ่งกล้วย", "นาจำปา"],
             "อำเภอดอกคำใต้": ["ดอนศรีชุม", "ดอกคำใต้", "สว่างอารมณ์", "ป่าซาง", "บ้านถ้ำ", "หนองหล่ม", "ดงสุวรรณ", "บุญเกิด", "ป่าแฝก", "บัวสบ", "แสงอรุณ", "คือเวียง"],
@@ -378,7 +381,6 @@
                 document.getElementById('dash-loan-limit').innerText = `${store.account.loanAmount.toLocaleString()} บาท`;
                 document.getElementById('dash-balance').innerText = `${store.account.remainingBalance.toLocaleString()} บาท`;
                 
-                // คำนวณวันเริ่มสัญญา
                 if (!store.account.startDate) {
                     store.account.startDate = new Date().toLocaleDateString('th-TH');
                     store.account.startTimestamp = Date.now();
@@ -394,22 +396,51 @@
             lucide.createIcons();
         }
 
-        function handleCustomerRegister(e) {
+        async function handleCustomerRegister(e) {
             e.preventDefault();
-            const store = getStore();
-            const amount = parseInt(document.getElementById('reg-amount').value);
+            const btn = document.getElementById('btn-submit-reg');
+            btn.disabled = true;
+            btn.innerText = "กำลังส่งข้อมูล...";
 
-            store.account = {
+            const amount = parseInt(document.getElementById('reg-amount').value);
+            const newAccount = {
+                action: "registerCustomer",
                 uid: `UID-PY-${Math.floor(1000 + Math.random() * 9000)}`,
                 fullname: document.getElementById('reg-fullname').value,
                 phone: document.getElementById('reg-phone').value,
-                loanAmount: amount,
-                remainingBalance: amount,
-                status: 'PENDING'
+                idcard: document.getElementById('reg-idcard').value,
+                occupation: document.getElementById('reg-occupation').value,
+                district: document.getElementById('reg-district').value,
+                subdistrict: document.getElementById('reg-subdistrict').value,
+                bankName: document.getElementById('reg-bank-name').value,
+                bankAcc: document.getElementById('reg-bank-acc').value,
+                loanAmount: amount
             };
 
-            saveStore(store);
-            Swal.fire('ส่งคำขอสำเร็จ', 'ข้อมูลถูกส่งไปยังแอดมินแล้ว', 'success');
+            try {
+                let response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(newAccount)
+                });
+                let result = await response.json();
+                
+                const store = getStore();
+                store.account = {
+                    uid: newAccount.uid,
+                    fullname: newAccount.fullname,
+                    phone: newAccount.phone,
+                    loanAmount: amount,
+                    remainingBalance: amount,
+                    status: 'PENDING'
+                };
+                saveStore(store);
+                Swal.fire('ส่งคำขอสำเร็จ', 'ข้อมูลถูกส่งไปยังระบบเรียบร้อยแล้ว', 'success');
+            } catch (error) {
+                console.error(error);
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้', 'error');
+                btn.disabled = false;
+                btn.innerText = "ส่งข้อมูลขออนุมัติวงเงิน";
+            }
         }
 
         function selectPayOption(type, amount, el) {
@@ -431,28 +462,60 @@
             document.getElementById('payment-modal').classList.remove('hidden');
         }
 
-        function submitPaymentSlip() {
+        async function submitPaymentSlip() {
             const input = document.getElementById('pay-slip-input');
             if (!input.files || !input.files[0]) {
                 Swal.fire('กรุณาเลือกไฟล์', 'แนบรูปสลิปก่อนส่ง', 'warning');
                 return;
             }
 
+            const btn = document.getElementById('btn-submit-slip');
+            btn.disabled = true;
+            btn.innerText = "กำลังส่งสลิป...";
+
             const store = getStore();
             const now = new Date();
             const timeStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const txId = `RC-${Math.floor(100000 + Math.random() * 900000)}`;
 
-            store.history.unshift({
-                id: `RC-${Math.floor(100000 + Math.random() * 900000)}`,
-                date: timeStr,
+            const payload = {
+                action: "addTransaction",
+                txId: txId,
+                customerName: store.account ? store.account.fullname : "ไม่ระบุ",
+                riderId: "CUSTOMER-PORTAL",
                 amount: selectedPayAmount,
                 type: selectedPayType,
-                status: 'PENDING'
-            });
+                payMethod: "โอนผ่าน QR",
+                status: "PENDING",
+                remark: "ลูกค้ายื่นชำระผ่านระบบหน้าบ้าน",
+                date: timeStr
+            };
 
-            saveStore(store);
-            closeModal('payment-modal');
-            Swal.fire('ส่งสลิปเรียบร้อย', 'รอแอดมินตรวจสอบ', 'info');
+            try {
+                let response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+                let result = await response.json();
+
+                store.history.unshift({
+                    id: txId,
+                    date: timeStr,
+                    amount: selectedPayAmount,
+                    type: selectedPayType,
+                    status: 'PENDING'
+                });
+
+                saveStore(store);
+                closeModal('payment-modal');
+                Swal.fire('ส่งสลิปเรียบร้อย', 'รอแอดมินตรวจสอบการชำระเงิน', 'info');
+            } catch (error) {
+                console.error(error);
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกรายการได้', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "ส่งสลิปชำระเงิน";
+            }
         }
 
         function renderHistoryList(history) {
@@ -527,4 +590,4 @@
         }
     </script>
 </body>
-</html>
+</html></body></html>
