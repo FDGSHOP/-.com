@@ -5,14 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>สินเชื่อเพื่อคนพะเยา</title>
   
-  <!-- PWA Metadata -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1e5bb8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/10178/10178971.png">
 
-  <!-- Framework & Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   
@@ -25,11 +22,8 @@
     .btn-remove-img { position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; cursor: pointer; z-index: 10; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     .btn-main { background: var(--main-blue); color: white; border-radius: 25px; padding: 12px; font-weight: bold; width: 100%; border: none; }
     .btn-main:disabled { background: #94a3b8; }
-    
-    /* สไตล์สัญญา A4 */
     .a4-paper { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); font-size: 13px; line-height: 1.6; color: #1e293b; }
     .signature-pad { border: 2px dashed #cbd5e1; border-radius: 8px; background: #fff; touch-action: none; width: 100%; height: 120px; }
-    
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; color: #94a3b8; display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; border-top-left-radius: 16px; border-top-right-radius: 16px; }
     .nav-item-btn { text-align: center; font-size: 11px; cursor: pointer; color: #94a3b8; }
     .nav-item-btn.active { color: #38bdf8; font-weight: bold; }
@@ -40,7 +34,6 @@
 </head>
 <body>
 
-  <!-- Top Bar & ปุ่ม PWA -->
   <div class="top-bar">
     <div><i class="bi bi-wallet2 me-1 text-warning"></i> สินเชื่อเพื่อคนพะเยา</div>
     <button id="btnPwaInstall" class="btn btn-sm btn-warning fw-bold rounded-pill" onclick="installPWA()">
@@ -50,7 +43,7 @@
 
   <div class="container py-3">
 
-    <!-- PAGE 1: คำนวณยอดและกรอกข้อมูลเบื้องต้น -->
+    <!-- PAGE 1: เลือกวงเงิน -->
     <div id="page-select" class="page-section active">
       <div id="activeContractAlert" class="alert alert-warning fw-bold small d-none mb-3">
         <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> ท่านมีสัญญาที่กำลังผ่อนชำระอยู่ ไม่สามารถยื่นกู้ซ้ำได้จนกว่าจะปิดสัญญาเดิม
@@ -98,7 +91,7 @@
       </div>
     </div>
 
-    <!-- PAGE 2: กรอกข้อมูล + พิกัด GPS + ที่อยู่พะเยา -->
+    <!-- PAGE 2: กรอกข้อมูลผู้กู้ -->
     <div id="page-form" class="page-section">
       <div class="card-box">
         <h6 class="fw-bold mb-3"><i class="bi bi-person-vcard text-primary me-1"></i>ข้อมูลผู้ขอสินเชื่อ</h6>
@@ -118,7 +111,6 @@
           <input type="tel" id="inpPhone" class="form-control form-control-sm" maxlength="12" placeholder="0XX-XXX-XXXX" oninput="formatPhone(this)" onchange="autoSave()">
         </div>
 
-        <!-- ที่อยู่ปัจจุบัน -->
         <div class="p-2 border rounded bg-light mb-3">
           <div class="small fw-bold text-primary mb-1"><i class="bi bi-house-door-fill"></i> ที่อยู่ปัจจุบัน (จ.พะเยา)</div>
           <input type="text" id="inpHomeAddr" class="form-control form-control-sm mb-2" placeholder="บ้านเลขที่ / หมู่บ้าน / ถนน" onchange="autoSave()">
@@ -136,7 +128,6 @@
           </div>
         </div>
 
-        <!-- สถานที่ทำงาน & GPS Check-in -->
         <div class="p-2 border border-warning rounded bg-warning bg-opacity-10 mb-3">
           <div class="small fw-bold text-dark mb-1"><i class="bi bi-shop text-danger"></i> สถานที่ค้าขาย / หน้าร้าน</div>
           <input type="text" id="inpShopName" class="form-control form-control-sm mb-2" placeholder="ชื่อร้าน / ตลาด / ที่ตั้งแผงค้าขาย" onchange="autoSave()">
@@ -161,7 +152,6 @@
           </div>
         </div>
 
-        <!-- บัญชีรับเงิน -->
         <div class="mb-2">
           <label class="small text-muted">ธนาคารรับเงิน *</label>
           <select id="inpBank" class="form-select form-select-sm" onchange="autoSave()">
@@ -183,7 +173,7 @@
       </div>
     </div>
 
-    <!-- PAGE 3: แนบเอกสาร + Watermark + ปุ่ม [X] -->
+    <!-- PAGE 3: แนบรูปภาพ -->
     <div id="page-upload" class="page-section">
       <div class="card-box">
         <h6 class="fw-bold mb-3"><i class="bi bi-camera-fill text-primary me-1"></i>แนบภาพถ่ายเอกสาร (ประทับลายน้ำอัตโนมัติ)</h6>
@@ -212,7 +202,7 @@
       </div>
     </div>
 
-    <!-- PAGE 3.5: สัญญาอิเล็กทรอนิกส์ A4 + ลายเซ็นดิจิทัล + PDPA -->
+    <!-- PAGE 3.5: สัญญา + เซ็นชื่อ -->
     <div id="page-contract" class="page-section">
       <div class="a4-paper mb-3">
         <div class="text-center mb-3">
@@ -230,7 +220,6 @@
           ข้าพเจ้าขอรับรองว่าข้อมูล สถานที่ประกอบอาชีพ/หน้าร้าน และพิกัด GPS ที่ระบุไว้เป็นความจริงทุกประการ
         </div>
 
-        <!-- ยินยอม PDPA -->
         <div class="form-check my-3 border p-2 rounded bg-light">
           <input class="form-check-input ms-1" type="checkbox" id="chkPdpa" onchange="toggleSubmitBtn()">
           <label class="form-check-label extra-small text-dark ms-2 fw-bold" for="chkPdpa">
@@ -238,32 +227,26 @@
           </label>
         </div>
 
-        <!-- ช่องเซ็นสัญญา A4 -->
         <div class="border rounded p-2 bg-light text-center">
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="extra-small fw-bold text-muted"><i class="bi bi-pencil-fill"></i> ลายมือชื่อผู้กู้ (เซ็นในกล่องด้านล่าง):</span>
+            <span class="extra-small fw-bold text-muted"><i class="bi bi-pencil-fill"></i> ลายมือชื่อผู้กู้:</span>
             <button class="btn btn-sm btn-link text-danger p-0 extra-small text-decoration-none" onclick="clearSignature()">ล้างลายเซ็น</button>
           </div>
           <canvas id="signaturePad" class="signature-pad mb-1"></canvas>
-          <div class="extra-small text-muted">(ลงลายมือชื่ออิเล็กทรอนิกส์เพื่อแนบในสัญญา A4)</div>
+          <div class="extra-small text-muted">(ลงลายมือชื่ออิเล็กทรอนิกส์เพื่อแนบในสัญญา)</div>
         </div>
       </div>
 
       <button id="btnSubmitApp" class="btn-main" disabled onclick="submitApplication()">ยืนยันส่งข้อมูลสมัครสินเชื่อ</button>
     </div>
 
-    <!-- PAGE 4: สถานะอนุมัติ -->
+    <!-- PAGE 4: สถานะคำขอ -->
     <div id="page-status" class="page-section">
       <div class="card-box text-center py-4">
         <div id="statusPendingBox">
           <div class="spinner-border text-primary my-2" style="width: 3rem; height: 3rem;"></div>
           <h5 class="fw-bold mt-2">อยู่ในระหว่างการพิจารณา</h5>
-          <p class="small text-muted">แอดมินกำลังตรวจสอบเอกสารและพิกัด GPS ร้านค้าของคุณ</p>
-          <div class="p-2 bg-light rounded mt-3 border">
-            <div class="extra-small text-dark fw-bold mb-2">[ จำลองการทำงานของแอดมิน ]</div>
-            <button class="btn btn-sm btn-success me-1 rounded-pill" onclick="simulateAdminDecision(true)">อนุมัติสัญญา</button>
-            <button class="btn btn-sm btn-danger rounded-pill" onclick="simulateAdminDecision(false)">ปฏิเสธคำขอ</button>
-          </div>
+          <p class="small text-muted">ข้อมูลของคุณถูกส่งไปยังแอดมินเรียบร้อยแล้ว กำลังรอการอนุมัติ...</p>
         </div>
 
         <div id="statusApprovedBox" class="d-none">
@@ -282,14 +265,13 @@
       </div>
     </div>
 
-    <!-- PAGE 5: ตารางส่งเงินรายวัน & Fox Server Time Check -->
+    <!-- PAGE 5: ตารางส่งเงิน & PromptPay QR -->
     <div id="page-payment" class="page-section">
       <div class="card-box">
         <h6 class="fw-bold mb-2"><i class="bi bi-receipt text-primary me-1"></i>ชำระค่างวดประจำวัน</h6>
         
-        <!-- แจ้งเตือนเวลา Server -->
         <div id="serverTimeBanner" class="p-2 bg-light border rounded mb-3 text-center extra-small">
-          <i class="bi bi-clock-history"></i> เวลา Server กลาง (Fox Check): <strong id="clockDisplay">กำลังโหลด...</strong>
+          <i class="bi bi-clock-history"></i> เวลา Server กลาง: <strong id="clockDisplay">กำลังโหลด...</strong>
         </div>
 
         <div class="p-3 bg-primary bg-opacity-10 rounded text-center mb-3">
@@ -298,7 +280,6 @@
           <div class="extra-small text-muted">ยอดเฉพาะดอกเบี้ย (ดอกลอย): <strong id="payInterestOnly" class="text-danger">฿ 20.00</strong></div>
         </div>
 
-        <!-- ตัวเลือกรูปแบบการชำระเงิน -->
         <div class="mb-3">
           <label class="small fw-bold text-muted mb-1">เลือกรูปแบบการชำระเงิน:</label>
           <div class="form-check border p-2 rounded mb-2">
@@ -315,7 +296,6 @@
           </div>
         </div>
 
-        <!-- สรุปยอดก่อนสร้าง QR -->
         <div class="p-2 bg-warning bg-opacity-10 border border-warning rounded mb-3 extra-small">
           <div class="d-flex justify-content-between mb-1">
             <span>ยอดชำระที่เลือก:</span>
@@ -326,7 +306,7 @@
             <strong id="summaryFine">฿ 50.00</strong>
           </div>
           <div id="fineReasonText" class="text-danger fw-bold my-1" style="display: none;">
-            * เหตุผลค่าปรับ: ส่งสลิปชำระเงินเกินเวลา 18:00 น. ของวัน (ตรวจโดย Server)
+            * เหตุผลค่าปรับ: ส่งสลิปชำระเงินเกินเวลา 18:00 น.
           </div>
           <hr class="my-1">
           <div class="d-flex justify-content-between fw-bold fs-6 text-dark">
@@ -339,7 +319,7 @@
       </div>
     </div>
 
-    <!-- PAGE 6: โปรไฟล์ + UID + ประวัติชำระเงิน + ใบเสร็จ -->
+    <!-- PAGE 6: โปรไฟล์ & ประวัติ -->
     <div id="page-profile" class="page-section">
       <div class="card-box">
         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -349,21 +329,11 @@
         <div class="small mb-1"><strong>ชื่อ-นามสกุล:</strong> <span id="profName">-</span></div>
         <div class="small mb-1"><strong>เบอร์โทรศัพท์:</strong> <span id="profPhone">-</span></div>
         <div class="small mb-1"><strong>เลขบัตรประชาชน:</strong> <span id="profID">-</span></div>
-        <div class="small mb-1"><strong>สถานะสัญญา:</strong> <span id="profLoanStatus" class="badge bg-success">ไม่มีสัญญาค้าง</span></div>
-        <div class="small mb-1 d-flex align-items-center mt-2">
-          <strong>บัญชีรับเงิน:</strong> 
-          <span id="profBank" class="ms-1">-</span>
-          <span id="profBankAcc" class="text-primary fw-bold mx-2">-</span>
-          <button class="btn btn-sm btn-outline-secondary py-0 px-2 extra-small" onclick="copyBankAcc()"><i class="bi bi-copy"></i> คัดลอก</button>
-        </div>
-        <div id="btnSimulateCloseLoan" class="mt-3 d-none">
-          <button class="btn btn-sm btn-outline-success w-100 fw-bold" onclick="simulateCloseLoan()">[จำลอง] ปิดสัญญาชำระครบ (เพื่อเปิดกู้รอบใหม่)</button>
-        </div>
+        <div class="small mb-1"><strong>สถานะสัญญา:</strong> <span id="profLoanStatus" class="badge bg-success">ปกติ</span></div>
       </div>
 
-      <!-- ตารางประวัติการชำระเงิน -->
       <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติการชำระเงิน & ใบเสร็จ</h6>
+        <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติการชำระเงิน</h6>
         <div class="table-responsive">
           <table class="table table-sm table-bordered extra-small text-center align-middle">
             <thead class="table-light">
@@ -371,13 +341,10 @@
                 <th>วันที่/เวลา</th>
                 <th>ประเภท</th>
                 <th>จำนวนเงิน</th>
-                <th>ใบเสร็จ</th>
               </tr>
             </thead>
             <tbody id="payHistoryList">
-              <tr>
-                <td colspan="4" class="text-muted py-3">ยังไม่มีประวัติการชำระเงิน</td>
-              </tr>
+              <tr><td colspan="3" class="text-muted py-3">ยังไม่มีประวัติการชำระเงิน</td></tr>
             </tbody>
           </table>
         </div>
@@ -386,25 +353,23 @@
 
   </div>
 
-  <!-- Modal ป๊อบอัพ QR Code PromptPay -->
+  <!-- Modal QR PromptPay -->
   <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content text-center">
         <div class="modal-header bg-primary text-white py-2">
           <h6 class="modal-title fw-bold"><i class="bi bi-qr-code"></i> PromptPay QR Code</h6>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div class="extra-small text-muted mb-1">สแกนชำระเงินผ่านแอปธนาคาร</div>
           <div class="fw-bold text-primary mb-2" id="modalPayTypeTitle">ชำระเต็มงวด</div>
           
-          <!-- Image PromptPay Dynamic -->
           <img id="imgPromptPayQr" src="" class="img-fluid border p-2 rounded mb-2" style="max-width: 220px;" alt="PromptPay QR">
           
           <div class="h4 fw-bold text-danger my-1" id="modalQrAmount">฿ 0.00</div>
           <div class="extra-small text-muted mb-3">บัญชีรับเงิน PromptPay: <strong>0658351446</strong></div>
 
-          <!-- ช่องแนบสลิปการโอน -->
           <div class="text-start border-top pt-2">
             <label class="small fw-bold text-muted mb-1">แนบสลิปการโอนเงินเพื่อยืนยัน:</label>
             <div class="upload-zone p-2" id="zoneSlip" onclick="document.getElementById('fileSlip').click()">
@@ -416,58 +381,8 @@
           </div>
         </div>
         <div class="modal-footer py-2">
-          <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
-          <button type="button" class="btn btn-success btn-sm rounded-pill fw-bold" onclick="submitPaymentSlip()">ส่งสลิปชำระเงิน</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal ใบเสร็จรับเงินอิเล็กทรอนิกส์ (E-Receipt) -->
-  <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-body p-4" id="receiptPrintArea">
-          <div class="text-center mb-3">
-            <h6 class="fw-bold m-0">ใบเสร็จรับเงินอิเล็กทรอนิกส์ (E-Receipt)</h6>
-            <div class="extra-small text-muted">โครงการสินเชื่อเพื่อคนพะเยา</div>
-            <div class="extra-small text-primary fw-bold mt-1" id="recUid">UID: PY-XXXX</div>
-            <hr class="my-2">
-          </div>
-          <div class="extra-small mb-1"><strong>เลขที่ใบเสร็จ:</strong> <span id="recNo">RC-001</span></div>
-          <div class="extra-small mb-1"><strong>วันที่/เวลา:</strong> <span id="recDate">-</span></div>
-          <div class="extra-small mb-1"><strong>ชื่อผู้กู้:</strong> <span id="recName">-</span></div>
-          <div class="extra-small mb-3"><strong>รายการชำระ:</strong> <span id="recType">-</span></div>
-
-          <table class="table table-sm table-bordered extra-small mb-3">
-            <thead>
-              <tr class="table-light text-center">
-                <th>รายละเอียด</th>
-                <th>จำนวนเงิน (บาท)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td id="recItemTitle">ค่างวดชำระ</td>
-                <td class="text-end" id="recBaseAmount">0.00</td>
-              </tr>
-              <tr id="recFineRow">
-                <td class="text-danger">ค่าปรับส่งเกินเวลา (หลัง 18:00 น.)</td>
-                <td class="text-end text-danger" id="recFineAmount">0.00</td>
-              </tr>
-              <tr class="fw-bold table-light">
-                <td class="text-center">รวมชำระสุทธิ</td>
-                <td class="text-end text-primary" id="recTotalAmount">0.00</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div class="extra-small text-muted text-center border-top pt-2" id="recFineNote">
-            * เอกสารนี้สร้างขึ้นโดยระบบอัตโนมัติ ชำระผ่านระบบ PromptPay 0658351446
-          </div>
-        </div>
-        <div class="modal-footer py-2">
           <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">ปิด</button>
+          <button type="button" class="btn btn-success btn-sm rounded-pill fw-bold" onclick="submitPaymentSlip()">ส่งสลิปชำระเงิน</button>
         </div>
       </div>
     </div>
@@ -488,9 +403,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // -------------------------------------------------------------
-    // Global States & Configurations
-    // -------------------------------------------------------------
     const PROMPTPAY_PHONE = "0658351446";
     const phayaoData = {
       "เมืองพะเยา": ["เวียง", "แม่ต๋ำ", "ท่าวังทอง", "บ้านต๋อม", "บ้านต๊ำ", "ท่าจำปี", "บ้านตุ่น", "แม่นาเรือ", "จำป่าหวาย", "แม่ปืม", "แม่กา", "แม่ใส", "บ้านสาง", "สันป่าม่วง", "บ้านใหม่"],
@@ -510,11 +422,9 @@
     let currentServerTime = new Date();
     let isLateFine = false;
 
-    // App Data State
     let userProfile = {
-      uid: "PY-" + Math.floor(1000 + Math.random() * 9000),
-      loanStatus: "NOT_APPLIED", // NOT_APPLIED, ACTIVE, CLOSED
-      history: []
+      uid: localStorage.getItem('user_uid') || "",
+      loanStatus: "NOT_APPLIED"
     };
 
     window.onload = function() {
@@ -522,206 +432,21 @@
       initDistrictDropdown('workDistrict');
       initSignaturePad();
       calculateLoan();
-      loadAutoSavedData();
-      startFoxServerClock();
-      checkLoanRights();
+      startServerClock();
     };
 
-    // -------------------------------------------------------------
-    // 1. Fox Server Time Check (ป้องกันการปรับเวลาในเครื่อง)
-    // -------------------------------------------------------------
-    async function startFoxServerClock() {
-      await fetchServerTime();
-      setInterval(async () => {
+    function startServerClock() {
+      setInterval(() => {
         currentServerTime.setSeconds(currentServerTime.getSeconds() + 1);
-        updateClockDisplay();
+        const hours = currentServerTime.getHours();
+        const mins = String(currentServerTime.getMinutes()).padStart(2, '0');
+        const secs = String(currentServerTime.getSeconds()).padStart(2, '0');
+        document.getElementById('clockDisplay').innerText = `${hours}:${mins}:${secs} น.`;
+        isLateFine = hours >= 18;
+        updatePaySummary();
       }, 1000);
-      
-      // Sync ใหม่ทุก 1 นาที
-      setInterval(fetchServerTime, 60000);
     }
 
-    async function fetchServerTime() {
-      try {
-        const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Bangkok');
-        const data = await res.json();
-        currentServerTime = new Date(data.datetime);
-      } catch (err) {
-        currentServerTime = new Date(); // Fallback
-      }
-      updateClockDisplay();
-    }
-
-    function updateClockDisplay() {
-      const hours = currentServerTime.getHours();
-      const mins = String(currentServerTime.getMinutes()).padStart(2, '0');
-      const secs = String(currentServerTime.getSeconds()).padStart(2, '0');
-      
-      document.getElementById('clockDisplay').innerText = `${hours}:${mins}:${secs} น.`;
-
-      // ตรวจสอบเงื่อนไข 18:00 น.
-      isLateFine = hours >= 18;
-      updatePaySummary();
-    }
-
-    // -------------------------------------------------------------
-    // 2. Control Loan Rights & Repetitive Rules
-    // -------------------------------------------------------------
-    function checkLoanRights() {
-      const savedStatus = localStorage.getItem('loan_status');
-      if (savedStatus) userProfile.loanStatus = savedStatus;
-
-      const btnNext = document.getElementById('btnNextToForm');
-      const alertBox = document.getElementById('activeContractAlert');
-
-      if (userProfile.loanStatus === 'ACTIVE') {
-        btnNext.disabled = true;
-        btnNext.innerText = "ท่านมีสัญญาค้างชำระอยู่";
-        alertBox.classList.remove('d-none');
-        document.getElementById('profLoanStatus').className = "badge bg-danger";
-        document.getElementById('profLoanStatus').innerText = "มีสัญญาผ่อนชำระ";
-        document.getElementById('btnSimulateCloseLoan').classList.remove('d-none');
-      } else {
-        btnNext.disabled = false;
-        btnNext.innerText = "ถัดไป: กรอกข้อมูลผู้กู้";
-        alertBox.classList.add('d-none');
-        document.getElementById('profLoanStatus').className = "badge bg-success";
-        document.getElementById('profLoanStatus').innerText = "ปกติ (พร้อมกู้ใหม่)";
-        document.getElementById('btnSimulateCloseLoan').classList.add('d-none');
-      }
-
-      document.getElementById('profUid').innerText = "UID: " + userProfile.uid;
-    }
-
-    function simulateCloseLoan() {
-      userProfile.loanStatus = 'CLOSED';
-      localStorage.setItem('loan_status', 'CLOSED');
-      checkLoanRights();
-      alert('ปิดสัญญาเรียบร้อยแล้ว! ลูกค้าสามารถยื่นกู้รอบใหม่ได้ทันทีโดยใช้ข้อมูลเดิม');
-      switchTab('page-select');
-    }
-
-    // -------------------------------------------------------------
-    // 3. PWA Installation Handler
-    // -------------------------------------------------------------
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('btnPwaInstall').style.display = 'inline-block';
-    });
-
-    function installPWA() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choice) => {
-          if (choice.outcome === 'accepted') document.getElementById('btnPwaInstall').style.display = 'none';
-          deferredPrompt = null;
-        });
-      } else {
-        alert("วิธีติดตั้งบน iOS (Safari):\nกดปุ่ม แชร์ (Share) ด้านล่าง แล้วเลือก 'เพิ่มไปยังหน้าจอหลัก' (Add to Home Screen)");
-      }
-    }
-
-    // -------------------------------------------------------------
-    // 4. Input Formatters & GPS
-    // -------------------------------------------------------------
-    function formatNationalID(input) {
-      let val = input.value.replace(/\D/g, '');
-      if (val.length > 13) val = val.substring(0, 13);
-      let res = val;
-      if (val.length > 1) res = val.substring(0, 1) + '-' + val.substring(1);
-      if (val.length > 5) res = res.substring(0, 6) + '-' + val.substring(5);
-      if (val.length > 10) res = res.substring(0, 12) + '-' + val.substring(10);
-      if (val.length > 12) res = res.substring(0, 15) + '-' + val.substring(12);
-      input.value = res;
-    }
-
-    function formatPhone(input) {
-      let val = input.value.replace(/\D/g, '');
-      if (val.length > 10) val = val.substring(0, 10);
-      let res = val;
-      if (val.length > 3) res = val.substring(0, 3) + '-' + val.substring(3);
-      if (val.length > 6) res = res.substring(0, 7) + '-' + val.substring(6);
-      input.value = res;
-    }
-
-    function formatBankAcc(input) { input.value = input.value.replace(/\D/g, ''); }
-
-    function getCurrentLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
-            document.getElementById('inpGps').value = coords;
-            autoSave();
-            alert('ปักหมุดพิกัด GPS หน้าร้านสำเร็จ!');
-          },
-          () => alert('ไม่สามารถดึงตำแหน่งได้ กรุณาเปิด GPS บนมือถือครับ')
-        );
-      } else {
-        alert('อุปกรณ์นี้ไม่รองรับการดึงพิกัด GPS');
-      }
-    }
-
-    // -------------------------------------------------------------
-    // 5. Compression + Watermark + Reset [X]
-    // -------------------------------------------------------------
-    function processImageWithWatermark(input, id) {
-      const file = input.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = function() {
-          const canvasObj = document.createElement('canvas');
-          const MAX_WIDTH = 1200;
-          const scale = MAX_WIDTH / img.width;
-          
-          canvasObj.width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
-          canvasObj.height = img.width > MAX_WIDTH ? img.height * scale : img.height;
-
-          const ctxObj = canvasObj.getContext('2d');
-          ctxObj.drawImage(img, 0, 0, canvasObj.width, canvasObj.height);
-
-          // Watermark
-          const text = "ใช้สำหรับขอสินเชื่อเพื่อคนพะเยาเท่านั้น";
-          const fontSize = Math.floor(canvasObj.width / 22);
-          ctxObj.save();
-          ctxObj.translate(canvasObj.width / 2, canvasObj.height / 2);
-          ctxObj.rotate(-Math.PI / 6);
-          ctxObj.font = `bold ${fontSize}px sans-serif`;
-          ctxObj.fillStyle = "rgba(220, 38, 38, 0.45)";
-          ctxObj.textAlign = "center";
-          ctxObj.fillText(text, 0, 0);
-          ctxObj.restore();
-
-          const compressedUrl = canvasObj.toDataURL('image/jpeg', 0.7);
-
-          document.getElementById('preview' + id).src = compressedUrl;
-          document.getElementById('preview' + id).classList.remove('d-none');
-          document.getElementById('label' + id).classList.add('d-none');
-          document.getElementById('btnRemove' + id).classList.remove('d-none');
-
-          fileStore[id] = compressedUrl;
-        };
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function removeImage(e, id) {
-      e.stopPropagation();
-      delete fileStore[id];
-      document.getElementById('file' + id).value = '';
-      document.getElementById('preview' + id).classList.add('d-none');
-      document.getElementById('label' + id).classList.remove('d-none');
-      document.getElementById('btnRemove' + id).classList.add('d-none');
-    }
-
-    // -------------------------------------------------------------
-    // 6. A4 Contract & Digital Signature Canvas
-    // -------------------------------------------------------------
     function initSignaturePad() {
       canvas = document.getElementById('signaturePad');
       ctx = canvas.getContext('2d');
@@ -762,27 +487,71 @@
       return { x: clientX - rect.left, y: clientY - rect.top };
     }
 
-    function clearSignature() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
+    function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-    function goToContractPage() {
-      if (!fileStore[1] || !fileStore[2]) {
-        alert('กรุณาแนบภาพบัตรประชาชนและภาพถ่ายคู่บัตรให้ครบถ้วนครับ');
-        return;
+    function getCurrentLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            document.getElementById('inpGps').value = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+            alert('ปักหมุด GPS สำเร็จ!');
+          },
+          () => alert('กรุณาเปิด GPS บนมือถือครับ')
+        );
       }
-
-      document.getElementById('docContractName').innerText = document.getElementById('inpName').value;
-      document.getElementById('docContractID').innerText = document.getElementById('inpNationalID').value;
-      document.getElementById('docContractAmount').innerText = document.getElementById('selectAmount').value + " บาท";
-
-      switchTab('page-contract');
-      setTimeout(initSignaturePad, 200);
     }
 
-    // -------------------------------------------------------------
-    // 7. Payment Calculation & Dynamic PromptPay QR Code
-    // -------------------------------------------------------------
+    function processImageWithWatermark(input, id) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function() {
+          const canvasObj = document.createElement('canvas');
+          const MAX_WIDTH = 1000;
+          const scale = MAX_WIDTH / img.width;
+          
+          canvasObj.width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
+          canvasObj.height = img.width > MAX_WIDTH ? img.height * scale : img.height;
+
+          const ctxObj = canvasObj.getContext('2d');
+          ctxObj.drawImage(img, 0, 0, canvasObj.width, canvasObj.height);
+
+          const text = "ใช้สำหรับสินเชื่อเพื่อคนพะเยาเท่านั้น";
+          const fontSize = Math.floor(canvasObj.width / 20);
+          ctxObj.save();
+          ctxObj.translate(canvasObj.width / 2, canvasObj.height / 2);
+          ctxObj.rotate(-Math.PI / 6);
+          ctxObj.font = `bold ${fontSize}px sans-serif`;
+          ctxObj.fillStyle = "rgba(220, 38, 38, 0.45)";
+          ctxObj.textAlign = "center";
+          ctxObj.fillText(text, 0, 0);
+          ctxObj.restore();
+
+          const compressedUrl = canvasObj.toDataURL('image/jpeg', 0.7);
+          document.getElementById('preview' + id).src = compressedUrl;
+          document.getElementById('preview' + id).classList.remove('d-none');
+          document.getElementById('label' + id).classList.add('d-none');
+          document.getElementById('btnRemove' + id).classList.remove('d-none');
+
+          fileStore[id] = compressedUrl;
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeImage(e, id) {
+      e.stopPropagation();
+      delete fileStore[id];
+      document.getElementById('file' + id).value = '';
+      document.getElementById('preview' + id).classList.add('d-none');
+      document.getElementById('label' + id).classList.remove('d-none');
+      document.getElementById('btnRemove' + id).classList.add('d-none');
+    }
+
     function calculateLoan() {
       const amount = parseFloat(document.getElementById('selectAmount').value);
       const days = parseInt(document.getElementById('selectDays').value);
@@ -814,24 +583,77 @@
       document.getElementById('summaryFine').innerText = `฿ ${fine.toFixed(2)}`;
       document.getElementById('summaryTotalPay').innerText = `฿ ${total.toFixed(2)}`;
 
-      if (isLateFine) {
-        document.getElementById('rowFine').style.display = 'flex';
-        document.getElementById('fineReasonText').style.display = 'block';
-      } else {
-        document.getElementById('rowFine').style.display = 'none';
-        document.getElementById('fineReasonText').style.display = 'none';
+      document.getElementById('rowFine').style.display = isLateFine ? 'flex' : 'none';
+      document.getElementById('fineReasonText').style.display = isLateFine ? 'block' : 'none';
+    }
+
+    function goToUploadPage() {
+      if (!document.getElementById('inpName').value || !document.getElementById('inpNationalID').value) {
+        alert('กรุณากรอกข้อมูลให้ครบถ้วนครับ');
+        return;
       }
+      switchTab('page-upload');
+    }
+
+    function goToContractPage() {
+      if (!fileStore[1] || !fileStore[2]) {
+        alert('กรุณาแนบภาพบัตรประชาชนและภาพถ่ายคู่บัตรให้ครบถ้วนครับ');
+        return;
+      }
+      document.getElementById('docContractName').innerText = document.getElementById('inpName').value;
+      document.getElementById('docContractID').innerText = document.getElementById('inpNationalID').value;
+      document.getElementById('docContractAmount').innerText = document.getElementById('selectAmount').value + " บาท";
+
+      switchTab('page-contract');
+      setTimeout(initSignaturePad, 200);
+    }
+
+    function toggleSubmitBtn() {
+      document.getElementById('btnSubmitApp').disabled = !document.getElementById('chkPdpa').checked;
+    }
+
+    // ส่งข้อมูลไปยัง Google Apps Script
+    function submitApplication() {
+      const payload = {
+        fullname: document.getElementById('inpName').value,
+        nationalId: document.getElementById('inpNationalID').value.replace(/\D/g, ''),
+        phone: document.getElementById('inpPhone').value.replace(/\D/g, ''),
+        amount: document.getElementById('selectAmount').value,
+        days: document.getElementById('selectDays').value,
+        freq: document.getElementById('selectFreq').value,
+        gps: document.getElementById('inpGps').value,
+        bank: document.getElementById('inpBank').value,
+        bankAcc: document.getElementById('inpBankAcc').value,
+        payType: document.getElementById('selectFreq').options[document.getElementById('selectFreq').selectedIndex].text,
+        file1: fileStore[1],
+        file2: fileStore[2],
+        signature: canvas.toDataURL()
+      };
+
+      switchTab('page-status');
+
+      google.script.run.withSuccessHandler(res => {
+        if(res.success) {
+          userProfile.uid = res.uid;
+          localStorage.setItem('user_uid', res.uid);
+          document.getElementById('profName').innerText = payload.fullname;
+          document.getElementById('profPhone').innerText = payload.phone;
+          document.getElementById('profID').innerText = payload.nationalId;
+          document.getElementById('profUid').innerText = "UID: " + res.uid;
+        } else {
+          alert("เกิดข้อผิดพลาด: " + res.error);
+        }
+      }).submitApplicationFromClient(payload);
     }
 
     function openQrModal() {
       const totalPayStr = document.getElementById('summaryTotalPay').innerText.replace('฿ ', '');
       const isInterestOnly = document.getElementById('payInterest').checked;
 
-      // PromptPay Dynamic QR Code URL
       const qrUrl = `https://promptpay.io/${PROMPTPAY_PHONE}/${totalPayStr}.png`;
       document.getElementById('imgPromptPayQr').src = qrUrl;
       document.getElementById('modalQrAmount').innerText = `฿ ${totalPayStr}`;
-      document.getElementById('modalPayTypeTitle').innerText = isInterestOnly ? "ชำระเฉพาะดอกเบี้ย (ดอกลอย)" : "ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)";
+      document.getElementById('modalPayTypeTitle').innerText = isInterestOnly ? "ชำระเฉพาะดอกเบี้ย (ดอกลอย)" : "ชำระเต็มงวด";
 
       const modal = new bootstrap.Modal(document.getElementById('qrModal'));
       modal.show();
@@ -843,79 +665,27 @@
         return;
       }
 
-      const totalPayStr = document.getElementById('summaryTotalPay').innerText.replace('฿ ', '');
-      const isInterestOnly = document.getElementById('payInterest').checked;
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH');
-
-      const receiptItem = {
-        rcNo: "RC-" + Math.floor(10000 + Math.random() * 90000),
-        date: dateStr,
-        type: isInterestOnly ? "ชำระเฉพาะดอกเบี้ย (ดอกลอย)" : "ชำระเต็มงวด (ต้น+ดอก)",
-        base: document.getElementById('summaryBasePay').innerText.replace('฿ ', ''),
-        fine: isLateFine ? "50.00" : "0.00",
-        total: totalPayStr
+      const payload = {
+        uid: userProfile.uid || "PY-GUEST",
+        paymentType: document.getElementById('payInterest').checked ? "INTEREST" : "FULL",
+        baseAmount: document.getElementById('summaryBasePay').innerText.replace('฿ ', ''),
+        fine: isLateFine ? "50" : "0",
+        totalPaid: document.getElementById('summaryTotalPay').innerText.replace('฿ ', ''),
+        slipBase64: fileStore['Slip'],
+        reinvest: true
       };
 
-      userProfile.history.unshift(receiptItem);
-      renderPayHistory();
-
-      // ปิด Modal QR
-      bootstrap.Modal.getInstance(document.getElementById('qrModal')).hide();
-      removeImage(new Event('click'), 'Slip');
-      
-      alert('ส่งสลิปชำระเงินเรียบร้อยแล้ว! แอดมินจะดำเนินการตรวจสอบสลิปของท่าน');
+      google.script.run.withSuccessHandler(res => {
+        if (res.success) {
+          alert('ส่งสลิปชำระเงินเรียบร้อยแล้ว!');
+          bootstrap.Modal.getInstance(document.getElementById('qrModal')).hide();
+          removeImage(new Event('click'), 'Slip');
+        } else {
+          alert('เกิดข้อผิดพลาด: ' + res.error);
+        }
+      }).submitPaymentTransaction(payload);
     }
 
-    function renderPayHistory() {
-      const tbody = document.getElementById('payHistoryList');
-      if (userProfile.history.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-muted py-3">ยังไม่มีประวัติการชำระเงิน</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = '';
-      userProfile.history.forEach((item, index) => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${item.date}</td>
-            <td>${item.type}</td>
-            <td class="fw-bold text-primary">฿ ${item.total}</td>
-            <td>
-              <button class="btn btn-xs btn-outline-primary py-0 px-1 extra-small" onclick="showReceiptModal(${index})">ดูใบเสร็จ</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function showReceiptModal(index) {
-      const item = userProfile.history[index];
-      document.getElementById('recUid').innerText = "UID: " + userProfile.uid;
-      document.getElementById('recNo').innerText = item.rcNo;
-      document.getElementById('recDate').innerText = item.date;
-      document.getElementById('recName').innerText = document.getElementById('inpName').value || "ผู้ขอสินเชื่อ";
-      document.getElementById('recType').innerText = item.type;
-      document.getElementById('recItemTitle').innerText = item.type;
-      document.getElementById('recBaseAmount').innerText = item.base;
-      document.getElementById('recFineAmount').innerText = item.fine;
-      document.getElementById('recTotalAmount').innerText = item.total;
-
-      if (parseFloat(item.fine) > 0) {
-        document.getElementById('recFineRow').style.display = 'table-row';
-        document.getElementById('recFineNote').innerText = "* รวมค่าปรับส่งเกินเวลา 18:00 น. (50 บาท) ตรวจสอบโดย Server";
-      } else {
-        document.getElementById('recFineRow').style.display = 'none';
-        document.getElementById('recFineNote').innerText = "* ชำระตรงเวลา ชำระผ่านระบบ PromptPay 0658351446";
-      }
-
-      const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
-      receiptModal.show();
-    }
-
-    // -------------------------------------------------------------
-    // Helper & Auto Save
-    // -------------------------------------------------------------
     function initDistrictDropdown(id) {
       const distSelect = document.getElementById(id);
       distSelect.innerHTML = '<option value="">-- เลือกอำเภอ --</option>';
@@ -931,96 +701,14 @@
       }
     }
 
-    function toggleSubmitBtn() {
-      document.getElementById('btnSubmitApp').disabled = !document.getElementById('chkPdpa').checked;
-    }
-
-    function autoSave() {
-      const data = {
-        name: document.getElementById('inpName').value,
-        idCard: document.getElementById('inpNationalID').value,
-        phone: document.getElementById('inpPhone').value,
-        homeAddr: document.getElementById('inpHomeAddr').value,
-        homeDist: document.getElementById('homeDistrict').value,
-        homeSubDist: document.getElementById('homeSubDistrict').value,
-        shopName: document.getElementById('inpShopName').value,
-        workDist: document.getElementById('workDistrict').value,
-        workSubDist: document.getElementById('workSubDistrict').value,
-        gps: document.getElementById('inpGps').value,
-        bank: document.getElementById('inpBank').value,
-        bankAcc: document.getElementById('inpBankAcc').value
-      };
-      localStorage.setItem('draft_app_data', JSON.stringify(data));
-    }
-
-    function loadAutoSavedData() {
-      const draft = localStorage.getItem('draft_app_data');
-      if (draft) {
-        const d = JSON.parse(draft);
-        document.getElementById('inpName').value = d.name || '';
-        document.getElementById('inpNationalID').value = d.idCard || '';
-        document.getElementById('inpPhone').value = d.phone || '';
-        document.getElementById('inpHomeAddr').value = d.homeAddr || '';
-        document.getElementById('inpShopName').value = d.shopName || '';
-        document.getElementById('inpGps').value = d.gps || '';
-        document.getElementById('inpBank').value = d.bank || '';
-        document.getElementById('inpBankAcc').value = d.bankAcc || '';
-      }
-    }
-
-    function goToUploadPage() {
-      const name = document.getElementById('inpName').value;
-      const idCard = document.getElementById('inpNationalID').value.replace(/\D/g, '');
-      const phone = document.getElementById('inpPhone').value.replace(/\D/g, '');
-
-      if (!name || idCard.length !== 13 || phone.length !== 10) {
-        alert('กรุณากรอกชื่อ, เลขบัตรประชาชน (13 หลัก) และเบอร์โทร (10 หลัก) ให้ถูกต้องครบถ้วนครับ');
-        return;
-      }
-      switchTab('page-upload');
-    }
-
-    function submitApplication() {
-      // Update Profile Information
-      document.getElementById('profName').innerText = document.getElementById('inpName').value;
-      document.getElementById('profPhone').innerText = document.getElementById('inpPhone').value;
-      document.getElementById('profID').innerText = document.getElementById('inpNationalID').value;
-      document.getElementById('profBank').innerText = document.getElementById('inpBank').value;
-      document.getElementById('profBankAcc').innerText = document.getElementById('inpBankAcc').value;
-
-      switchTab('page-status');
-    }
-
-    function simulateAdminDecision(isApproved) {
-      if (isApproved) {
-        document.getElementById('statusPendingBox').classList.add('d-none');
-        document.getElementById('statusApprovedBox').classList.remove('d-none');
-        
-        userProfile.loanStatus = 'ACTIVE';
-        localStorage.setItem('loan_status', 'ACTIVE');
-        checkLoanRights();
-      } else {
-        document.getElementById('statusPendingBox').classList.add('d-none');
-        document.getElementById('statusRejectedBox').classList.remove('d-none');
-      }
-    }
-
-    function resetToReApply() {
-      document.getElementById('statusPendingBox').classList.remove('d-none');
-      document.getElementById('statusRejectedBox').classList.add('d-none');
-      switchTab('page-select');
-    }
-
-    function copyBankAcc() {
-      const acc = document.getElementById('profBankAcc').innerText;
-      navigator.clipboard.writeText(acc);
-      alert('คัดลอกเลขที่บัญชีแล้ว: ' + acc);
-    }
+    function formatNationalID(input) { input.value = input.value.replace(/\D/g, ''); }
+    function formatPhone(input) { input.value = input.value.replace(/\D/g, ''); }
+    function formatBankAcc(input) { input.value = input.value.replace(/\D/g, ''); }
+    function autoSave() {}
 
     function switchTab(pageId) {
       document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-item-btn').forEach(n => n.classList.remove('active'));
-      
       document.getElementById(pageId).classList.add('active');
       if (pageId === 'page-select') document.getElementById('navSelect').classList.add('active');
       if (pageId === 'page-payment') document.getElementById('navPayment').classList.add('active');
