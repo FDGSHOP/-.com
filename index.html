@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -6,6 +6,21 @@
     <title>ระบบบริหารจัดการยอดชำระ & ไรเดอร์ (Master & Admin Pro - Updated)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        .checkmark-circle {
+            width: 80px; height: 80px; border-radius: 50%; display: stroke;
+            stroke-width: 3; stroke: #22c55e; stroke-miterlimit: 10;
+            box-shadow: inset 0px 0px 0px #22c55e;
+            animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+        }
+        .checkmark-check {
+            transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48;
+            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+        @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+    </style>
+</head>
 <body class="bg-gray-100 font-sans antialiased text-gray-800">
 
     <!-- PRELOADER SCREEN -->
@@ -220,6 +235,15 @@
             </header>
 
             <main class="p-4 md:p-8 flex-1 space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-white border rounded-xl p-3 shadow-sm">
+                    <div>
+                        <div class="text-sm font-bold text-slate-700">ข้อมูลระบบ</div>
+                        <div id="last-refresh-time" class="text-xs text-gray-500">ยังไม่ได้ดึงข้อมูล</div>
+                    </div>
+                    <button onclick="refreshFromGoogleSheets(true)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh ข้อมูล
+                    </button>
+                </div>
                 <!-- Tab 1: Dashboard & Financials -->
                 <div id="admin-tab-dash" class="space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -227,22 +251,9 @@
                             <h2 class="text-2xl font-bold">แดชบอร์ดการเงิน & ภาพรวมบริษัท</h2>
                             <p class="text-xs text-gray-500">เปรียบเทียบวงเงินลงทุน ยอดที่ต้องเก็บ และคอมมิชชั่นไรเดอร์ 7%</p>
                         </div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <button onclick="refreshFromGoogleSheets()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm flex items-center gap-2">
-                                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh ข้อมูล
-                            </button>
-                            <button onclick="adminCloseDay()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm">
-                                กดปิดรอบวัน (Cut-off & ระงับผู้ค้างเงิน)
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2 text-blue-800">
-                            <i data-lucide="calendar-clock" class="w-5 h-5"></i>
-                            <span class="text-sm font-bold">ข้อมูลจาก Google Sheets ล่าสุด</span>
-                        </div>
-                        <span id="latest-update-text" class="text-sm font-semibold text-blue-700">ยังไม่ได้ Refresh</span>
+                        <button onclick="adminCloseDay()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm">
+                            กดปิดรอบวัน (Cut-off & ระงับผู้ค้างเงิน)
+                        </button>
                     </div>
 
                     <!-- ส่วนแสดงข้อมูลวงเงินลงทุนสำหรับ Master และ Admin -->
@@ -657,7 +668,8 @@
 
     <!-- SCRIPT LOGIC -->
     <script>
-                let targetLoginRole = ''; 
+        const MASTER_KEY = "";
+        let targetLoginRole = ''; 
         let currentUser = null; 
         let isMaster = false;
         
@@ -669,18 +681,121 @@
         // Global Investment Capital (Master can set, Admin can view)
         let companyInvestmentCapital = 500000;
 
+        // Mock User Database
         let users = [];
         let customers = [];
-        let transactions = [];
+
         let remittances = [];
         let remittanceHistory = [];
         let activeAdminSlipCustId = null;
 
         // Google Apps Script Endpoint URL
-        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwH8EDMzKp53ZbUYn9klLbhetsYQX1RDOEwJrfdDBb9ce74GuYaDeZPY0RY_0fdfwcTtQ/exec";
+        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwaC3CneUid11YVt-pm-7_SBkMczYdPixDMvQmXclcCW8ZBEbs_sgi6BWAAOq8FHV4TAg/exec";
+        let apiToken = sessionStorage.getItem('fdg_api_token') || '';
+        let lastUpdatedAt = null;
+        let payroll = [];
+        let commissionLedger = [];
+        let deleteRequests = [];
 
-        let authToken = '';
-        let backendLastUpdated = '';
+        async function gasPost(payload) {
+            const res = await fetch(GAS_ENDPOINT, {
+                method: 'POST',
+                headers: {'Content-Type':'text/plain;charset=utf-8'},
+                body: JSON.stringify(payload)
+            });
+            return await res.json();
+        }
+
+        async function refreshFromGoogleSheets(showMessage = true) {
+            try {
+                if (!apiToken) {
+                    if (showMessage) showToast('กรุณาเข้าสู่ระบบก่อน Refresh ข้อมูล', false);
+                    return false;
+                }
+                const data = await gasPost({action:'getAllData', token:apiToken});
+                if (data.status !== 'success') {
+                    if (showMessage) showToast(data.message || 'ดึงข้อมูลจาก Google Sheets ไม่สำเร็จ', false);
+                    return false;
+                }
+
+                users = Array.isArray(data.users) ? data.users : [];
+                customers = Array.isArray(data.customers) ? data.customers : [];
+                payroll = Array.isArray(data.payroll) ? data.payroll : [];
+                commissionLedger = Array.isArray(data.commissionLedger) ? data.commissionLedger : [];
+                deleteRequests = Array.isArray(data.deleteRequests) ? data.deleteRequests : [];
+                lastUpdatedAt = new Date();
+
+                if (currentUser && !isMaster) {
+                    const fresh = users.find(u => String(u.id) === String(currentUser.id));
+                    if (fresh) currentUser = fresh;
+                }
+
+                if (document.getElementById('admin-app') && !document.getElementById('admin-app').classList.contains('hidden')) renderAdmin();
+                if (document.getElementById('rider-app') && !document.getElementById('rider-app').classList.contains('hidden')) renderRider();
+
+                updateRefreshIndicator();
+                if (showMessage) showToast('Refresh ข้อมูลจาก Google Sheets สำเร็จ', true);
+                return true;
+            } catch (err) {
+                if (showMessage) showToast('เชื่อมต่อ Google Sheets ไม่สำเร็จ: ' + err.message, false);
+                return false;
+            }
+        }
+
+        function updateRefreshIndicator() {
+            const el = document.getElementById('last-refresh-time');
+            if (!el) return;
+            el.innerText = lastUpdatedAt
+                ? 'ข้อมูลล่าสุด: ' + lastUpdatedAt.toLocaleString('th-TH')
+                : 'ยังไม่ได้ดึงข้อมูล';
+        }
+
+        async function createUserRemote() {
+            if (!isMaster) {
+                showToast('เฉพาะ Master เท่านั้นที่สร้างบัญชีได้', false);
+                return;
+            }
+            const fields = {
+                name: document.getElementById('new-user-fullname').value.trim(),
+                phone: document.getElementById('new-user-phone').value.trim(),
+                role: document.getElementById('new-user-role').value,
+                username: document.getElementById('new-user-username').value.trim(),
+                password: document.getElementById('new-user-password').value.trim(),
+                bankname: document.getElementById('new-user-bankname').value.trim(),
+                bankacc: document.getElementById('new-user-bankacc').value.trim(),
+                address: document.getElementById('new-user-address').value.trim(),
+                isApproved: true,
+                status: 'active'
+            };
+            if (!fields.name || !fields.phone || !fields.username || !fields.password) {
+                showToast('กรุณากรอกข้อมูลบัญชีให้ครบ', false); return;
+            }
+            const result = await gasPost({action:'createUser',token:apiToken,fields});
+            if (result.status !== 'success') { showToast(result.message || 'สร้างบัญชีไม่สำเร็จ', false); return; }
+            showToast('บันทึกบัญชีลง Google Sheets แล้ว', true);
+            ['new-user-fullname','new-user-phone','new-user-username','new-user-password','new-user-bankname','new-user-bankacc','new-user-address'].forEach(id=>document.getElementById(id).value='');
+            await refreshFromGoogleSheets(false);
+        }
+
+        async function createCustomerRemote() {
+            const fields = {
+                fullname: document.getElementById('loan-cust-name').value.trim(),
+                phone: document.getElementById('loan-cust-phone').value.trim(),
+                loanAmount: Number(document.getElementById('loan-cust-amount').value),
+                installment: Number(document.getElementById('loan-cust-installment').value),
+                term: Number(document.getElementById('loan-cust-term').value),
+                status:'pending', payStatus:'pending'
+            };
+            if (!fields.fullname || !fields.phone || !fields.loanAmount || !fields.installment || !fields.term) {
+                showToast('กรุณากรอกข้อมูลลูกค้าให้ครบ', false); return;
+            }
+            const result=await gasPost({action:'createCustomer',token:apiToken,fields});
+            if(result.status!=='success'){showToast(result.message||'บันทึกไม่สำเร็จ',false);return;}
+            showToast('บันทึกลูกค้าลง Google Sheets แล้ว',true);
+            ['loan-cust-name','loan-cust-phone','loan-cust-amount','loan-cust-installment','loan-cust-term'].forEach(id=>document.getElementById(id).value='');
+            await refreshFromGoogleSheets(false);
+        }
+
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
@@ -739,126 +854,31 @@
             }
 
             try {
-                showToast('กำลังตรวจสอบบัญชี...', true);
-                const result = await gasPost('login', { role: targetLoginRole, username: userInp, password: passInp });
-                if (!result || result.status !== 'success') {
-                    showToast(result && result.message ? result.message : 'เข้าสู่ระบบไม่สำเร็จ', false);
+                const result = await gasPost({
+                    action:'login',
+                    username:userInp,
+                    password:passInp,
+                    role:targetLoginRole
+                });
+
+                if (result.status !== 'success') {
+                    showToast(result.message || 'เข้าสู่ระบบไม่สำเร็จ', false);
                     return;
                 }
 
-                authToken = result.token;
+                apiToken = result.token || '';
+                sessionStorage.setItem('fdg_api_token', apiToken);
+                currentUser = result.user || null;
                 isMaster = !!result.isMaster;
-                currentUser = result.user;
+
+                showToast(`ยินดีต้อนรับ ${currentUser?.name || 'ผู้ใช้งาน'}`, true);
                 await refreshFromGoogleSheets(false);
-                currentUser = users.find(u => String(u.id) === String(result.user.id)) || result.user;
-                isMaster = !!result.isMaster;
-                showToast(isMaster ? 'เข้าสู่ระบบ Master สำเร็จ' : `ยินดีต้อนรับ ${currentUser.name}`, true);
-                openDashboard(currentUser.role);
+                openDashboard(isMaster ? 'admin' : currentUser.role);
             } catch (err) {
-                console.error(err);
-                showToast('ไม่สามารถเชื่อมต่อ Google Apps Script ได้', false);
+                showToast('เชื่อมต่อระบบหลังบ้านไม่สำเร็จ: ' + err.message, false);
             }
         }
 
-        async function gasGet(action) {
-            if (!authToken) throw new Error('ยังไม่ได้เข้าสู่ระบบ');
-            const url = `${GAS_ENDPOINT}?action=${encodeURIComponent(action)}&token=${encodeURIComponent(authToken)}&_=${Date.now()}`;
-            const response = await fetch(url, { method: 'GET', cache: 'no-store' });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return await response.json();
-        }
-
-        async function gasPost(action, payload = {}) {
-            const response = await fetch(GAS_ENDPOINT, {
-                method: 'POST',
-                body: JSON.stringify(Object.assign({ action }, payload)),
-                cache: 'no-store'
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return await response.json();
-        }
-
-        function setLatestUpdate(stamp) {
-            backendLastUpdated = stamp || backendLastUpdated;
-            const el = document.getElementById('latest-update-text');
-            if (!el) return;
-            if (!backendLastUpdated) {
-                el.innerText = 'ยังไม่มีข้อมูลการอัปเดต';
-                return;
-            }
-            const d = new Date(backendLastUpdated);
-            el.innerText = isNaN(d.getTime()) ? String(backendLastUpdated) : d.toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'medium' });
-        }
-
-        async function refreshFromGoogleSheets(showMessage = true) {
-            if (!authToken) {
-                if (showMessage) showToast('กรุณาเข้าสู่ระบบก่อน Refresh ข้อมูล', false);
-                return false;
-            }
-            try {
-                if (showMessage) showToast('กำลัง Refresh ข้อมูลจาก Google Sheets...', true);
-                const data = await gasGet('getAllData');
-                if (!data || data.status !== 'success') throw new Error(data && data.message ? data.message : 'โหลดข้อมูลไม่สำเร็จ');
-                users = Array.isArray(data.users) ? data.users : [];
-                customers = Array.isArray(data.customers) ? data.customers : [];
-                transactions = Array.isArray(data.transactions) ? data.transactions : [];
-                remittances = Array.isArray(data.remittances) ? data.remittances : [];
-                remittanceHistory = Array.isArray(data.remittanceHistory) ? data.remittanceHistory : [];
-                companyInvestmentCapital = Number(data.companyInvestmentCapital || 0);
-                setLatestUpdate(data.lastUpdated || '');
-
-                if (currentUser && !isMaster) {
-                    currentUser = users.find(u => String(u.id) === String(currentUser.id)) || currentUser;
-                }
-                if (document.getElementById('admin-app') && !document.getElementById('admin-app').classList.contains('hidden')) renderAdmin();
-                if (document.getElementById('rider-app') && !document.getElementById('rider-app').classList.contains('hidden')) renderRider();
-                if (showMessage) showToast('Refresh ข้อมูลจาก Google Sheets สำเร็จ', true);
-                return true;
-            } catch (err) {
-                console.error(err);
-                if (showMessage) showToast('Refresh ไม่สำเร็จ: ไม่สามารถดึงข้อมูลจาก Google Sheets ได้', false);
-                return false;
-            }
-        }
-
-        async function syncCustomer(c) {
-            if (!c) return;
-            const uid = c._sheetUid;
-            if (!uid) return;
-            await gasPost('updateCustomer', {
-                token: authToken,
-                uid,
-                fields: {
-                    fullname: c.name || '',
-                    phone: c.phone || '',
-                    loanAmount: Number(c.loanAmount || c.remainingAmount || 0),
-                    remainingBalance: Number(c.remainingAmount || 0),
-                    status: String(c.status || '').toUpperCase(),
-                    startDate: c.startDate || '',
-                    startTimestamp: c.startTimestamp || ''
-                },
-                meta: { installment: Number(c.installment || 0), term: Number(c.term || 0), riderId: c.riderId || null, payStatus: c.payStatus || 'pending', remark: c.remark || '', slipImage: c.slipImage || null, pendingTxId: c.pendingTxId || null }
-            });
-        }
-
-        async function syncUser(u) {
-            if (!u) return;
-            const id = u._sheetId || u.id;
-            const state = { isOnline: !!u.isOnline, cashHold: Number(u.cashHold || 0), qrHold: Number(u.qrHold || 0), incomeYesterday: Number(u.incomeYesterday || 0), incomeToday: Number(u.incomeToday || 0), incomeMonth: Number(u.incomeMonth || 0) };
-            if (!isMaster && u.role === 'rider') {
-                return gasPost('setRiderState', { token: authToken, id: String(id), state });
-            }
-            return gasPost('updateUser', {
-                token: authToken,
-                id: String(id),
-                fields: { name: u.name || '', phone: u.phone || '', role: u.role || '', username: u.username || '', bankname: u.bankName || '', bankacc: u.bankAcc || '', address: u.address || '', isApproved: !!u.isApproved, status: u.status || 'active' },
-                meta: state
-            });
-        }
-
-        async function addTransaction(fields) {
-            return gasPost('addTransaction', { token: authToken, fields });
-        }
         function openDashboard(role) {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('login-username').value = '';
@@ -894,10 +914,10 @@
         }
 
         function logout() {
-            authToken = '';
-            backendLastUpdated = '';
             currentUser = null;
             isMaster = false;
+            apiToken = '';
+            sessionStorage.removeItem('fdg_api_token');
             document.getElementById('admin-app').classList.add('hidden');
             document.getElementById('rider-app').classList.add('hidden');
             document.getElementById('portal-screen').classList.remove('hidden');
@@ -1025,26 +1045,21 @@
             lucide.createIcons();
         }
 
-        async function toggleShift() {
+        function toggleShift() {
             if (currentUser.isOnline) {
                 const pendingCount = customers.filter(c => c.riderId === currentUser.id && c.status === 'approved' && c.payStatus === 'pending').length;
                 if (pendingCount > 0) {
                     showToast(`ไม่สามารถเลิกงานได้! ยังมีงานที่ยังไม่ได้เก็บเงินค้างอยู่ ${pendingCount} รายการ`, false);
                     return;
                 }
-                if ((currentUser.cashHold || 0) > 0) {
+                if (currentUser.cashHold > 0) {
                     showToast('คุณมียอดเงินสดค้างส่งบริษัท ไม่สามารถกดเลิกงานได้จนกว่าจะโอนเงินสดคืนทั้งหมด!', false);
                     return;
                 }
             }
+
             currentUser.isOnline = !currentUser.isOnline;
-            try {
-                await gasPost('setRiderState', { token: authToken, id: String(currentUser._sheetId || currentUser.id), state: { isOnline: currentUser.isOnline, cashHold: currentUser.cashHold || 0, qrHold: currentUser.qrHold || 0, incomeYesterday: currentUser.incomeYesterday || 0, incomeToday: currentUser.incomeToday || 0, incomeMonth: currentUser.incomeMonth || 0 } });
-                showToast(currentUser.isOnline ? 'เริ่มปฏิบัติงานแล้ว' : 'ปิดกะการทำงานเรียบร้อย', true);
-            } catch (err) {
-                currentUser.isOnline = !currentUser.isOnline;
-                showToast('บันทึกสถานะกะงานไม่สำเร็จ', false);
-            }
+            showToast(currentUser.isOnline ? 'เริ่มปฏิบัติงานแล้ว' : 'ปิดกะการทำงานเรียบร้อย', true);
             renderRider();
         }
 
@@ -1106,25 +1121,19 @@
             document.getElementById('slip-file-label').innerText = "คลิกเพื่อถ่ายรูปหรืออัปโหลดสลิป";
         }
 
-        async function handleFloatingInterest() {
+        function handleFloatingInterest() {
             const c = customers.find(item => item.id === activeTaskId);
-            if (!c) return;
-            const interestAmount = c.installment * 0.3;
+            const interestAmount = c.installment * 0.3; 
             const commission = interestAmount * 0.07;
-            if (!confirm(`ยืนยันการรับชำระเฉพาะดอกเบี้ยจำนวน ${interestAmount} ฿? ไรเดอร์จะได้รับคอมมิชชั่น 7% (${commission.toFixed(1)} ฿)`)) return;
-            c.payStatus = 'success';
-            currentUser.incomeToday = (currentUser.incomeToday || 0) + commission;
-            currentUser.incomeMonth = (currentUser.incomeMonth || 0) + commission;
-            currentUser.cashHold = (currentUser.cashHold || 0) + interestAmount;
-            try {
-                await syncCustomer(c);
-                await syncUser(currentUser);
-                await addTransaction({ txId: `TX-${Date.now()}`, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: interestAmount, type: 'INTEREST', payMethod: 'เงินสด', status: 'SUCCESS', remark: 'ชำระเฉพาะดอกเบี้ย', date: new Date().toISOString() });
+            if (confirm(`ยืนยันการรับชำระเฉพาะดอกเบี้ยจำนวน ${interestAmount} ฿? ไรเดอร์จะได้รับคอมมิชชั่น 7% (${commission.toFixed(1)} ฿)`)) {
+                c.payStatus = 'success';
+                currentUser.incomeToday = (currentUser.incomeToday || 0) + commission;
+                currentUser.incomeMonth = (currentUser.incomeMonth || 0) + commission;
+                currentUser.cashHold = (currentUser.cashHold || 0) + interestAmount;
                 closeModal('modal-collect');
-                await refreshFromGoogleSheets(false);
                 showToast('บันทึกการชำระดอกเบี้ยสำเร็จ ไรเดอร์ได้รับค่าคอมมิชชั่น 7%', true);
                 renderRider();
-            } catch (err) { showToast('บันทึกการชำระดอกเบี้ยไม่สำเร็จ', false); }
+            }
         }
 
         function toggleCloseAccountOptions() {
@@ -1132,37 +1141,27 @@
             sub.classList.toggle('hidden');
         }
 
-        async function submitCloseAccount(method) {
+        function submitCloseAccount(method) {
             const c = customers.find(item => item.id === activeTaskId);
-            if (!c) return;
-            const totalRemaining = c.remainingAmount;
+            const totalRemaining = c.remainingAmount; 
             const commission = totalRemaining * 0.07;
             const methodText = method === 'QR' ? 'สแกน QR Code' : 'เงินสด';
-            if (!confirm(`ยืนยันปิดบัญชีชำระยอดรวม ${totalRemaining.toLocaleString()} ฿ ด้วยวิธี: ${methodText}? ไรเดอร์จะได้รับคอมมิชชั่น 7% (${commission.toFixed(1)} ฿)`)) return;
-            try {
-                if (method === 'QR') {
-                    const txId = `TX-${Date.now()}`;
-                    c.payStatus = 'pending_admin';
-                    c.slipImage = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&q=80';
-                    c.pendingTxId = txId;
-                    await syncCustomer(c);
-                    await addTransaction({ txId, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: totalRemaining, type: 'CLOSE_ACCOUNT', payMethod: 'โอน', status: 'PENDING', remark: 'ปิดบัญชี รอตรวจสอบ', date: new Date().toISOString() });
-                } else {
-                    c.payStatus = 'success';
-                    c.slipImage = null;
-                    c.remainingAmount = 0;
+
+            if (confirm(`ยืนยันปิดบัญชีชำระยอดรวม ${totalRemaining.toLocaleString()} ฿ ด้วยวิธี: ${methodText}? ไรเดอร์จะได้รับคอมมิชชั่น 7% (${commission.toFixed(1)} ฿)`)) {
+                c.payStatus = method === 'QR' ? 'pending_admin' : 'success';
+                c.slipImage = method === 'QR' ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&q=80' : null;
+                
+                if (method === 'CASH') {
                     currentUser.incomeToday = (currentUser.incomeToday || 0) + commission;
                     currentUser.incomeMonth = (currentUser.incomeMonth || 0) + commission;
                     currentUser.cashHold = (currentUser.cashHold || 0) + totalRemaining;
-                    await syncCustomer(c);
-                    await syncUser(currentUser);
-                    await addTransaction({ txId: `TX-${Date.now()}`, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: totalRemaining, type: 'CLOSE_ACCOUNT', payMethod: 'เงินสด', status: 'SUCCESS', remark: 'ปิดบัญชีด้วยเงินสด', date: new Date().toISOString() });
+                    c.remainingAmount = 0;
                 }
+
                 closeModal('modal-collect');
-                await refreshFromGoogleSheets(false);
                 showToast(`บันทึกปิดบัญชีสำเร็จ (${methodText}) ไรเดอร์รับคอมฯ 7%`, true);
                 renderRider();
-            } catch (err) { console.error(err); showToast('บันทึกปิดบัญชีไม่สำเร็จ', false); }
+            }
         }
 
         function toggleFailSection(checkbox) {
@@ -1174,55 +1173,46 @@
             }
         }
 
-        async function submitCollect() {
+        function submitCollect() {
             const c = customers.find(item => item.id === activeTaskId);
-            if (!c) return;
             const isFailChecked = document.getElementById('toggle-fail-switch').checked;
-            try {
-                if (isFailChecked) {
-                    const remarkText = document.getElementById('collect-remark').value.trim();
-                    if (!remarkText) { showToast('กรุณาระบุเหตุผลที่ไม่สามารถเก็บเงินได้', false); return; }
-                    c.remark = remarkText;
-                    c.payStatus = 'failed';
-                    await syncCustomer(c);
-                    await addTransaction({ txId: `TX-${Date.now()}`, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: c.installment, type: 'COLLECTION', payMethod: 'ไม่สามารถเก็บได้', status: 'FAILED', remark: remarkText, date: new Date().toISOString() });
-                    closeModal('modal-collect');
-                    await refreshFromGoogleSheets(false);
-                    showToast('บันทึกส่งเข้าหัวข้อยอดเงินที่ไม่สามารถเก็บได้เรียบร้อย', true);
-                    renderRider();
+
+            if (isFailChecked) {
+                const remarkText = document.getElementById('collect-remark').value.trim();
+                if (!remarkText) {
+                    showToast('กรุณาระบุเหตุผลที่ไม่สามารถเก็บเงินได้', false);
                     return;
                 }
-                if (selectedPayMethod === 'โอน' && !hasSlipImage) {
-                    showToast('กรุณาแนบรูปภาพสลิปการโอนเงินของลูกค้า', false);
-                    return;
-                }
-                const commission = c.installment * 0.07;
-                const txId = `TX-${Date.now()}`;
-                if (selectedPayMethod === 'โอน') {
-                    c.payStatus = 'pending_admin';
-                    c.slipImage = document.getElementById('slip-image-preview').src || null;
-                    c.pendingTxId = txId;
-                    await syncCustomer(c);
-                    await addTransaction({ txId, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: c.installment, type: 'COLLECTION', payMethod: 'โอน', status: 'PENDING', remark: 'ลูกค้าโอนแล้ว รอแอดมินตรวจสอบ', date: new Date().toISOString() });
-                    showToast('ส่งสลิปเข้าสู่ช่อง "รอตรวจสอบ" เรียบร้อย', true);
-                } else {
-                    c.payStatus = 'success';
-                    c.remainingAmount = Math.max(0, c.remainingAmount - c.installment);
-                    currentUser.cashHold = (currentUser.cashHold || 0) + c.installment;
-                    currentUser.incomeToday = (currentUser.incomeToday || 0) + commission;
-                    currentUser.incomeMonth = (currentUser.incomeMonth || 0) + commission;
-                    await syncCustomer(c);
-                    await syncUser(currentUser);
-                    await addTransaction({ txId, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: c.installment, type: 'COLLECTION', payMethod: 'เงินสด', status: 'SUCCESS', remark: 'รับชำระเงินสด', date: new Date().toISOString() });
-                    showToast('บันทึกรับเงินสดสำเร็จ! (ไรเดอร์ได้รับค่าคอมฯ 7% เรียบร้อย)', true);
-                }
+                c.remark = `${remarkText}`;
+                c.payStatus = 'failed'; // ย้ายไปยังหัวข้อยอดเงินที่ไม่สามารถเก็บได้
                 closeModal('modal-collect');
-                await refreshFromGoogleSheets(false);
+                showToast('บันทึกส่งเข้าหัวข้อยอดเงินที่ไม่สามารถเก็บได้เรียบร้อย', true);
                 renderRider();
-            } catch (err) {
-                console.error(err);
-                showToast('บันทึกรายการชำระเงินไม่สำเร็จ', false);
+                return;
             }
+
+            if (selectedPayMethod === 'โอน' && !hasSlipImage) {
+                showToast('กรุณาแนบรูปภาพสลิปการโอนเงินของลูกค้า', false);
+                return;
+            }
+
+            const commission = c.installment * 0.07;
+
+            if (selectedPayMethod === 'โอน') {
+                c.payStatus = 'pending_admin'; 
+                c.slipImage = document.getElementById('slip-image-preview').src || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&q=80';
+                showToast('ส่งสลิปเข้าสู่ช่อง "รอตรวจสอบ" เรียบร้อย', true);
+            } else {
+                c.payStatus = 'success';
+                c.remainingAmount = Math.max(0, c.remainingAmount - c.installment);
+                currentUser.cashHold = (currentUser.cashHold || 0) + c.installment;
+                currentUser.incomeToday = (currentUser.incomeToday || 0) + commission;
+                currentUser.incomeMonth = (currentUser.incomeMonth || 0) + commission;
+                showToast('บันทึกรับเงินสดสำเร็จ! (ไรเดอร์ได้รับค่าคอมฯ 7% เรียบร้อย)', true);
+            }
+
+            closeModal('modal-collect');
+            renderRider();
         }
 
         function openRemitModal() {
@@ -1242,35 +1232,57 @@
             }
         }
 
-        async function startRemitLoadingProcess() {
+        function startRemitLoadingProcess() {
             const slipFile = document.getElementById('remit-slip').files[0];
-            if (!slipFile) { showToast('กรุณาแนบสลิปการโอนเงินคืนบริษัท', false); return; }
+            if (!slipFile) {
+                showToast('กรุณาแนบสลิปการโอนเงินคืนบริษัท', false);
+                return;
+            }
+
             closeModal('modal-remit');
             const loadModal = document.getElementById('modal-loading-progress');
             loadModal.classList.remove('hidden');
             document.getElementById('progress-container').classList.remove('hidden');
             document.getElementById('success-checkmark-container').classList.add('hidden');
+            
             let progress = 0;
             const fill = document.getElementById('progress-bar-fill');
             const percentText = document.getElementById('progress-percent-text');
-            fill.style.width = '0%'; percentText.innerText = '0%';
-            const timer = setInterval(async () => {
+            fill.style.width = '0%';
+            percentText.innerText = '0%';
+
+            const timer = setInterval(() => {
                 progress += 10;
-                fill.style.width = `${progress}%`; percentText.innerText = `${progress}%`;
+                fill.style.width = `${progress}%`;
+                percentText.innerText = `${progress}%`;
                 if (progress >= 100) {
                     clearInterval(timer);
-                    const remAmount = currentUser.cashHold || 0;
-                    const rm = { id: Date.now(), txId: `TX-${Date.now()}`, riderId: currentUser.id, riderName: currentUser.name, amount: remAmount, timestamp: new Date().toLocaleString('th-TH'), status: 'PENDING' };
-                    remittances.push(rm); remittanceHistory.push(Object.assign({}, rm)); currentUser.cashHold = 0;
-                    try {
-                        await syncUser(currentUser);
-                        await addTransaction({ txId: rm.txId, uid: '', riderId: String(currentUser._sheetId || currentUser.id), amount: remAmount, type: 'REMIT', payMethod: 'โอนคืนบริษัท', status: 'PENDING', remark: 'รอแอดมินตรวจสอบ', date: new Date().toISOString() });
-                        await gasPost('addRemittance', { token: authToken, remittance: rm });
-                        await refreshFromGoogleSheets(false);
+                    setTimeout(() => {
+                        const remAmount = currentUser.cashHold;
+                        remittances.push({
+                            id: Date.now(),
+                            riderId: currentUser.id,
+                            riderName: currentUser.name,
+                            amount: remAmount,
+                            timestamp: new Date().toLocaleString()
+                        });
+                        remittanceHistory.push({
+                            id: Date.now(),
+                            riderName: currentUser.name,
+                            amount: remAmount,
+                            timestamp: new Date().toLocaleString()
+                        });
+                        currentUser.cashHold = 0;
+
                         document.getElementById('progress-container').classList.add('hidden');
                         document.getElementById('success-checkmark-container').classList.remove('hidden');
-                        setTimeout(() => { loadModal.classList.add('hidden'); showToast('ส่งยอดเงินคืนบริษัทสำเร็จ เงินสดติดตัวถูกรีเซ็ตเป็น 0 ฿', true); renderRider(); }, 1200);
-                    } catch (err) { console.error(err); loadModal.classList.add('hidden'); showToast('บันทึกการส่งยอดคืนบริษัทไม่สำเร็จ', false); }
+                        
+                        setTimeout(() => {
+                            loadModal.classList.add('hidden');
+                            showToast('ส่งยอดเงินคืนบริษัทสำเร็จ เงินสดติดตัวถูกรีเซ็ตเป็น 0 ฿', true);
+                            renderRider();
+                        }, 1200);
+                    }, 400);
                 }
             }, 150);
         }
@@ -1299,7 +1311,7 @@
         }
 
         // ==================== ADMIN & MASTER FUNCTIONS ====================
-        async function updateMasterInvestmentLimit() {
+        function updateMasterInvestmentLimit() {
             if (!isMaster) {
                 showToast('เฉพาะระดับ Master เท่านั้นที่มีสิทธิ์กำหนดวงเงินลงทุน!', false);
                 return;
@@ -1309,17 +1321,10 @@
                 showToast('กรุณากรอกตัวเลขวงเงินลงทุนให้ถูกต้อง', false);
                 return;
             }
-            try {
-                const result = await gasPost('setCompanyCapital', { token: authToken, value: val });
-                if (result.status !== 'success') throw new Error(result.message || 'บันทึกไม่สำเร็จ');
-                companyInvestmentCapital = val;
-                setLatestUpdate(result.lastUpdated);
-                document.getElementById('input-master-investment').value = '';
-                showToast(`อัปเดตวงเงินลงทุนบริษัทเป็น ${val.toLocaleString()} ฿ เรียบร้อย`, true);
-                renderAdmin();
-            } catch (err) {
-                showToast('บันทึกวงเงินลงทุนไม่สำเร็จ', false);
-            }
+            companyInvestmentCapital = val;
+            document.getElementById('input-master-investment').value = '';
+            showToast(`อัปเดตวงเงินลงทุนบริษัทเป็น ${val.toLocaleString()} ฿ เรียบร้อย`, true);
+            renderAdmin();
         }
 
         function renderAdmin() {
@@ -1554,68 +1559,28 @@
             lucide.createIcons();
         }
 
-        async function addNewLoanCustomer() {
-            const name = document.getElementById('loan-cust-name').value.trim();
-            const phone = document.getElementById('loan-cust-phone').value.trim();
-            const amount = parseFloat(document.getElementById('loan-cust-amount').value);
-            const installment = parseFloat(document.getElementById('loan-cust-installment').value);
-            const term = parseInt(document.getElementById('loan-cust-term').value);
-
-            if (!(name && phone && amount && installment && term)) {
-                showToast('กรุณากรอกข้อมูลสินเชื่อและเบอร์โทรให้ครบถ้วน', false);
-                return;
-            }
-            if (amount > companyInvestmentCapital) {
-                showToast('คำเตือน: วงเงินที่ขอสินเชื่อสูงกว่าเงินลงทุนที่มีอยู่ Admin ควรพิจารณาตรวจสอบความเสี่ยงก่อนอนุมัติ', false);
-            }
-
-            const uid = `UID-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-            const startDate = new Date().toLocaleDateString('th-TH');
-            const startTimestamp = new Date().toISOString();
-            try {
-                const result = await gasPost('add', {
-                    token: authToken,
-                    sheetName: 'Customers',
-                    values: [uid, '', name, phone, '', '', '', '', '', '', amount, amount, 'PENDING', startDate, startTimestamp],
-                    meta: { installment, term, riderId: null, payStatus: 'pending', remark: '', slipImage: null }
-                });
-                if (result.status !== 'success') throw new Error(result.message || 'เพิ่มข้อมูลไม่สำเร็จ');
-                await refreshFromGoogleSheets(false);
-                showToast('เพิ่มข้อมูลลูกค้าขอสินเชื่อเรียบร้อย', true);
-                ['loan-cust-name','loan-cust-phone','loan-cust-amount','loan-cust-installment','loan-cust-term'].forEach(id => document.getElementById(id).value = '');
-                renderAdmin();
-            } catch (err) {
-                console.error(err);
-                showToast('เพิ่มข้อมูลลูกค้าไม่สำเร็จ', false);
-            }
+        function addNewLoanCustomer() {
+            createCustomerRemote();
         }
 
-        async function writeOffDebt(custId) {
-            if (!confirm('ยืนยันตัดหนี้สูญสำหรับลูกค้ารายนี้? ยอดหนี้จะถูกปิดเป็น 0 และบันทึกเป็นหนี้สูญ')) return;
-            const c = customers.find(item => item.id === custId);
-            if (!c) return;
-            c.remainingAmount = 0;
-            c.payStatus = 'success';
-            try {
-                await syncCustomer(c);
-                await refreshFromGoogleSheets(false);
+        function writeOffDebt(custId) {
+            if (confirm('ยืนยันตัดหนี้สูญสำหรับลูกค้ารายนี้? ยอดหนี้จะถูกปิดเป็น 0 และบันทึกเป็นหนี้สูญ')) {
+                const c = customers.find(item => item.id === custId);
+                c.remainingAmount = 0;
+                c.payStatus = 'success';
                 showToast('บันทึกตัดหนี้สูญเรียบร้อย', true);
                 renderAdmin();
-            } catch (err) { showToast('บันทึกตัดหนี้สูญไม่สำเร็จ', false); }
+            }
         }
 
-        async function restoreDebt(custId) {
-            if (!confirm('ส่งลูกค้ารายนี้กลับไปยังสถานะปกติเพื่อให้ไรเดอร์เก็บเงินอีกครั้ง?')) return;
-            const c = customers.find(item => item.id === custId);
-            if (!c) return;
-            c.payStatus = 'pending';
-            c.remark = '';
-            try {
-                await syncCustomer(c);
-                await refreshFromGoogleSheets(false);
+        function restoreDebt(custId) {
+            if (confirm('ส่งลูกค้ารายนี้กลับไปยังสถานะปกติเพื่อให้ไรเดอร์เก็บเงินอีกครั้ง?')) {
+                const c = customers.find(item => item.id === custId);
+                c.payStatus = 'pending';
+                c.remark = '';
                 showToast('ส่งกลับรายการเก็บเงินปกติเรียบร้อย', true);
                 renderAdmin();
-            } catch (err) { showToast('บันทึกสถานะไม่สำเร็จ', false); }
+            }
         }
 
         function openViewSlipModal(custId) {
@@ -1626,49 +1591,36 @@
             document.getElementById('modal-view-slip').classList.remove('hidden');
         }
 
-        async function approveCustomerSlip() {
+        function approveCustomerSlip() {
             const c = customers.find(item => item.id === activeAdminSlipCustId);
-            if (!c) return;
             c.payStatus = 'success';
             c.remainingAmount = Math.max(0, c.remainingAmount - c.installment);
+
             const commission = c.installment * 0.07;
             const rider = users.find(u => u.id === c.riderId);
-            if (rider) { rider.qrHold = (rider.qrHold || 0) + c.installment; rider.incomeToday = (rider.incomeToday || 0) + commission; rider.incomeMonth = (rider.incomeMonth || 0) + commission; }
-            try {
-                await syncCustomer(c);
-                if (rider) await syncUser(rider);
-                if (c.pendingTxId) await gasPost('updateTransaction', { token: authToken, txId: c.pendingTxId, fields: { status: 'SUCCESS', remark: 'แอดมินอนุมัติสลิป', date: new Date().toISOString() } });
-                c.pendingTxId = null;
-                await syncCustomer(c);
-                closeModal('modal-view-slip');
-                await refreshFromGoogleSheets(false);
-                showToast('อนุมัติสลิปสำเร็จ! ยอดเงินเข้าบริษัทและคอมมิชชั่น 7% บวกเพิ่มให้ไรเดอร์เรียบร้อย', true);
-                renderAdmin();
-            } catch (err) { console.error(err); showToast('บันทึกการอนุมัติสลิปไม่สำเร็จ', false); }
+            if (rider) {
+                rider.qrHold = (rider.qrHold || 0) + c.installment;
+                rider.incomeToday = (rider.incomeToday || 0) + commission;
+                rider.incomeMonth = (rider.incomeMonth || 0) + commission;
+            }
+
+            closeModal('modal-view-slip');
+            showToast('อนุมัติสลิปสำเร็จ! ยอดเงินเข้าบริษัทและคอมมิชชั่น 7% บวกเพิ่มให้ไรเดอร์เรียบร้อย', true);
+            renderAdmin();
         }
 
-        async function approveLoan(id, status) {
+        function approveLoan(id, status) {
             const c = customers.find(item => item.id === id);
-            if (!c) return;
             c.status = status;
-            try {
-                await syncCustomer(c);
-                await refreshFromGoogleSheets(false);
-                showToast(`อัปเดตสถานะสินเชื่อเป็น ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'} แล้ว`, true);
-                renderAdmin();
-            } catch (err) { showToast('อัปเดตสถานะสินเชื่อไม่สำเร็จ', false); }
+            showToast(`อัปเดตสถานะสินเชื่อเป็น ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'} แล้ว`, true);
+            renderAdmin();
         }
 
-        async function assignRider(custId, riderId) {
+        function assignRider(custId, riderId) {
             const c = customers.find(item => item.id === custId);
-            if (!c) return;
             c.riderId = riderId ? parseInt(riderId) : null;
-            try {
-                await syncCustomer(c);
-                await refreshFromGoogleSheets(false);
-                showToast('มอบหมายงานให้ Rider สำเร็จ', true);
-                renderAdmin();
-            } catch (err) { showToast('บันทึกการมอบหมาย Rider ไม่สำเร็จ', false); }
+            showToast('มอบหมายงานให้ Rider สำเร็จ', true);
+            renderAdmin();
         }
 
         function openEditLoanModal(id) {
@@ -1681,127 +1633,78 @@
             document.getElementById('modal-edit-loan').classList.remove('hidden');
         }
 
-        async function saveEditLoan() {
+        function saveEditLoan() {
             const id = parseInt(document.getElementById('edit-loan-id').value);
             const c = customers.find(item => item.id === id);
-            if (!c) return;
             c.remainingAmount = parseFloat(document.getElementById('edit-loan-amount').value);
             c.installment = parseFloat(document.getElementById('edit-loan-installment').value);
             c.term = parseInt(document.getElementById('edit-loan-term').value);
-            try {
-                await syncCustomer(c);
-                await refreshFromGoogleSheets(false);
-                closeModal('modal-edit-loan');
-                showToast('แก้ไขยอดหนี้สำเร็จ', true);
-                renderAdmin();
-            } catch (err) { showToast('แก้ไขยอดหนี้ไม่สำเร็จ', false); }
+            closeModal('modal-edit-loan');
+            showToast('แก้ไขยอดหนี้สำเร็จ', true);
+            renderAdmin();
         }
 
-        async function createUser() {
-            const fullname = document.getElementById('new-user-fullname').value.trim();
-            const phone = document.getElementById('new-user-phone').value.trim();
-            const role = document.getElementById('new-user-role').value;
-            const username = document.getElementById('new-user-username').value.trim();
-            const password = document.getElementById('new-user-password').value.trim();
-            const bankname = document.getElementById('new-user-bankname').value.trim();
-            const bankacc = document.getElementById('new-user-bankacc').value.trim();
-            const address = document.getElementById('new-user-address').value.trim();
-
-            if (!(fullname && phone && username && password && bankname && bankacc && address)) {
-                showToast('กรุณากรอกข้อมูลส่วนตัว, ที่อยู่ และข้อมูลธนาคารให้ครบถ้วนทุกช่อง', false);
-                return;
-            }
-            const id = Date.now();
-            try {
-                const result = await gasPost('add', {
-                    token: authToken,
-                    sheetName: 'Users',
-                    values: [id, fullname, phone, role, username, password, bankname, bankacc, address, false, 'active'],
-                    meta: { isOnline: false, cashHold: 0, qrHold: 0, incomeYesterday: 0, incomeToday: 0, incomeMonth: 0 }
-                });
-                if (result.status !== 'success') throw new Error(result.message || 'สร้างบัญชีไม่สำเร็จ');
-                await refreshFromGoogleSheets(false);
-                ['new-user-fullname','new-user-phone','new-user-username','new-user-password','new-user-bankname','new-user-bankacc','new-user-address'].forEach(id => document.getElementById(id).value = '');
-                showToast('สร้างบัญชีพนักงานเรียบร้อย (รอ Master อนุมัติการใช้งาน)', true);
-                renderAdmin();
-            } catch (err) {
-                console.error(err);
-                showToast('สร้างบัญชีพนักงานไม่สำเร็จ', false);
-            }
+        function createUser() {
+            createUserRemote();
         }
 
         async function masterApproveUser(id) {
             if (!isMaster) { showToast('เฉพาะ Master เท่านั้น', false); return; }
-            const u = users.find(item => item.id === id);
-            if (!u) return;
-            u.isApproved = true;
-            try {
-                await syncUser(u);
-                await refreshFromGoogleSheets(false);
-                showToast(`อนุมัติเปิดใช้งานบัญชี ${u.name} เรียบร้อยแล้ว`, true);
-                renderAdmin();
-            } catch (err) { showToast('บันทึกการอนุมัติบัญชีไม่สำเร็จ', false); }
+            const result = await gasPost({
+                action:'updateUser', token:apiToken, id:id,
+                fields:{isApproved:true,status:'active',updatedAt:new Date().toISOString()}
+            });
+            if(result.status!=='success'){showToast(result.message||'อนุมัติไม่สำเร็จ',false);return;}
+            showToast('อนุมัติบัญชีเรียบร้อย',true);
+            await refreshFromGoogleSheets(false);
         }
 
-        async function masterSuspendUser(id) {
-            if (!isMaster) { showToast('เฉพาะ Master เท่านั้นที่มีสิทธิ์ระงับบัญชีพนักงาน!', false); return; }
+        function masterApproveUser(id) {
             const u = users.find(item => item.id === id);
-            if (!u) return;
+            u.isApproved = true;
+            showToast(`อนุมัติเปิดใช้งานบัญชี ${u.name} เรียบร้อยแล้ว`, true);
+            renderAdmin();
+        }
+
+        function masterSuspendUser(id) {
+            if (!isMaster) {
+                showToast('เฉพาะ Master เท่านั้นที่มีสิทธิ์ระงับบัญชีพนักงาน!', false);
+                return;
+            }
+            const u = users.find(item => item.id === id);
             u.status = 'suspended';
             u.isOnline = false;
-            try {
-                await syncUser(u);
-                await refreshFromGoogleSheets(false);
-                showToast(`ระงับบัญชี ${u.name} (${u.role.toUpperCase()}) สำเร็จ`, true);
-                renderAdmin();
-            } catch (err) { showToast('บันทึกการระงับบัญชีไม่สำเร็จ', false); }
+            showToast(`ระงับบัญชี ${u.name} (${u.role.toUpperCase()}) สำเร็จ`, true);
+            renderAdmin();
         }
 
-        async function masterUnblockUser(id) {
-            if (!isMaster) { showToast('เฉพาะ Master เท่านั้น', false); return; }
+        function masterUnblockUser(id) {
             const u = users.find(item => item.id === id);
-            if (!u) return;
             u.status = 'active';
-            try {
-                await syncUser(u);
-                await refreshFromGoogleSheets(false);
-                showToast(`ปลดระงับบัญชี ${u.name} เรียบร้อยแล้ว`, true);
-                renderAdmin();
-            } catch (err) { showToast('บันทึกการปลดระงับไม่สำเร็จ', false); }
+            showToast(`ปลดระงับบัญชี ${u.name} เรียบร้อยแล้ว`, true);
+            renderAdmin();
         }
 
-        async function approveRemittance(rmId) {
+        function approveRemittance(rmId) {
             const rm = remittances.find(r => r.id === rmId);
-            if (!rm) return;
             const rider = users.find(u => u.id === rm.riderId);
-            if (!rider) return;
             rider.cashHold = 0;
             remittances = remittances.filter(r => r.id !== rmId);
-            try {
-                await syncUser(rider);
-                await gasPost('updateTransaction', { token: authToken, txId: rm.txId || '', fields: { status: 'SUCCESS', remark: 'อนุมัติยอดเงินสดเข้าบริษัท', date: new Date().toISOString() } });
-                await gasPost('removeRemittance', { token: authToken, id: rm.id });
-                await refreshFromGoogleSheets(false);
-                showToast('อนุมัติยอดเงินสดเข้าบริษัทเรียบร้อย', true);
-                renderAdmin();
-            } catch (err) { showToast('บันทึกการอนุมัติยอดเงินสดไม่สำเร็จ', false); }
+            showToast('อนุมัติยอดเงินสดเข้าบริษัทเรียบร้อย', true);
+            renderAdmin();
         }
 
-        async function adminCloseDay() {
-            try {
-                for (const r of users.filter(u => u.role === 'rider')) {
-                    if ((r.cashHold || 0) > 0) {
-                        r.status = 'suspended';
-                        r.isOnline = false;
-                    }
-                    r.incomeYesterday = r.incomeToday || 0;
-                    r.incomeToday = 0;
-                    await syncUser(r);
+        function adminCloseDay() {
+            users.filter(u => u.role === 'rider').forEach(r => {
+                if (r.cashHold > 0) {
+                    r.status = 'suspended';
+                    r.isOnline = false;
                 }
-                await refreshFromGoogleSheets(false);
-                showToast('ตัดรอบวันสำเร็จ! (Cut-off Midnight) ระงับบัญชี Rider ที่ค้างส่งเงินสดอัตโนมัติ', true);
-                renderAdmin();
-            } catch (err) { showToast('ตัดรอบวันไม่สำเร็จ', false); }
+                r.incomeYesterday = r.incomeToday || 0;
+                r.incomeToday = 0;
+            });
+            showToast('ตัดรอบวันสำเร็จ! (Cut-off Midnight) ระงับบัญชี Rider ที่ค้างส่งเงินสดอัตโนมัติ', true);
+            renderAdmin();
         }
 
         function toggleSidebar() {
@@ -1826,3 +1729,4 @@
     </script>
 </body>
 </html>
+</body></html>
