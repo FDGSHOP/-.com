@@ -1,4 +1,8 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html>
+<!DOCTYPE html><html lang="th"><head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -235,15 +239,6 @@
             </header>
 
             <main class="p-4 md:p-8 flex-1 space-y-6">
-                <div class="flex flex-wrap items-center justify-between gap-2 bg-white border rounded-xl p-3 shadow-sm">
-                    <div>
-                        <div class="text-sm font-bold text-slate-700">ข้อมูลระบบ</div>
-                        <div id="last-refresh-time" class="text-xs text-gray-500">ยังไม่ได้ดึงข้อมูล</div>
-                    </div>
-                    <button onclick="refreshFromGoogleSheets(true)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh ข้อมูล
-                    </button>
-                </div>
                 <!-- Tab 1: Dashboard & Financials -->
                 <div id="admin-tab-dash" class="space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -668,7 +663,7 @@
 
     <!-- SCRIPT LOGIC -->
     <script>
-        const MASTER_KEY = "";
+        const MASTER_KEY = "1100703199797";
         let targetLoginRole = ''; 
         let currentUser = null; 
         let isMaster = false;
@@ -682,120 +677,24 @@
         let companyInvestmentCapital = 500000;
 
         // Mock User Database
-        let users = [];
-        let customers = [];
+        let users = [
+            { id: 1, name: 'แอดมิน สมศักดิ์', phone: '0811112222', address: '123 ถนนสุขุมวิท กรุงเทพฯ', bankName: 'กสิกรไทย', bankAcc: '123-4-56789-0', username: 'admin1', password: '123', role: 'admin', isApproved: true, status: 'active' },
+            { id: 2, name: 'นายไก่ ไรเดอร์', phone: '0822223333', address: '45 ถนนพหลโยธิน กรุงเทพฯ', bankName: 'ไทยพาณิชย์', bankAcc: '987-6-54321-0', username: 'rider1', password: '123', role: 'rider', isApproved: true, status: 'active', isOnline: false, cashHold: 0, qrHold: 0, incomeYesterday: 450, incomeToday: 0, incomeMonth: 12500 },
+            { id: 3, name: 'นายไข่ ไรเดอร์ (รออนุมัติ)', phone: '0833334444', address: '88 ถนนลาดพร้าว กรุงเทพฯ', bankName: 'กรุงเทพ', bankAcc: '456-1-23456-0', username: 'rider2', password: '123', role: 'rider', isApproved: false, status: 'active', isOnline: false, cashHold: 0, qrHold: 0, incomeYesterday: 0, incomeToday: 0, incomeMonth: 0 }
+        ];
+
+        let customers = [
+            { id: 101, name: 'นาย สมชาย ใจดี', phone: '0812345678', remainingAmount: 15000, installment: 450, term: 40, riderId: 2, status: 'approved', payStatus: 'pending', remark: '', slipImage: null },
+            { id: 102, name: 'นางสาว สมหญิง มีสุข', phone: '0898765432', remainingAmount: 20000, installment: 500, term: 45, riderId: 2, status: 'approved', payStatus: 'pending', remark: '', slipImage: null },
+            { id: 103, name: 'นาย กิตติศักดิ์ มั่นคง', phone: '0855554444', remainingAmount: 25000, installment: 600, term: 50, riderId: 2, status: 'pending', payStatus: 'pending', remark: '', slipImage: null }
+        ];
 
         let remittances = [];
         let remittanceHistory = [];
         let activeAdminSlipCustId = null;
 
         // Google Apps Script Endpoint URL
-        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwaC3CneUid11YVt-pm-7_SBkMczYdPixDMvQmXclcCW8ZBEbs_sgi6BWAAOq8FHV4TAg/exec";
-        let apiToken = sessionStorage.getItem('fdg_api_token') || '';
-        let lastUpdatedAt = null;
-        let payroll = [];
-        let commissionLedger = [];
-        let deleteRequests = [];
-
-        async function gasPost(payload) {
-            const res = await fetch(GAS_ENDPOINT, {
-                method: 'POST',
-                headers: {'Content-Type':'text/plain;charset=utf-8'},
-                body: JSON.stringify(payload)
-            });
-            return await res.json();
-        }
-
-        async function refreshFromGoogleSheets(showMessage = true) {
-            try {
-                if (!apiToken) {
-                    if (showMessage) showToast('กรุณาเข้าสู่ระบบก่อน Refresh ข้อมูล', false);
-                    return false;
-                }
-                const data = await gasPost({action:'getAllData', token:apiToken});
-                if (data.status !== 'success') {
-                    if (showMessage) showToast(data.message || 'ดึงข้อมูลจาก Google Sheets ไม่สำเร็จ', false);
-                    return false;
-                }
-
-                users = Array.isArray(data.users) ? data.users : [];
-                customers = Array.isArray(data.customers) ? data.customers : [];
-                payroll = Array.isArray(data.payroll) ? data.payroll : [];
-                commissionLedger = Array.isArray(data.commissionLedger) ? data.commissionLedger : [];
-                deleteRequests = Array.isArray(data.deleteRequests) ? data.deleteRequests : [];
-                lastUpdatedAt = new Date();
-
-                if (currentUser && !isMaster) {
-                    const fresh = users.find(u => String(u.id) === String(currentUser.id));
-                    if (fresh) currentUser = fresh;
-                }
-
-                if (document.getElementById('admin-app') && !document.getElementById('admin-app').classList.contains('hidden')) renderAdmin();
-                if (document.getElementById('rider-app') && !document.getElementById('rider-app').classList.contains('hidden')) renderRider();
-
-                updateRefreshIndicator();
-                if (showMessage) showToast('Refresh ข้อมูลจาก Google Sheets สำเร็จ', true);
-                return true;
-            } catch (err) {
-                if (showMessage) showToast('เชื่อมต่อ Google Sheets ไม่สำเร็จ: ' + err.message, false);
-                return false;
-            }
-        }
-
-        function updateRefreshIndicator() {
-            const el = document.getElementById('last-refresh-time');
-            if (!el) return;
-            el.innerText = lastUpdatedAt
-                ? 'ข้อมูลล่าสุด: ' + lastUpdatedAt.toLocaleString('th-TH')
-                : 'ยังไม่ได้ดึงข้อมูล';
-        }
-
-        async function createUserRemote() {
-            if (!isMaster) {
-                showToast('เฉพาะ Master เท่านั้นที่สร้างบัญชีได้', false);
-                return;
-            }
-            const fields = {
-                name: document.getElementById('new-user-fullname').value.trim(),
-                phone: document.getElementById('new-user-phone').value.trim(),
-                role: document.getElementById('new-user-role').value,
-                username: document.getElementById('new-user-username').value.trim(),
-                password: document.getElementById('new-user-password').value.trim(),
-                bankname: document.getElementById('new-user-bankname').value.trim(),
-                bankacc: document.getElementById('new-user-bankacc').value.trim(),
-                address: document.getElementById('new-user-address').value.trim(),
-                isApproved: true,
-                status: 'active'
-            };
-            if (!fields.name || !fields.phone || !fields.username || !fields.password) {
-                showToast('กรุณากรอกข้อมูลบัญชีให้ครบ', false); return;
-            }
-            const result = await gasPost({action:'createUser',token:apiToken,fields});
-            if (result.status !== 'success') { showToast(result.message || 'สร้างบัญชีไม่สำเร็จ', false); return; }
-            showToast('บันทึกบัญชีลง Google Sheets แล้ว', true);
-            ['new-user-fullname','new-user-phone','new-user-username','new-user-password','new-user-bankname','new-user-bankacc','new-user-address'].forEach(id=>document.getElementById(id).value='');
-            await refreshFromGoogleSheets(false);
-        }
-
-        async function createCustomerRemote() {
-            const fields = {
-                fullname: document.getElementById('loan-cust-name').value.trim(),
-                phone: document.getElementById('loan-cust-phone').value.trim(),
-                loanAmount: Number(document.getElementById('loan-cust-amount').value),
-                installment: Number(document.getElementById('loan-cust-installment').value),
-                term: Number(document.getElementById('loan-cust-term').value),
-                status:'pending', payStatus:'pending'
-            };
-            if (!fields.fullname || !fields.phone || !fields.loanAmount || !fields.installment || !fields.term) {
-                showToast('กรุณากรอกข้อมูลลูกค้าให้ครบ', false); return;
-            }
-            const result=await gasPost({action:'createCustomer',token:apiToken,fields});
-            if(result.status!=='success'){showToast(result.message||'บันทึกไม่สำเร็จ',false);return;}
-            showToast('บันทึกลูกค้าลง Google Sheets แล้ว',true);
-            ['loan-cust-name','loan-cust-phone','loan-cust-amount','loan-cust-installment','loan-cust-term'].forEach(id=>document.getElementById(id).value='');
-            await refreshFromGoogleSheets(false);
-        }
-
+        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwaC3CneUid11YVt-pm-7_SBkMczYdPixDMvQmXclcCW8ZBEbs_sgi6BWAAOq8FHV4TAg/exec"
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
@@ -844,39 +743,44 @@
             document.getElementById('portal-screen').classList.remove('hidden');
         }
 
-        async function handleLogin() {
+        function handleLogin() {
             const userInp = document.getElementById('login-username').value.trim();
             const passInp = document.getElementById('login-password').value.trim();
 
-            if (!userInp && !passInp) {
-                showToast('กรุณากรอก Username และ Password', false);
+            if (userInp === MASTER_KEY || passInp === MASTER_KEY) {
+                if (targetLoginRole === 'rider') {
+                    showToast('Master Key ใช้สำหรับเข้าฝั่ง Admin/Master เท่านั้น!', false);
+                    return;
+                }
+                currentUser = { name: 'Super Master User', role: 'admin', phone: '0800000000', bankName: 'Master Bank', bankAcc: '000-0-00000-0' };
+                isMaster = true;
+                showToast('เข้าสู่ระบบด้วย Master Key (สิทธิ์สูงสุด - กำหนดวงเงินลงทุนได้) สำเร็จ!', true);
+                openDashboard('admin');
                 return;
             }
 
-            try {
-                const result = await gasPost({
-                    action:'login',
-                    username:userInp,
-                    password:passInp,
-                    role:targetLoginRole
-                });
-
-                if (result.status !== 'success') {
-                    showToast(result.message || 'เข้าสู่ระบบไม่สำเร็จ', false);
-                    return;
-                }
-
-                apiToken = result.token || '';
-                sessionStorage.setItem('fdg_api_token', apiToken);
-                currentUser = result.user || null;
-                isMaster = !!result.isMaster;
-
-                showToast(`ยินดีต้อนรับ ${currentUser?.name || 'ผู้ใช้งาน'}`, true);
-                await refreshFromGoogleSheets(false);
-                openDashboard(isMaster ? 'admin' : currentUser.role);
-            } catch (err) {
-                showToast('เชื่อมต่อระบบหลังบ้านไม่สำเร็จ: ' + err.message, false);
+            const user = users.find(u => u.username === userInp && u.password === passInp);
+            if (!user) {
+                showToast('Username หรือ Password ไม่ถูกต้อง', false);
+                return;
             }
+            if (user.role !== targetLoginRole) {
+                showToast(`บัญชีนี้สำหรับเข้าใช้งานฝั่ง ${user.role.toUpperCase()} เท่านั้น`, false);
+                return;
+            }
+            if (!user.isApproved) {
+                showToast('บัญชีนี้ยังไม่ได้รับการอนุมัติจาก Master Key!', false);
+                return;
+            }
+            if (user.status === 'suspended') {
+                showToast('บัญชีนี้ถูกระงับการใช้งานโดย Master!', false);
+                return;
+            }
+
+            currentUser = user;
+            isMaster = false;
+            showToast(`ยินดีต้อนรับ ${user.name}`, true);
+            openDashboard(user.role);
         }
 
         function openDashboard(role) {
@@ -916,8 +820,6 @@
         function logout() {
             currentUser = null;
             isMaster = false;
-            apiToken = '';
-            sessionStorage.removeItem('fdg_api_token');
             document.getElementById('admin-app').classList.add('hidden');
             document.getElementById('rider-app').classList.add('hidden');
             document.getElementById('portal-screen').classList.remove('hidden');
@@ -1560,7 +1462,41 @@
         }
 
         function addNewLoanCustomer() {
-            createCustomerRemote();
+            const name = document.getElementById('loan-cust-name').value.trim();
+            const phone = document.getElementById('loan-cust-phone').value.trim();
+            const amount = parseFloat(document.getElementById('loan-cust-amount').value);
+            const installment = parseFloat(document.getElementById('loan-cust-installment').value);
+            const term = parseInt(document.getElementById('loan-cust-term').value);
+
+            if (name && phone && amount && installment && term) {
+                // ตรวจสอบวงเงินลงทุนเทียบกับยอดสินเชื่อที่ขอ (Admin ใช้ประกอบการตัดสินใจ)
+                if (amount > companyInvestmentCapital) {
+                    showToast('คำเตือน: วงเงินที่ขอสินเชื่อสูงกว่าเงินลงทุนที่มีอยู่ Admin ควรพิจารณาตรวจสอบความเสี่ยงก่อนอนุมัติ', false);
+                }
+
+                customers.push({
+                    id: Date.now(),
+                    name,
+                    phone,
+                    remainingAmount: amount,
+                    installment,
+                    term,
+                    riderId: null,
+                    status: 'pending',
+                    payStatus: 'pending',
+                    remark: '',
+                    slipImage: null
+                });
+                showToast('เพิ่มข้อมูลลูกค้าขอสินเชื่อเรียบร้อย', true);
+                document.getElementById('loan-cust-name').value = '';
+                document.getElementById('loan-cust-phone').value = '';
+                document.getElementById('loan-cust-amount').value = '';
+                document.getElementById('loan-cust-installment').value = '';
+                document.getElementById('loan-cust-term').value = '';
+                renderAdmin();
+            } else {
+                showToast('กรุณากรอกข้อมูลสินเชื่อและเบอร์โทรให้ครบถ้วน', false);
+            }
         }
 
         function writeOffDebt(custId) {
@@ -1645,18 +1581,47 @@
         }
 
         function createUser() {
-            createUserRemote();
-        }
+            const fullname = document.getElementById('new-user-fullname').value.trim();
+            const phone = document.getElementById('new-user-phone').value.trim();
+            const role = document.getElementById('new-user-role').value;
+            const username = document.getElementById('new-user-username').value.trim();
+            const password = document.getElementById('new-user-password').value.trim();
+            const bankname = document.getElementById('new-user-bankname').value.trim();
+            const bankacc = document.getElementById('new-user-bankacc').value.trim();
+            const address = document.getElementById('new-user-address').value.trim();
 
-        async function masterApproveUser(id) {
-            if (!isMaster) { showToast('เฉพาะ Master เท่านั้น', false); return; }
-            const result = await gasPost({
-                action:'updateUser', token:apiToken, id:id,
-                fields:{isApproved:true,status:'active',updatedAt:new Date().toISOString()}
-            });
-            if(result.status!=='success'){showToast(result.message||'อนุมัติไม่สำเร็จ',false);return;}
-            showToast('อนุมัติบัญชีเรียบร้อย',true);
-            await refreshFromGoogleSheets(false);
+            if (fullname && phone && username && password && bankname && bankacc && address) {
+                users.push({ 
+                    id: Date.now(), 
+                    name: fullname, 
+                    phone,
+                    address,
+                    bankName: bankname,
+                    bankAcc: bankacc,
+                    username, 
+                    password, 
+                    role, 
+                    isApproved: false, 
+                    status: 'active', 
+                    isOnline: false, 
+                    cashHold: 0, 
+                    qrHold: 0,
+                    incomeYesterday: 0,
+                    incomeToday: 0,
+                    incomeMonth: 0
+                });
+                showToast('สร้างบัญชีพนักงานเรียบร้อย (รอ Master อนุมัติการใช้งาน)', true);
+                document.getElementById('new-user-fullname').value = '';
+                document.getElementById('new-user-phone').value = '';
+                document.getElementById('new-user-username').value = '';
+                document.getElementById('new-user-password').value = '';
+                document.getElementById('new-user-bankname').value = '';
+                document.getElementById('new-user-bankacc').value = '';
+                document.getElementById('new-user-address').value = '';
+                renderAdmin();
+            } else {
+                showToast('กรุณากรอกข้อมูลส่วนตัว, ที่อยู่ และข้อมูลธนาคารให้ครบถ้วนทุกช่อง', false);
+            }
         }
 
         function masterApproveUser(id) {
@@ -1727,6 +1692,111 @@
             document.getElementById(id).classList.add('hidden');
         }
     </script>
+
+<!-- FDG SYSTEM STATUS / VERSION -->
+<div id="fdgSystemStatus" style="
+position:fixed;left:14px;bottom:14px;z-index:99999;
+background:rgba(15,15,18,.94);border:1px solid rgba(255,255,255,.12);
+border-radius:12px;padding:9px 12px;color:#fff;font:12px/1.45 Arial,sans-serif;
+box-shadow:0 8px 30px rgba(0,0,0,.35);backdrop-filter:blur(8px);
+min-width:220px;">
+  <div style="font-weight:800">FDG BACK OFFICE <span style="opacity:.65">v1.1.1</span></div>
+  <div id="fdgBackendStatus">⏳ กำลังตรวจสอบ Backend...</div>
+  <div id="fdgLastRefresh" style="opacity:.7">อัปเดตล่าสุด: —</div>
+</div>
+<script>
+(function(){
+  const ENDPOINT = "https://script.google.com/macros/s/AKfycbwaC3CneUid11YVt-pm-7_SBkMczYdPixDMvQmXclcCW8ZBEbs_sgi6BWAAOq8FHV4TAg/exec";
+  const VERSION = "v1.1.1";
+
+  window.FDG_ENDPOINT = ENDPOINT;
+  window.FDG_VERSION = VERSION;
+
+  function nowText(){
+    return new Intl.DateTimeFormat('th-TH',{
+      dateStyle:'short', timeStyle:'medium'
+    }).format(new Date());
+  }
+
+  function setStatus(icon,text){
+    const el=document.getElementById('fdgBackendStatus');
+    if(el) el.textContent=icon+' '+text;
+  }
+
+  function setRefresh(){
+    const el=document.getElementById('fdgLastRefresh');
+    if(el) el.textContent='อัปเดตล่าสุด: '+nowText();
+  }
+
+  async function checkBackend(){
+    setStatus('⏳','กำลังตรวจสอบ Google Apps Script...');
+    try{
+      const r=await fetch(ENDPOINT+'?action=ping&_='+Date.now(),{
+        method:'GET',
+        cache:'no-store'
+      });
+      const text=await r.text();
+      let data=null;
+      try{data=JSON.parse(text)}catch(e){}
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      if(!data || data.status!=='success') throw new Error(data?.message||'Backend ตอบกลับไม่ถูกต้อง');
+      setStatus('🟢','เชื่อมต่อ Google Apps Script แล้ว');
+      setRefresh();
+      return true;
+    }catch(err){
+      console.error('[FDG BACKEND]',err);
+      setStatus('🔴','เชื่อมต่อ Backend ไม่สำเร็จ');
+      return false;
+    }
+  }
+
+  window.FDG_REFRESH_REAL_DATA = async function(){
+    setStatus('⏳','กำลัง Refresh ข้อมูลจาก Google Sheets...');
+    try{
+      const r=await fetch(ENDPOINT+'?action=getAllData&token='+
+        encodeURIComponent(window.FDG_TOKEN||'')+'&_='+Date.now(),{
+        method:'GET',cache:'no-store'
+      });
+      const text=await r.text();
+      let data=null;
+      try{data=JSON.parse(text)}catch(e){}
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      if(!data || data.status!=='success')
+        throw new Error(data?.message||'ดึงข้อมูลไม่สำเร็จ');
+
+      // เก็บข้อมูลจริงไว้ให้ระบบเดิมนำไปใช้ได้
+      window.FDG_REAL_DATA=data;
+      window.dispatchEvent(new CustomEvent('fdg:refresh',{
+        detail:data
+      }));
+
+      setStatus('🟢','Refresh จาก Google Sheets สำเร็จ');
+      setRefresh();
+      return data;
+    }catch(err){
+      console.error('[FDG REFRESH]',err);
+      setStatus('🔴','Refresh ไม่สำเร็จ: '+err.message);
+      throw err;
+    }
+  };
+
+  // ช่วยระบบเดิม: หากมีปุ่ม refresh อยู่ ให้ผูกเข้ากับ Backend จริง
+  document.addEventListener('click',function(e){
+    const el=e.target.closest(
+      '[data-action="refresh"],#refreshBtn,#refreshDataBtn,.refresh-btn'
+    );
+    if(el){
+      e.preventDefault();
+      window.FDG_REFRESH_REAL_DATA().catch(()=>{});
+    }
+  });
+
+  window.addEventListener('load',function(){
+    checkBackend();
+  });
+})();
+</script>
+
 </body>
 </html>
 </body></html>
