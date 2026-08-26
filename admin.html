@@ -21,6 +21,10 @@
         @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
     </style>
 <meta name="fdg-build" content="v1.2.0-live-sync">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body class="bg-gray-100 font-sans antialiased text-gray-800">
 
@@ -75,7 +79,7 @@
             </button>
             
             <h2 id="login-title" class="text-2xl font-bold text-center mt-4 mb-2">เข้าสู่ระบบ</h2>
-            <p class="text-xs text-gray-400 text-center mb-6" id="login-subtitle">กรอกข้อมูลผู้ใช้งานเพื่อยืนยันตัวตน</p>
+            <p class="text-xs text-gray-400 text-center mb-6" id="login-subtitle">กรอกข้อมูลผู้ใช้งานเพื่อยืนยันตัวตน · FDG v1.6.0</p>
 
             <div class="space-y-4">
                 <div>
@@ -222,6 +226,8 @@
                     <span id="badge-slip-count" class="bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
                 </a>
                 <a href="#" onclick="showAdminTab('remit')" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2"><i data-lucide="banknote"></i> ตรวจสลิปเงินสดค้างส่ง</a>
+                <a href="#" onclick="showAdminTab('payroll')" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2"><i data-lucide="wallet-cards"></i> เงินเดือน & คอมมิชชั่น</a>
+                <a href="#" onclick="openLogModal();loadServerLogs()" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2 text-cyan-300"><i data-lucide="scroll-text"></i> SYSTEM LOG</a>
             </nav>
             <div class="p-4 border-t border-slate-800">
                 <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 p-2 rounded font-bold text-sm">ออกจากระบบ</button>
@@ -261,6 +267,7 @@
                         <span id="latest-update-text" class="text-sm font-semibold text-blue-700">ยังไม่ได้ Refresh</span>
                     </div>
 
+                    <div class="bg-slate-900 text-white rounded-xl p-4"><div class="flex justify-between items-center mb-2"><b>System Log ล่าสุด</b><button onclick="openLogModal();loadServerLogs()" class="bg-cyan-600 px-3 py-1 rounded-lg text-xs font-bold">ดู/คัดลอก LOG</button></div><div id="fdg-log-preview" class="max-h-40 overflow-y-auto"></div></div>
                     <!-- ส่วนแสดงข้อมูลวงเงินลงทุนสำหรับ Master และ Admin -->
                     <div class="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
@@ -420,6 +427,7 @@
                             </select>
                             <input type="text" id="new-user-username" placeholder="Username" class="p-2 border rounded text-sm">
                             <input type="password" id="new-user-password" placeholder="Password" class="p-2 border rounded text-sm">
+                            <input type="number" id="new-user-salary" placeholder="เงินเดือน Admin (บาท)" min="0" class="p-2 border rounded text-sm">
                             <input type="text" id="new-user-bankname" placeholder="ชื่อธนาคาร (เช่น กสิกร, ไทยพาณิชย์)" class="p-2 border rounded text-sm">
                             <input type="text" id="new-user-bankacc" placeholder="เลขบัญชีธนาคาร" class="p-2 border rounded text-sm">
                             <textarea id="new-user-address" placeholder="ที่อยู่ปัจจุบัน" class="p-2 border rounded text-sm md:col-span-2" rows="2"></textarea>
@@ -471,10 +479,33 @@
                     </div>
                 </div>
 
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <div class="p-4 border-b font-bold text-gray-700">คำขอลบบัญชี (Master ต้องยืนยัน)</div>
+                    <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="p-3">ชื่อ</th><th class="p-3">ประเภท</th><th class="p-3">ผู้ขอ</th><th class="p-3">เวลา</th><th class="p-3">จัดการ</th></tr></thead><tbody id="master-delete-list"></tbody></table></div>
+                </div>
+
                 <!-- Tab 5: Admin Slip Verification -->
                 <div id="admin-tab-slips" class="hidden space-y-4">
                     <h2 class="text-2xl font-bold">ตรวจสอบสลิปโอนเงินของลูกค้า (QR Code)</h2>
                     <div id="admin-customer-slips-list" class="space-y-3"></div>
+                </div>
+
+                <div id="admin-tab-payroll" class="hidden space-y-6">
+                    <div class="flex justify-between items-center"><h2 class="text-2xl font-bold">เงินเดือน & คอมมิชชั่น</h2><span class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold">Rider 7%</span></div>
+                    <div class="bg-white p-5 rounded-xl shadow space-y-4">
+                        <div class="grid md:grid-cols-4 gap-3">
+                            <select id="pay-user" class="p-3 border rounded-lg"></select>
+                            <input id="pay-month" type="number" min="1" max="12" class="p-3 border rounded-lg" placeholder="เดือน">
+                            <input id="pay-year" type="number" class="p-3 border rounded-lg" placeholder="ปี ค.ศ.">
+                            <input id="pay-base" type="number" min="0" class="p-3 border rounded-lg" placeholder="เงินเดือน Admin">
+                        </div>
+                        <div class="grid md:grid-cols-3 gap-3">
+                            <div class="bg-indigo-50 p-3 rounded-lg"><div class="text-xs text-indigo-700">คอมมิชชั่น Rider 7%</div><b id="pay-commission">0.00 ฿</b></div>
+                            <div class="bg-emerald-50 p-3 rounded-lg"><div class="text-xs text-emerald-700">รวมจ่าย</div><b id="pay-total">0.00 ฿</b></div>
+                            <button onclick="createPayrollFromUI()" class="bg-indigo-600 text-white rounded-lg font-bold">บันทึกเงินเดือนรอบนี้</button>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow overflow-hidden"><div class="p-4 font-bold border-b">ประวัติการจ่ายเงินเดือน</div><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3">พนักงาน</th><th class="p-3">งวด</th><th class="p-3">ฐาน</th><th class="p-3">คอมฯ</th><th class="p-3">รวม</th><th class="p-3">สถานะ</th><th class="p-3">จัดการ</th></tr></thead><tbody id="payroll-list"></tbody></table></div></div>
                 </div>
 
                 <!-- Tab 6: Remittance Check -->
@@ -693,10 +724,15 @@
         let activeAdminSlipCustId = null;
 
         // Google Apps Script Endpoint URL
-        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzoEm4AoO1GlB_0V5SK7TfIeOnZCvq4EU7zmT4iW1ljyk4sgYu4rDPWykDacvMVW1zjIA/exec"
+        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzoEm4AoO1GlB_0V5SK7TfIeOnZCvq4EU7zmT4iW1ljyk4sgYu4rDPWykDacvMVW1zjIA/exec";
 
         let authToken = '';
         let backendLastUpdated = '';
+        const FDG_VERSION = '1.6.0';
+        let systemLogs = [];
+        let payroll = [];
+        let deleteRequests = [];
+        let commissionLedger = [];
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
@@ -716,6 +752,8 @@
                 }
             }, 50);
         });
+
+        document.addEventListener('change', e => { if(['pay-user','pay-month','pay-year','pay-base'].includes(e.target?.id)) updatePayrollPreview(); });
 
         function showToast(msg, isSuccess = true) {
             const toast = document.getElementById('toast');
@@ -755,18 +793,21 @@
             }
 
             try {
+                addClientLog('INFO','login','กำลังตรวจสอบบัญชี',{targetRole:targetLoginRole});
                 showToast('กำลังตรวจสอบบัญชี...', true);
                 const result = await gasPost('login', { role: targetLoginRole, username: userInp, password: passInp });
                 if (!result || result.status !== 'success') {
+                    addClientLog('ERROR','login',result && result.message ? result.message : 'เข้าสู่ระบบไม่สำเร็จ');
                     showToast(result && result.message ? result.message : 'เข้าสู่ระบบไม่สำเร็จ', false);
                     return;
                 }
 
                 authToken = result.token;
+                addClientLog('INFO','login','Login สำเร็จ',{isMaster:!!result.isMaster,role:result.user?.role});
                 isMaster = !!result.isMaster;
                 currentUser = result.user;
                 await refreshFromGoogleSheets(false);
-                currentUser = users.find(u => String(u.id) === String(result.user.id)) || result.user;
+                currentUser = result.isMaster ? result.user : (users.find(u => String(u.id) === String(result.user.id)) || result.user);
                 isMaster = !!result.isMaster;
                 showToast(isMaster ? 'เข้าสู่ระบบ Master สำเร็จ' : `ยินดีต้อนรับ ${currentUser.name}`, true);
                 openDashboard(isMaster ? 'admin' : currentUser.role);
@@ -787,7 +828,7 @@
         async function gasPost(action, payload = {}) {
             const response = await fetch(GAS_ENDPOINT, {
                 method: 'POST',
-                body: JSON.stringify(Object.assign({ action }, payload)),
+                body: JSON.stringify(Object.assign({ action, clientVersion: FDG_VERSION }, payload)),
                 cache: 'no-store'
             });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -806,6 +847,42 @@
             el.innerText = isNaN(d.getTime()) ? String(backendLastUpdated) : d.toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'medium' });
         }
 
+        function addClientLog(level, action, message, details={}) {
+            const entry = { timestamp:new Date().toISOString(), level, action, userId:currentUser?.id||'', userName:currentUser?.name||'', role:currentUser?.role||'', message, details:JSON.stringify(details), success:level!=='ERROR', clientVersion:FDG_VERSION, requestId:'' };
+            systemLogs = [entry].concat(systemLogs || []).slice(0,200);
+            renderLogPreview();
+        }
+
+        function renderLogPreview() {
+            const box=document.getElementById('fdg-log-preview');
+            if(!box)return;
+            box.innerHTML=(systemLogs||[]).slice(0,20).map(l=>{
+                const t=new Date(l.timestamp); const ts=isNaN(t)?l.timestamp:t.toLocaleString('th-TH');
+                const cls=l.level==='ERROR'?'text-red-600':l.level==='WARN'?'text-amber-600':'text-emerald-600';
+                return `<div class="border-b py-2 text-xs"><span class="${cls} font-bold">[${l.level||'INFO'}]</span> <span class="text-gray-400">${ts}</span> <b>${l.action||''}</b> — ${l.message||''}</div>`;
+            }).join('') || '<div class="text-xs text-gray-400 p-3">ยังไม่มี LOG</div>';
+        }
+
+        async function loadServerLogs() {
+            try {
+                const r=await gasPost('getLogs',{token:authToken,limit:200});
+                if(r.status==='success') { systemLogs=r.logs||[]; renderLogPreview(); }
+            } catch(e) { addClientLog('ERROR','getLogs','โหลด LOG จาก Server ไม่สำเร็จ',{error:e.message}); }
+        }
+
+        function openLogModal(){
+            const modal=document.getElementById('fdg-log-modal');
+            if(!modal)return;
+            const text=(systemLogs||[]).map(l=>JSON.stringify(l)).join('\n');
+            document.getElementById('fdg-log-copy-area').value=text;
+            modal.classList.remove('hidden');
+        }
+        function closeLogModal(){document.getElementById('fdg-log-modal')?.classList.add('hidden');}
+        async function copyLogs(){
+            const area=document.getElementById('fdg-log-copy-area');
+            try{await navigator.clipboard.writeText(area.value);showToast('คัดลอก LOG ทั้งหมดแล้ว',true);}catch(e){area.select();document.execCommand('copy');showToast('คัดลอก LOG แล้ว',true);}
+        }
+
         async function refreshFromGoogleSheets(showMessage = true) {
             if (!authToken) {
                 if (showMessage) showToast('กรุณาเข้าสู่ระบบก่อน Refresh ข้อมูล', false);
@@ -819,7 +896,7 @@
                     id:null,name:'',phone:'',address:'',bankName:'',bankAcc:'',
                     username:'',role:'',isApproved:true,status:'active',
                     isOnline:false,cashHold:0,qrHold:0,incomeYesterday:0,incomeToday:0,incomeMonth:0,salary:0
-                }, u));
+                }, u, { bankName: u.bankName || u.bankname || '', bankAcc: u.bankAcc || u.bankacc || '' }));
                 customers = (Array.isArray(data.customers) ? data.customers : []).map(c => Object.assign({
                     id:c.uid || c.id, _sheetUid:c.uid || c.id,
                     name:c.fullname || c.name || '', phone:c.phone || '',
@@ -829,10 +906,16 @@
                     payStatus:c.payStatus || 'pending', remark:c.remark || '', slipImage:c.slipImage || null
                 }, c));
                 transactions = Array.isArray(data.transactions) ? data.transactions : [];
+                payroll = Array.isArray(data.payroll) ? data.payroll : [];
+                commissionLedger = Array.isArray(data.commissionLedger) ? data.commissionLedger : [];
+                deleteRequests = Array.isArray(data.deleteRequests) ? data.deleteRequests : [];
+                systemLogs = Array.isArray(data.logs) ? data.logs : [];
                 remittances = Array.isArray(data.remittances) ? data.remittances : [];
                 remittanceHistory = Array.isArray(data.remittanceHistory) ? data.remittanceHistory : [];
                 companyInvestmentCapital = Number(data.companyInvestmentCapital || 0);
                 setLatestUpdate(data.lastUpdated || '');
+                addClientLog('INFO','refresh','โหลดข้อมูลจาก Google Sheets สำเร็จ',{users:users.length,customers:customers.length,transactions:transactions.length});
+                renderLogPreview();
 
                 if (currentUser && !isMaster) {
                     currentUser = users.find(u => String(u.id) === String(currentUser.id)) || currentUser;
@@ -843,7 +926,8 @@
                 return true;
             } catch (err) {
                 console.error(err);
-                if (showMessage) showToast('Refresh ไม่สำเร็จ: ไม่สามารถดึงข้อมูลจาก Google Sheets ได้', false);
+                if (showMessage) showToast('Refresh ไม่สำเร็จ: ' + (err.message || 'ไม่สามารถดึงข้อมูลจาก Google Sheets ได้'), false);
+                addClientLog('ERROR','refresh','Refresh failed',{error:err.message});
                 return false;
             }
         }
@@ -1529,14 +1613,10 @@
                         ${!u.isApproved ? '<br><span class="text-amber-500 text-xs">รออนุมัติ</span>' : ''}
                     </td>
                     <td class="p-3">
-                        ${isMaster ? `
-                            <div class="flex gap-1">
-                                ${u.status === 'active' ? 
-                                    `<button onclick="masterSuspendUser(${u.id})" class="bg-red-600 text-white text-xs px-2 py-1 rounded font-bold">ระงับบัญชี</button>` : 
-                                    `<button onclick="masterUnblockUser(${u.id})" class="bg-emerald-600 text-white text-xs px-2 py-1 rounded font-bold">ปลดระงับ</button>`
-                                }
-                            </div>
-                        ` : '<span class="text-xs text-gray-400">สิทธิ์ Master เท่านั้น</span>'}
+                        <div class="flex gap-1 flex-wrap">
+                            ${isMaster ? (u.status === 'active' ? `<button onclick="masterSuspendUser(${JSON.stringify(String(u.id))})" class="bg-red-600 text-white text-xs px-2 py-1 rounded font-bold">ระงับ</button>` : `<button onclick="masterUnblockUser(${JSON.stringify(String(u.id))})" class="bg-emerald-600 text-white text-xs px-2 py-1 rounded font-bold">ปลดระงับ</button>`) : ''}
+                            <button onclick="requestDeleteUser(${JSON.stringify(String(u.id))})" class="bg-gray-800 text-white text-xs px-2 py-1 rounded font-bold">ขอลบบัญชี</button>
+                        </div>
                     </td>
                 `;
                 userBody.appendChild(tr);
@@ -1557,8 +1637,8 @@
                     <td class="p-3"><span class="uppercase text-xs font-bold p-1 bg-gray-100 rounded">${u.role}</span></td>
                     <td class="p-3">${!u.isApproved ? '<span class="text-amber-500 font-bold">รอเปิดใช้งาน</span>' : '<span class="text-red-600 font-bold">ถูกระงับ</span>'}</td>
                     <td class="p-3 flex gap-2">
-                        ${!u.isApproved ? `<button onclick="masterApproveUser(${u.id})" class="bg-emerald-600 text-white text-xs px-2 py-1 rounded font-bold">อนุมัติสร้างบัญชี</button>` : ''}
-                        ${u.status === 'suspended' ? `<button onclick="masterUnblockUser(${u.id})" class="bg-indigo-600 text-white text-xs px-2 py-1 rounded font-bold">ปลดระงับบัญชี</button>` : ''}
+                        ${!u.isApproved ? `<button onclick="masterApproveUser(${JSON.stringify(String(u.id))})" class="bg-emerald-600 text-white text-xs px-2 py-1 rounded font-bold">อนุมัติสร้างบัญชี</button>` : ''}
+                        ${u.status === 'suspended' ? `<button onclick="masterUnblockUser(${JSON.stringify(String(u.id))})" class="bg-indigo-600 text-white text-xs px-2 py-1 rounded font-bold">ปลดระงับบัญชี</button>` : ''}
                     </td>
                 `;
                 approveBody.appendChild(tr);
@@ -1578,7 +1658,47 @@
                 `;
                 remitBox.appendChild(div);
             });
+            renderPayrollUI();
+            renderDeleteRequestsUI();
+            renderLogPreview();
             lucide.createIcons();
+        }
+
+        function renderDeleteRequestsUI(){
+            const b=document.getElementById('master-delete-list'); if(!b)return;
+            const pending=(deleteRequests||[]).filter(x=>String(x.status).toUpperCase()==='PENDING');
+            b.innerHTML=pending.length?pending.map(x=>`<tr class="border-b"><td class="p-3 font-bold">${x.targetName||'-'}</td><td class="p-3">${x.targetType||'-'}</td><td class="p-3">${x.requestedByName||'-'}</td><td class="p-3">${x.requestedAt||'-'}</td><td class="p-3">${isMaster?`<button onclick="approveDeleteRequest(${JSON.stringify(String(x.requestId))})" class="bg-red-600 text-white px-2 py-1 rounded mr-1">อนุมัติลบ</button><button onclick="rejectDeleteRequest(${JSON.stringify(String(x.requestId))})" class="bg-gray-600 text-white px-2 py-1 rounded">ไม่อนุมัติ</button>`:'<span class="text-gray-400">รอ Master</span>'}</td></tr>`).join(''):'<tr><td colspan="5" class="p-4 text-center text-gray-400">ไม่มีคำขอลบค้าง</td></tr>';
+        }
+
+        function renderPayrollUI(){
+            const sel=document.getElementById('pay-user'); if(!sel)return;
+            const admins=(users||[]).filter(u=>['admin','rider'].includes(String(u.role).toLowerCase()) && String(u.status).toLowerCase()!=='deleted');
+            sel.innerHTML=admins.map(u=>`<option value="${String(u.id)}">${u.name} (${String(u.role).toUpperCase()})</option>`).join('');
+            const now=new Date();
+            const m=document.getElementById('pay-month'), y=document.getElementById('pay-year');
+            if(m&&!m.value)m.value=now.getMonth()+1; if(y&&!y.value)y.value=now.getFullYear();
+            const u=admins.find(x=>String(x.id)===String(sel.value));
+            if(u&&document.getElementById('pay-base'))document.getElementById('pay-base').value=Number(u.salary||0);
+            const rows=(payroll||[]).slice().reverse(); const body=document.getElementById('payroll-list');
+            if(body)body.innerHTML=rows.map(p=>`<tr class="border-b"><td class="p-3 font-bold">${p.name||'-'}</td><td class="p-3">${p.periodMonth||'-'}/${p.periodYear||'-'}</td><td class="p-3">${Number(p.baseSalary||0).toLocaleString()} ฿</td><td class="p-3">${Number(p.commissionAmount||0).toLocaleString()} ฿</td><td class="p-3 font-bold">${Number(p.totalAmount||0).toLocaleString()} ฿</td><td class="p-3">${p.status||'-'}</td><td class="p-3">${isMaster&&String(p.status).toLowerCase()!=='paid'?`<button onclick="markPayrollPaidUI(${JSON.stringify(String(p.payrollId))})" class="bg-emerald-600 text-white px-2 py-1 rounded">ติ๊กว่าจ่ายแล้ว</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="p-4 text-center text-gray-400">ยังไม่มีรายการ</td></tr>';
+            updatePayrollPreview();
+        }
+        function updatePayrollPreview(){
+            const sel=document.getElementById('pay-user'); if(!sel)return; const u=users.find(x=>String(x.id)===String(sel.value));
+            const m=Number(document.getElementById('pay-month')?.value||new Date().getMonth()+1), y=Number(document.getElementById('pay-year')?.value||new Date().getFullYear());
+            const com=(commissionLedger||[]).filter(c=>String(c.riderId)===String(u?.id) && String(c.status||'').toLowerCase()!=='cancelled').filter(c=>{const d=new Date(c.date||c.createdAt);return d.getMonth()+1===m&&d.getFullYear()===y;}).reduce((a,c)=>a+Number(c.commissionAmount||0),0);
+            const base=Number(document.getElementById('pay-base')?.value||u?.salary||0); const total=base+com;
+            if(document.getElementById('pay-commission'))document.getElementById('pay-commission').textContent=com.toLocaleString('th-TH',{minimumFractionDigits:2})+' ฿';
+            if(document.getElementById('pay-total'))document.getElementById('pay-total').textContent=total.toLocaleString('th-TH',{minimumFractionDigits:2})+' ฿';
+        }
+        async function createPayrollFromUI(){
+            if(!isMaster){showToast('เฉพาะ Master เท่านั้น',false);return;} const u=users.find(x=>String(x.id)===String(document.getElementById('pay-user')?.value)); if(!u)return;
+            updatePayrollPreview(); const m=Number(document.getElementById('pay-month').value),y=Number(document.getElementById('pay-year').value),base=Number(document.getElementById('pay-base').value||0);
+            const com=(commissionLedger||[]).filter(c=>String(c.riderId)===String(u.id)).filter(c=>{const d=new Date(c.date||c.createdAt);return d.getMonth()+1===m&&d.getFullYear()===y;}).reduce((a,c)=>a+Number(c.commissionAmount||0),0);
+            try{const r=await gasPost('createPayroll',{token:authToken,fields:{userId:u.id,periodMonth:m,periodYear:y,baseSalary:u.role==='admin'?base:0,commissionAmount:com}});if(r.status!=='success')throw new Error(r.message||'บันทึกไม่สำเร็จ');await refreshFromGoogleSheets(false);showToast('บันทึกเงินเดือนสำเร็จ',true);}catch(e){addClientLog('ERROR','createPayroll',e.message);showToast('บันทึกเงินเดือนไม่สำเร็จ: '+e.message,false);}
+        }
+        async function markPayrollPaidUI(payrollId){
+            try{const method=prompt('ช่องทางการจ่าย เช่น โอนธนาคาร / เงินสด:','โอนธนาคาร')||'manual';const ref=prompt('เลขอ้างอิง/หมายเหตุ:','')||'';const r=await gasPost('markPayrollPaid',{token:authToken,payrollId,paymentMethod:method,reference:ref});if(r.status!=='success')throw new Error(r.message||'บันทึกไม่สำเร็จ');await refreshFromGoogleSheets(false);showToast('บันทึกสถานะจ่ายแล้ว',true);}catch(e){addClientLog('ERROR','markPayrollPaid',e.message);showToast('บันทึกการจ่ายไม่สำเร็จ: '+e.message,false);}
         }
 
         async function addNewLoanCustomer() {
@@ -1745,6 +1865,7 @@
             const bankname = document.getElementById('new-user-bankname').value.trim();
             const bankacc = document.getElementById('new-user-bankacc').value.trim();
             const address = document.getElementById('new-user-address').value.trim();
+            const salary = Number(document.getElementById('new-user-salary').value || 0);
 
             if (!(fullname && phone && username && password && bankname && bankacc && address)) {
                 showToast('กรุณากรอกข้อมูลส่วนตัว, ที่อยู่ และข้อมูลธนาคารให้ครบถ้วนทุกช่อง', false);
@@ -1764,19 +1885,42 @@
                         bankname: bankname,
                         bankacc: bankacc,
                         address: address,
+                        salary: role === 'admin' ? salary : 0,
                         isApproved: true,
                         status: 'active'
                     }
                 });
                 if (result.status !== 'success') throw new Error(result.message || 'สร้างบัญชีไม่สำเร็จ');
                 await refreshFromGoogleSheets(false);
-                ['new-user-fullname','new-user-phone','new-user-username','new-user-password','new-user-bankname','new-user-bankacc','new-user-address'].forEach(id => document.getElementById(id).value = '');
+                ['new-user-fullname','new-user-phone','new-user-username','new-user-password','new-user-bankname','new-user-bankacc','new-user-address','new-user-salary'].forEach(id => document.getElementById(id).value = '');
                 showToast('สร้างบัญชีพนักงานเรียบร้อย (รอ Master อนุมัติการใช้งาน)', true);
                 renderAdmin();
             } catch (err) {
                 console.error(err);
                 showToast('สร้างบัญชีพนักงานไม่สำเร็จ', false);
             }
+        }
+
+        async function requestDeleteUser(id){
+            if(!authToken)return;
+            const u=users.find(x=>String(x.id)===String(id)); if(!u)return;
+            if(!confirm(`ยืนยันส่งคำขอลบบัญชี ${u.name} ให้ Master ตรวจสอบ?`))return;
+            try{
+                const r=await gasPost('requestDelete',{token:authToken,targetId:String(id),targetType:u.role});
+                if(r.status!=='success')throw new Error(r.message||'ส่งคำขอไม่สำเร็จ');
+                addClientLog('INFO','requestDelete','ส่งคำขอลบบัญชีแล้ว',{targetId:id,targetName:u.name});
+                await refreshFromGoogleSheets(false); showToast('ส่งคำขอลบให้ Master แล้ว',true); renderAdmin();
+            }catch(e){addClientLog('ERROR','requestDelete',e.message);showToast('ส่งคำขอลบไม่สำเร็จ: '+e.message,false);}
+        }
+
+        async function approveDeleteRequest(requestId){
+            if(!isMaster)return;
+            try{const r=await gasPost('approveDelete',{token:authToken,requestId}); if(r.status!=='success')throw new Error(r.message||'อนุมัติไม่สำเร็จ'); addClientLog('INFO','approveDelete','Master อนุมัติการลบบัญชีแล้ว',{requestId}); await refreshFromGoogleSheets(false); renderAdmin();}catch(e){addClientLog('ERROR','approveDelete',e.message);showToast('อนุมัติลบไม่สำเร็จ: '+e.message,false);}
+        }
+        async function rejectDeleteRequest(requestId){
+            if(!isMaster)return;
+            const reason=prompt('เหตุผลที่ไม่อนุมัติ (ถ้ามี):','');
+            try{const r=await gasPost('rejectDelete',{token:authToken,requestId,reason:reason||''}); if(r.status!=='success')throw new Error(r.message||'ปฏิเสธไม่สำเร็จ'); addClientLog('INFO','rejectDelete','Master ปฏิเสธคำขอลบแล้ว',{requestId}); await refreshFromGoogleSheets(false); renderAdmin();}catch(e){addClientLog('ERROR','rejectDelete',e.message);showToast('ปฏิเสธคำขอลบไม่สำเร็จ: '+e.message,false);}
         }
 
         async function masterApproveUser(id) {
@@ -1865,6 +2009,7 @@
             document.getElementById('admin-tab-approve').classList.add('hidden');
             document.getElementById('admin-tab-slips').classList.add('hidden');
             document.getElementById('admin-tab-remit').classList.add('hidden');
+            document.getElementById('admin-tab-payroll').classList.add('hidden');
             document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
             if (window.innerWidth < 768) toggleSidebar();
         }
@@ -1873,5 +2018,26 @@
             document.getElementById(id).classList.add('hidden');
         }
     </script>
+
+    <div id="fdg-log-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[100] p-4 flex items-center justify-center">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+        <div class="p-4 border-b flex items-center justify-between"><div><b>SYSTEM LOG</b><div class="text-xs text-gray-500">FDG v1.6.0 — คัดลอกส่งให้ผู้พัฒนาได้ทันที</div></div><div class="flex gap-2"><button onclick="copyLogs()" class="bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold">📋 คัดลอก LOG</button><button onclick="closeLogModal()" class="bg-gray-200 px-3 py-2 rounded-lg">ปิด</button></div></div>
+        <textarea id="fdg-log-copy-area" class="flex-1 min-h-[55vh] p-4 font-mono text-xs outline-none" readonly></textarea>
+      </div>
+    </div>
+    <div id="fdg-system-status" class="fixed bottom-3 left-3 z-[90] bg-slate-900 text-white rounded-xl shadow-lg px-3 py-2 text-xs flex items-center gap-3"><b>FDG v1.6.0</b><span id="fdg-log-status">LOG พร้อมใช้งาน</span><button onclick="openLogModal();loadServerLogs()" class="text-cyan-300 font-bold">LOG</button></div>
+
+<button id="fdg-install-btn" onclick="fdgInstallApp()" class="hidden fixed bottom-16 right-3 z-[90] bg-emerald-600 text-white px-4 py-2 rounded-xl shadow-lg font-bold text-xs">📲 ติดตั้งลงมือถือ</button>
+
+<script>
+(function(){
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('SW registration failed',e));}
+ let deferredPrompt=null;
+ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;let b=document.getElementById('fdg-install-btn');if(b)b.classList.remove('hidden');});
+ window.fdgInstallApp=async function(){if(!deferredPrompt){showToast('เบราว์เซอร์นี้ยังไม่แสดงตัวเลือกติดตั้ง ให้ใช้เมนู เพิ่มไปยังหน้าจอหลัก',false);return;}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;};
+ window.addEventListener('appinstalled',()=>{const b=document.getElementById('fdg-install-btn');if(b)b.classList.add('hidden');showToast('ติดตั้งเว็บแอปเรียบร้อย',true);});
+})();
+</script>
+
 </body>
 </html>
