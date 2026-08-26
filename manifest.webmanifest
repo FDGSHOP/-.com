@@ -1,0 +1,9 @@
+{
+  "name":"FDG Back Office",
+  "short_name":"FDG Admin",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#0f172a",
+  "theme_color":"#0f172a",
+  "description":"FDG Back Office management system"
+}
