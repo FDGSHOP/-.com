@@ -1,1045 +1,2203 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>สินเชื่อเพื่อคนพะเยา</title>
-  
-  <!-- PWA Metadata -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1e5bb8">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/10178/10178971.png">
-
-  <!-- Framework & Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  
-  <style>
-    :root { --main-blue: #1e5bb8; --bg-gray: #f4f6fb; }
-    body { background-color: var(--bg-gray); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-bottom: 90px; user-select: none; }
-    .top-bar { background: var(--main-blue); color: white; padding: 12px 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .card-box { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .upload-zone { position: relative; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; background: #f8fafc; cursor: pointer; }
-    .btn-remove-img { position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; cursor: pointer; z-index: 10; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    .btn-main { background: var(--main-blue); color: white; border-radius: 25px; padding: 12px; font-weight: bold; width: 100%; border: none; }
-    .btn-main:disabled { background: #94a3b8; }
-    
-    /* สไตล์สัญญา A4 */
-    .a4-paper { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); font-size: 13px; line-height: 1.6; color: #1e293b; }
-    .signature-pad { border: 2px dashed #cbd5e1; border-radius: 8px; background: #fff; touch-action: none; width: 100%; height: 120px; }
-    
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; color: #94a3b8; display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; border-top-left-radius: 16px; border-top-right-radius: 16px; }
-    .nav-item-btn { text-align: center; font-size: 11px; cursor: pointer; color: #94a3b8; }
-    .nav-item-btn.active { color: #38bdf8; font-weight: bold; }
-    .page-section { display: none; }
-    .page-section.active { display: block; }
-    .extra-small { font-size: 11px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบริหารจัดการยอดชำระ & ไรเดอร์ (Master & Admin Pro - Updated)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        .checkmark-circle {
+            width: 80px; height: 80px; border-radius: 50%; display: stroke;
+            stroke-width: 3; stroke: #22c55e; stroke-miterlimit: 10;
+            box-shadow: inset 0px 0px 0px #22c55e;
+            animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+        }
+        .checkmark-check {
+            transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48;
+            animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+        @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+    </style>
+<meta name="fdg-build" content="v1.7.1-fast-sync-lock">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
-<body>
+<body class="bg-gray-100 font-sans antialiased text-gray-800">
 
-  <!-- Top Bar & ปุ่ม PWA -->
-  <div class="top-bar">
-    <div><i class="bi bi-wallet2 me-1 text-warning"></i> สินเชื่อเพื่อคนพะเยา</div>
-    <button id="btnPwaInstall" class="btn btn-sm btn-warning fw-bold rounded-pill" onclick="installPWA()">
-      <i class="bi bi-download"></i> ติดตั้งแอป
-    </button>
-  </div>
-
-  <div class="container py-3">
-
-    <!-- PAGE 1: คำนวณยอดและกรอกข้อมูลเบื้องต้น -->
-    <div id="page-select" class="page-section active">
-      <div id="activeContractAlert" class="alert alert-warning fw-bold small d-none mb-3">
-        <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> ท่านมีสัญญาที่กำลังผ่อนชำระอยู่ ไม่สามารถยื่นกู้ซ้ำได้จนกว่าจะปิดสัญญาเดิม
-      </div>
-
-      <div class="card-box bg-primary text-white text-center p-3">
-        <div class="small opacity-75">ตารางคำนวณยอดชำระแบบประมาณการ</div>
-        <div class="h2 fw-bold my-1" id="calcDisplayAmount">฿ 3,000</div>
-        <div class="small text-warning" id="calcDisplaySummary">จ่ายวันละ ฿ 120.00 (30 งวด / ดอกเบี้ย 20%)</div>
-      </div>
-
-      <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-calculator text-primary me-1"></i>เงื่อนไขการขอสินเชื่อ</h6>
-        
-        <div class="mb-3">
-          <label class="small fw-bold">1. วงเงินกู้ที่ต้องการ:</label>
-          <select id="selectAmount" class="form-select fw-bold text-primary" onchange="calculateLoan()">
-            <option value="1000">1,000 บาท</option>
-            <option value="2000">2,000 บาท</option>
-            <option value="3000" selected>3,000 บาท</option>
-            <option value="5000">5,000 บาท</option>
-            <option value="10000">10,000 บาท</option>
-          </select>
+    <!-- PRELOADER SCREEN -->
+    <div id="preloader" class="fixed inset-0 bg-slate-900 z-50 flex flex-col justify-center items-center text-white">
+        <div id="loading-box" class="flex flex-col items-center space-y-4">
+            <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            <div class="text-3xl font-bold tracking-wider" id="loader-percent">0%</div>
+            <p class="text-sm text-gray-400">กำลังโหลดระบบ...</p>
         </div>
-
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <label class="small fw-bold">2. ระยะเวลากู้:</label>
-            <select id="selectDays" class="form-select" onchange="calculateLoan()">
-              <option value="7">7 วัน</option>
-              <option value="15">15 วัน</option>
-              <option value="30" selected>30 วัน</option>
-            </select>
-          </div>
-          <div class="col-6">
-            <label class="small fw-bold">3. รอบชำระเงิน:</label>
-            <select id="selectFreq" class="form-select" onchange="calculateLoan()">
-              <option value="1" selected>ชำระทุกวัน</option>
-              <option value="3">ชำระทุก 3 วัน</option>
-            </select>
-          </div>
+        <div id="success-box" class="hidden flex-col items-center space-y-4">
+            <svg class="checkmark-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark-circle" cx="26" cy="26" r="23" fill="none"/>
+                <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            <span class="text-xl font-bold text-emerald-500">โหลดระบบสำเร็จ!</span>
         </div>
-
-        <button id="btnNextToForm" class="btn-main mt-2" onclick="switchTab('page-form')">ถัดไป: กรอกข้อมูลผู้กู้</button>
-      </div>
     </div>
 
-    <!-- PAGE 2: กรอกข้อมูล + พิกัด GPS + ที่อยู่พะเยา -->
-    <div id="page-form" class="page-section">
-      <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-person-vcard text-primary me-1"></i>ข้อมูลผู้ขอสินเชื่อ</h6>
+    <!-- GLOBAL ACTION SYNC / DUPLICATE-CLICK LOCK -->
+    <div id="fdg-action-loader" class="hidden fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-[2px] flex items-center justify-center p-4" aria-live="polite" aria-busy="false">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-7 text-center">
+            <div class="w-16 h-16 mx-auto border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            <div id="fdg-action-percent" class="text-3xl font-extrabold text-slate-800 mt-5">0%</div>
+            <div id="fdg-action-title" class="font-bold text-slate-800 mt-2">กำลังดำเนินการ...</div>
+            <div id="fdg-action-detail" class="text-xs text-slate-500 mt-1">กรุณารอ ระบบกำลังบันทึกและซิงก์ข้อมูล</div>
+            <div class="mt-5 w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                <div id="fdg-action-progress" class="h-full bg-indigo-600 rounded-full transition-[width] duration-150" style="width:0%"></div>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-3">ห้ามกดซ้ำ ระบบจะปลดล็อกอัตโนมัติเมื่อเสร็จสิ้น</div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full transition-transform duration-300 ease-in-out max-w-sm w-full bg-white border-l-4 p-4 rounded-lg shadow-xl flex items-center space-x-3 hidden">
+        <div id="toast-icon"></div>
+        <div id="toast-message" class="text-sm font-semibold"></div>
+    </div>
+
+    <!-- 1. PORTAL LANDING -->
+    <div id="portal-screen" class="hidden min-h-screen flex flex-col justify-center items-center p-4">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-800">ระบบบริหารจัดการไรเดอร์ & ยอดชำระ</h1>
+            <p class="text-gray-500 text-sm mt-1">กรุณาเลือกระบบที่ต้องการเข้าใช้งาน</p>
+        </div>
         
-        <div class="mb-2">
-          <label class="small text-muted">ชื่อ - นามสกุลผู้กู้ *</label>
-          <input type="text" id="inpName" class="form-control form-control-sm" placeholder="นายสมชาย ค้าขายดี" onchange="autoSave()">
-        </div>
-
-        <div class="mb-2">
-          <label class="small text-muted">เลขบัตรประชาชน (13 หลัก) *</label>
-          <input type="text" id="inpNationalID" class="form-control form-control-sm" maxlength="17" placeholder="X-XXXX-XXXXX-XX-X" oninput="formatNationalID(this)" onchange="autoSave()">
-        </div>
-
-        <div class="mb-3">
-          <label class="small text-muted">เบอร์โทรศัพท์มือถือ (10 หลัก) *</label>
-          <input type="tel" id="inpPhone" class="form-control form-control-sm" maxlength="12" placeholder="0XX-XXX-XXXX" oninput="formatPhone(this)" onchange="autoSave()">
-        </div>
-
-        <!-- ที่อยู่ปัจจุบัน -->
-        <div class="p-2 border rounded bg-light mb-3">
-          <div class="small fw-bold text-primary mb-1"><i class="bi bi-house-door-fill"></i> ที่อยู่ปัจจุบัน (จ.พะเยา)</div>
-          <input type="text" id="inpHomeAddr" class="form-control form-control-sm mb-2" placeholder="บ้านเลขที่ / หมู่บ้าน / ถนน" onchange="autoSave()">
-          <div class="row g-2">
-            <div class="col-6">
-              <select id="homeDistrict" class="form-select form-select-sm" onchange="updateSubDistricts('homeDistrict', 'homeSubDistrict'); autoSave();">
-                <option value="">-- เลือกอำเภอ --</option>
-              </select>
-            </div>
-            <div class="col-6">
-              <select id="homeSubDistrict" class="form-select form-select-sm" onchange="autoSave()">
-                <option value="">-- เลือกตำบล --</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- สถานที่ทำงาน & GPS Check-in -->
-        <div class="p-2 border border-warning rounded bg-warning bg-opacity-10 mb-3">
-          <div class="small fw-bold text-dark mb-1"><i class="bi bi-shop text-danger"></i> สถานที่ค้าขาย / หน้าร้าน</div>
-          <input type="text" id="inpShopName" class="form-control form-control-sm mb-2" placeholder="ชื่อร้าน / ตลาด / ที่ตั้งแผงค้าขาย" onchange="autoSave()">
-          <div class="row g-2 mb-2">
-            <div class="col-6">
-              <select id="workDistrict" class="form-select form-select-sm" onchange="updateSubDistricts('workDistrict', 'workSubDistrict'); autoSave();">
-                <option value="">-- เลือกอำเภอ --</option>
-              </select>
-            </div>
-            <div class="col-6">
-              <select id="workSubDistrict" class="form-select form-select-sm" onchange="autoSave()">
-                <option value="">-- เลือกตำบล --</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="input-group input-group-sm">
-            <input type="text" id="inpGps" class="form-control" placeholder="พิกัด GPS หน้าร้าน" readonly>
-            <button class="btn btn-outline-danger fw-bold" type="button" onclick="getCurrentLocation()">
-              <i class="bi bi-geo-alt-fill"></i> ปักหมุด GPS
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-xl">
+            <button onclick="openLogin('admin')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-8 rounded-2xl shadow-xl flex flex-col items-center space-y-3 transition transform hover:-translate-y-1">
+                <i data-lucide="shield-check" class="w-16 h-16"></i>
+                <span class="text-2xl">ADMIN / MASTER</span>
+                <span class="text-xs text-indigo-200">สำหรับผู้ดูแลระบบ และ เจ้าหน้าที่บริหาร</span>
             </button>
-          </div>
+            <button onclick="openLogin('rider')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold p-8 rounded-2xl shadow-xl flex flex-col items-center space-y-3 transition transform hover:-translate-y-1">
+                <i data-lucide="smartphone" class="w-16 h-16"></i>
+                <span class="text-2xl">RIDER APP</span>
+                <span class="text-xs text-emerald-200">สำหรับไรเดอร์ปฏิบัติงานเก็บเงิน</span>
+            </button>
         </div>
-
-        <!-- บัญชีรับเงิน -->
-        <div class="mb-2">
-          <label class="small text-muted">ธนาคารรับเงิน *</label>
-          <select id="inpBank" class="form-select form-select-sm" onchange="autoSave()">
-            <option value="">-- เลือกธนาคาร --</option>
-            <option value="กสิกรไทย">ธนาคารกสิกรไทย</option>
-            <option value="ไทยพาณิชย์">ธนาคารไทยพาณิชย์</option>
-            <option value="กรุงไทย">ธนาคารกรุงไทย</option>
-            <option value="กรุงเทพ">ธนาคารกรุงเทพ</option>
-            <option value="ออมสิน">ธนาคารออมสิน</option>
-            <option value="ธ.ก.ส.">ธนาคาร ธ.ก.ส.</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="small text-muted">เลขที่บัญชีธนาคาร *</label>
-          <input type="text" id="inpBankAcc" class="form-control form-control-sm" placeholder="ระบุเฉพาะตัวเลข" oninput="formatBankAcc(this)" onchange="autoSave()">
-        </div>
-
-        <button class="btn-main" onclick="goToUploadPage()">ถัดไป: แนบรูปภาพเอกสาร</button>
-      </div>
     </div>
 
-    <!-- PAGE 3: แนบเอกสาร + Watermark + ปุ่ม [X] -->
-    <div id="page-upload" class="page-section">
-      <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-camera-fill text-primary me-1"></i>แนบภาพถ่ายเอกสาร (ประทับลายน้ำอัตโนมัติ)</h6>
+    <!-- 2. LOGIN SCREEN -->
+    <div id="login-screen" class="hidden min-h-screen flex flex-col justify-center items-center p-4">
+        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md relative">
+            <button onclick="backToPortal()" class="absolute top-4 left-4 text-gray-500 hover:text-gray-800 flex items-center gap-1">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> ย้อนกลับ
+            </button>
+            
+            <h2 id="login-title" class="text-2xl font-bold text-center mt-4 mb-2">เข้าสู่ระบบ</h2>
+            <p class="text-xs text-gray-400 text-center mb-6" id="login-subtitle">กรอกข้อมูลผู้ใช้งานเพื่อยืนยันตัวตน · FDG v1.7.1</p>
 
-        <div class="mb-3">
-          <label class="small fw-bold text-muted mb-1">1. ถ่ายภาพหน้าบัตรประชาชน *</label>
-          <div class="upload-zone" id="zone1" onclick="document.getElementById('file1').click()">
-            <span id="label1" class="small text-muted"><i class="bi bi-card-heading fs-3 d-block"></i> แตะเพื่อเลือกภาพหน้าบัตร</span>
-            <img id="preview1" class="img-fluid d-none rounded" style="max-height: 140px;">
-            <div id="btnRemove1" class="btn-remove-img d-none" onclick="removeImage(event, 1)">✕</div>
-          </div>
-          <input type="file" id="file1" class="d-none" accept="image/*" onchange="processImageWithWatermark(this, 1)">
-        </div>
-
-        <div class="mb-3">
-          <label class="small fw-bold text-muted mb-1">2. ถ่ายรูปใบหน้าคู่กับบัตรประชาชน *</label>
-          <div class="upload-zone" id="zone2" onclick="document.getElementById('file2').click()">
-            <span id="label2" class="small text-muted"><i class="bi bi-person-bounding-box fs-3 d-block"></i> แตะเพื่อถ่ายรูปคู่บัตร</span>
-            <img id="preview2" class="img-fluid d-none rounded" style="max-height: 140px;">
-            <div id="btnRemove2" class="btn-remove-img d-none" onclick="removeImage(event, 2)">✕</div>
-          </div>
-          <input type="file" id="file2" class="d-none" accept="image/*" onchange="processImageWithWatermark(this, 2)">
-        </div>
-
-        <button class="btn-main" onclick="goToContractPage()">ถัดไป: ตรวจสอบและเซ็นสัญญา</button>
-      </div>
-    </div>
-
-    <!-- PAGE 3.5: สัญญาอิเล็กทรอนิกส์ A4 + ลายเซ็นดิจิทัล + PDPA -->
-    <div id="page-contract" class="page-section">
-      <div class="a4-paper mb-3">
-        <div class="text-center mb-3">
-          <h5 class="fw-bold mb-1">หนังสือสัญญากู้ยืมเงินอิเล็กทรอนิกส์</h5>
-          <div class="extra-small text-muted">โครงการสินเชื่อเพื่อคนพะเยา</div>
-          <hr class="my-2">
-        </div>
-
-        <div class="mb-2">
-          ข้าพเจ้า <strong id="docContractName" class="text-primary">-</strong> ถือบัตรประชาชนเลขที่ <span id="docContractID">-</span> 
-          ตกลงทำสัญญากู้ยืมเงินจำนวน <strong id="docContractAmount" class="text-danger">-</strong> บาท กับผู้ให้อยู่ภายใต้เงื่อนไขดอกเบี้ยและการผ่อนชำระตามที่ระบบกำหนด
-        </div>
-
-        <div class="mb-2">
-          ข้าพเจ้าขอรับรองว่าข้อมูล สถานที่ประกอบอาชีพ/หน้าร้าน และพิกัด GPS ที่ระบุไว้เป็นความจริงทุกประการ
-        </div>
-
-        <!-- ยินยอม PDPA -->
-        <div class="form-check my-3 border p-2 rounded bg-light">
-          <input class="form-check-input ms-1" type="checkbox" id="chkPdpa" onchange="toggleSubmitBtn()">
-          <label class="form-check-label extra-small text-dark ms-2 fw-bold" for="chkPdpa">
-            ข้าพเจ้ายินยอมให้ใช้ข้อมูลส่วนบุคคลและตำแหน่ง GPS เพื่อการพิจารณาสินเชื่อตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA)
-          </label>
-        </div>
-
-        <!-- ช่องเซ็นสัญญา A4 -->
-        <div class="border rounded p-2 bg-light text-center">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="extra-small fw-bold text-muted"><i class="bi bi-pencil-fill"></i> ลายมือชื่อผู้กู้ (เซ็นในกล่องด้านล่าง):</span>
-            <button class="btn btn-sm btn-link text-danger p-0 extra-small text-decoration-none" onclick="clearSignature()">ล้างลายเซ็น</button>
-          </div>
-          <canvas id="signaturePad" class="signature-pad mb-1"></canvas>
-          <div class="extra-small text-muted">(ลงลายมือชื่ออิเล็กทรอนิกส์เพื่อแนบในสัญญา A4)</div>
-        </div>
-      </div>
-
-      <button id="btnSubmitApp" class="btn-main" disabled onclick="submitApplication()">ยืนยันส่งข้อมูลสมัครสินเชื่อ</button>
-    </div>
-
-    <!-- PAGE 4: สถานะอนุมัติ -->
-    <div id="page-status" class="page-section">
-      <div class="card-box text-center py-4">
-        <div id="statusPendingBox">
-          <div class="spinner-border text-primary my-2" style="width: 3rem; height: 3rem;"></div>
-          <h5 class="fw-bold mt-2">อยู่ในระหว่างการพิจารณา</h5>
-          <p class="small text-muted">แอดมินกำลังตรวจสอบเอกสารและพิกัด GPS ร้านค้าของคุณ</p>
-          <div class="p-2 bg-light rounded mt-3 border">
-            <div class="extra-small text-dark fw-bold mb-2">[ จำลองการทำงานของแอดมิน ]</div>
-            <button class="btn btn-sm btn-success me-1 rounded-pill" onclick="return false" style="display:none">อนุมัติสัญญา</button>
-            <button class="btn btn-sm btn-danger rounded-pill" onclick="return false" style="display:none">ปฏิเสธคำขอ</button>
-          </div>
-        </div>
-
-        <div id="statusApprovedBox" class="d-none">
-          <i class="bi bi-check-circle-fill text-success display-1"></i>
-          <h4 class="fw-bold text-success mt-2">อนุมัติสัญญาเรียบร้อย!</h4>
-          <p class="small text-muted mb-3">ระบบกำลังดำเนินการโอนเงินเข้าบัญชีของคุณ</p>
-          <button class="btn-main" onclick="switchTab('page-payment')">ไปหน้าตารางส่งเงินรายวัน</button>
-        </div>
-
-        <div id="statusRejectedBox" class="d-none">
-          <i class="bi bi-x-circle-fill text-danger display-1"></i>
-          <h4 class="fw-bold text-danger mt-2">ไม่อนุมัติคำขอ</h4>
-          <p class="small text-muted mb-3">เนื่องจากข้อมูลไม่ผ่านเงื่อนไขการพิจารณา</p>
-          <button class="btn btn-outline-secondary rounded-pill" onclick="resetToReApply()">ลองยื่นใหม่อีกครั้ง</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- PAGE 5: ตารางส่งเงินรายวัน & Fox Server Time Check -->
-    <div id="page-payment" class="page-section">
-      <div class="card-box">
-        <h6 class="fw-bold mb-2"><i class="bi bi-receipt text-primary me-1"></i>ชำระค่างวดประจำวัน</h6>
-        
-        <!-- แจ้งเตือนเวลา Server -->
-        <div id="serverTimeBanner" class="p-2 bg-light border rounded mb-3 text-center extra-small">
-          <i class="bi bi-clock-history"></i> เวลา Server กลาง (Fox Check): <strong id="clockDisplay">กำลังโหลด...</strong>
-        </div>
-
-        <div class="p-3 bg-primary bg-opacity-10 rounded text-center mb-3">
-          <div class="small text-muted">ยอดค่างวดปกติ (เงินต้น + ดอกเบี้ย)</div>
-          <div class="h3 fw-bold text-primary my-1" id="payAmountDue">฿ 120.00</div>
-          <div class="extra-small text-muted">ยอดเฉพาะดอกเบี้ย (ดอกลอย): <strong id="payInterestOnly" class="text-danger">฿ 20.00</strong></div>
-        </div>
-
-        <!-- ตัวเลือกรูปแบบการชำระเงิน -->
-        <div class="mb-3">
-          <label class="small fw-bold text-muted mb-1">เลือกรูปแบบการชำระเงิน:</label>
-          <div class="form-check border p-2 rounded mb-2">
-            <input class="form-check-input ms-1" type="radio" name="payType" id="payFull" value="FULL" checked onchange="updatePaySummary()">
-            <label class="form-check-label small fw-bold ms-2" for="payFull">
-              ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)
-            </label>
-          </div>
-          <div class="form-check border p-2 rounded">
-            <input class="form-check-input ms-1" type="radio" name="payType" id="payInterest" value="INTEREST" onchange="updatePaySummary()">
-            <label class="form-check-label small fw-bold ms-2 text-danger" for="payInterest">
-              ชำระเฉพาะดอกเบี้ย (ดอกลอย - ไม่ตัดเงินต้น)
-            </label>
-          </div>
-        </div>
-
-        <!-- สรุปยอดก่อนสร้าง QR -->
-        <div class="p-2 bg-warning bg-opacity-10 border border-warning rounded mb-3 extra-small">
-          <div class="d-flex justify-content-between mb-1">
-            <span>ยอดชำระที่เลือก:</span>
-            <strong id="summaryBasePay">฿ 120.00</strong>
-          </div>
-          <div class="d-flex justify-content-between mb-1 text-danger" id="rowFine" style="display: none;">
-            <span>ค่าปรับส่งเกินเวลา (หลัง 18:00 น.):</span>
-            <strong id="summaryFine">฿ 50.00</strong>
-          </div>
-          <div id="fineReasonText" class="text-danger fw-bold my-1" style="display: none;">
-            * เหตุผลค่าปรับ: ส่งสลิปชำระเงินเกินเวลา 18:00 น. ของวัน (ตรวจโดย Server)
-          </div>
-          <hr class="my-1">
-          <div class="d-flex justify-content-between fw-bold fs-6 text-dark">
-            <span>รวมยอดชำระสุทธิ:</span>
-            <span class="text-primary" id="summaryTotalPay">฿ 120.00</span>
-          </div>
-        </div>
-
-        <button class="btn-main mb-3" onclick="openQrModal()"><i class="bi bi-qr-code-scan me-1"></i> กดชำระเงิน (สร้าง PromptPay QR)</button>
-      </div>
-    </div>
-
-    <!-- PAGE 6: โปรไฟล์ + UID + ประวัติชำระเงิน + ใบเสร็จ -->
-    <div id="page-profile" class="page-section">
-      <div class="card-box">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="fw-bold m-0"><i class="bi bi-person-badge-fill text-primary me-1"></i>ข้อมูลโปรไฟล์ผู้กู้</h6>
-          <span class="badge bg-secondary" id="profUid">UID: PY-0000</span>
-        </div>
-        <div class="small mb-1"><strong>ชื่อ-นามสกุล:</strong> <span id="profName">-</span></div>
-        <div class="small mb-1"><strong>เบอร์โทรศัพท์:</strong> <span id="profPhone">-</span></div>
-        <div class="small mb-1"><strong>เลขบัตรประชาชน:</strong> <span id="profID">-</span></div>
-        <div class="small mb-1"><strong>สถานะสัญญา:</strong> <span id="profLoanStatus" class="badge bg-success">ไม่มีสัญญาค้าง</span></div>
-        <div class="small mb-1 d-flex align-items-center mt-2">
-          <strong>บัญชีรับเงิน:</strong> 
-          <span id="profBank" class="ms-1">-</span>
-          <span id="profBankAcc" class="text-primary fw-bold mx-2">-</span>
-          <button class="btn btn-sm btn-outline-secondary py-0 px-2 extra-small" onclick="copyBankAcc()"><i class="bi bi-copy"></i> คัดลอก</button>
-        </div>
-        <div id="btnSimulateCloseLoan" class="mt-3 d-none">
-          <button class="btn btn-sm btn-outline-success w-100 fw-bold" onclick="return false" style="display:none">[จำลอง] ปิดสัญญาชำระครบ (เพื่อเปิดกู้รอบใหม่)</button>
-        </div>
-      </div>
-
-      <!-- ตารางประวัติการชำระเงิน -->
-      <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติการชำระเงิน & ใบเสร็จ</h6>
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered extra-small text-center align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>วันที่/เวลา</th>
-                <th>ประเภท</th>
-                <th>จำนวนเงิน</th>
-                <th>ใบเสร็จ</th>
-              </tr>
-            </thead>
-            <tbody id="payHistoryList">
-              <tr>
-                <td colspan="4" class="text-muted py-3">ยังไม่มีประวัติการชำระเงิน</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Modal ป๊อบอัพ QR Code PromptPay -->
-  <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content text-center">
-        <div class="modal-header bg-primary text-white py-2">
-          <h6 class="modal-title fw-bold"><i class="bi bi-qr-code"></i> PromptPay QR Code</h6>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="extra-small text-muted mb-1">สแกนชำระเงินผ่านแอปธนาคาร</div>
-          <div class="fw-bold text-primary mb-2" id="modalPayTypeTitle">ชำระเต็มงวด</div>
-          
-          <!-- Image PromptPay Dynamic -->
-          <img id="imgPromptPayQr" src="" class="img-fluid border p-2 rounded mb-2" style="max-width: 220px;" alt="PromptPay QR">
-          
-          <div class="h4 fw-bold text-danger my-1" id="modalQrAmount">฿ 0.00</div>
-          <div class="extra-small text-muted mb-3">บัญชีรับเงิน PromptPay: <strong>0658351446</strong></div>
-
-          <!-- ช่องแนบสลิปการโอน -->
-          <div class="text-start border-top pt-2">
-            <label class="small fw-bold text-muted mb-1">แนบสลิปการโอนเงินเพื่อยืนยัน:</label>
-            <div class="upload-zone p-2" id="zoneSlip" onclick="document.getElementById('fileSlip').click()">
-              <span id="labelSlip" class="extra-small text-muted"><i class="bi bi-file-earmark-arrow-up fs-4 d-block"></i> เลือกไฟล์สลิปการโอน</span>
-              <img id="previewSlip" class="img-fluid d-none rounded" style="max-height: 120px;">
-              <div id="btnRemoveSlip" class="btn-remove-img d-none" onclick="removeImage(event, 'Slip')">✕</div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">ชื่อผู้ใช้งาน (Username / Master Key)</label>
+                    <input type="text" id="login-username" placeholder="กรอก Username หรือ Master Key" class="w-full mt-1 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
+                    <div class="relative mt-1">
+                        <input type="password" id="login-password" placeholder="กรอกรหัสผ่าน (หากใช้ Master Key ไม่ต้องใส่)" class="w-full p-3 border rounded-lg outline-none pr-10 focus:ring-2 focus:ring-indigo-500">
+                        <button type="button" onclick="togglePassword('login-password', 'eye-login')" class="absolute right-3 top-3 text-gray-400">
+                            <i data-lucide="eye" id="eye-login" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-slate-800 text-white p-3 rounded-lg font-bold hover:bg-slate-900 transition">เข้าสู่ระบบ</button>
             </div>
-            <input type="file" id="fileSlip" class="d-none" accept="image/*" onchange="processImageWithWatermark(this, 'Slip')">
-          </div>
         </div>
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
-          <button type="button" class="btn btn-success btn-sm rounded-pill fw-bold" onclick="submitPaymentSlip()">ส่งสลิปชำระเงิน</button>
+    </div>
+
+    <!-- 3. RIDER INTERFACE -->
+    <div id="rider-app" class="hidden min-h-screen bg-gray-50 pb-12 relative">
+        <div id="rider-sidebar" class="fixed inset-y-0 left-0 z-40 w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col">
+            <div class="p-4 bg-emerald-600 text-white flex justify-between items-center">
+                <span class="font-bold text-lg">แดชบอร์ด & คอมมิชชั่นไรเดอร์ (7%)</span>
+                <button onclick="toggleRiderSidebar()" class="text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto space-y-4">
+                <div class="bg-indigo-50 p-3 rounded-lg text-center">
+                    <span class="text-[11px] text-indigo-600 font-bold block">รายได้ค่าคอมฯ ทั้งหมดในเดือนนี้ (7%)</span>
+                    <p class="font-bold text-indigo-800 text-xl" id="rider-income-month">0 ฿</p>
+                </div>
+                <div class="bg-indigo-50 p-3 rounded-lg text-center">
+                    <span class="text-[11px] text-indigo-600 font-bold block">รายได้ค่าคอมฯ เมื่อวาน</span>
+                    <p class="font-bold text-indigo-800 text-lg" id="rider-income-yesterday">0 ฿</p>
+                </div>
+                <div class="bg-emerald-50 p-3 rounded-lg text-center">
+                    <span class="text-[11px] text-emerald-600 font-bold block">รายได้ค่าคอมฯ วันนี้ (Real-Time แรงจูงใจ 7%)</span>
+                    <p class="font-bold text-emerald-800 text-lg" id="rider-income-today">0 ฿</p>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-center">
+                    <div class="bg-blue-50 p-3 rounded-lg">
+                        <span class="text-[11px] text-blue-600 font-bold block">ยอดโอนตรงบริษัท (QR)</span>
+                        <p class="font-bold text-blue-800 text-base" id="rider-qr-sum">0 ฿</p>
+                    </div>
+                    <div class="bg-amber-50 p-3 rounded-lg">
+                        <span class="text-[11px] text-amber-600 font-bold block">เงินสดค้างกับตัว</span>
+                        <p class="font-bold text-amber-800 text-base" id="rider-cash-sum">0 ฿</p>
+                    </div>
+                </div>
+                <div class="pt-2 border-t text-xs">
+                    <span class="text-gray-500">คอมฯ สะสมรวม (7%): <strong class="text-emerald-600 font-bold" id="rider-com-sum">0 ฿</strong></span>
+                </div>
+                <button onclick="openRemitModal(); toggleRiderSidebar();" class="w-full bg-amber-600 hover:bg-amber-700 text-white p-2 rounded-lg font-bold shadow text-xs">โอนเงินสดคืนบริษัท (QR)</button>
+                <button onclick="openHistoryModal(); toggleRiderSidebar();" class="w-full text-xs text-indigo-600 font-bold hover:underline flex items-center justify-center gap-1 pt-2">
+                    <i data-lucide="history" class="w-3.5 h-3.5"></i> ดูประวัติการส่งยอดเงินสด
+                </button>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Modal ใบเสร็จรับเงินอิเล็กทรอนิกส์ (E-Receipt) -->
-  <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-body p-4" id="receiptPrintArea">
-          <div class="text-center mb-3">
-            <h6 class="fw-bold m-0">ใบเสร็จรับเงินอิเล็กทรอนิกส์ (E-Receipt)</h6>
-            <div class="extra-small text-muted">โครงการสินเชื่อเพื่อคนพะเยา</div>
-            <div class="extra-small text-primary fw-bold mt-1" id="recUid">UID: PY-XXXX</div>
-            <hr class="my-2">
-          </div>
-          <div class="extra-small mb-1"><strong>เลขที่ใบเสร็จ:</strong> <span id="recNo">RC-001</span></div>
-          <div class="extra-small mb-1"><strong>วันที่/เวลา:</strong> <span id="recDate">-</span></div>
-          <div class="extra-small mb-1"><strong>ชื่อผู้กู้:</strong> <span id="recName">-</span></div>
-          <div class="extra-small mb-3"><strong>รายการชำระ:</strong> <span id="recType">-</span></div>
+        <header class="bg-emerald-600 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleRiderSidebar()" class="text-white p-1 hover:bg-emerald-700 rounded"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="bike" class="w-6 h-6"></i>
+                    <div>
+                        <span class="font-bold text-base block leading-tight" id="rider-profile-name">Rider Name</span>
+                        <span class="text-[10px] text-emerald-200">พนักงานเก็บเงิน (คอมฯ 7%)</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="logout()" class="p-2 bg-emerald-700 hover:bg-emerald-800 rounded-lg text-xs font-bold flex items-center gap-1">
+                <i data-lucide="log-out" class="w-3 h-3"></i> ออก
+            </button>
+        </header>
 
-          <table class="table table-sm table-bordered extra-small mb-3">
-            <thead>
-              <tr class="table-light text-center">
-                <th>รายละเอียด</th>
-                <th>จำนวนเงิน (บาท)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td id="recItemTitle">ค่างวดชำระ</td>
-                <td class="text-end" id="recBaseAmount">0.00</td>
-              </tr>
-              <tr id="recFineRow">
-                <td class="text-danger">ค่าปรับส่งเกินเวลา (หลัง 18:00 น.)</td>
-                <td class="text-end text-danger" id="recFineAmount">0.00</td>
-              </tr>
-              <tr class="fw-bold table-light">
-                <td class="text-center">รวมชำระสุทธิ</td>
-                <td class="text-end text-primary" id="recTotalAmount">0.00</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="p-4 max-w-lg mx-auto space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow border flex justify-between items-center">
+                <div>
+                    <span class="text-xs text-gray-500">สถานะกะทำงาน (เงื่อนไขเลิกงาน: ต้องไม่มีงานค้างที่ยังไม่ได้เก็บเงิน)</span>
+                    <p id="rider-shift-status" class="font-bold text-red-500 text-sm">ยังไม่เริ่มงาน</p>
+                </div>
+                <button id="btn-toggle-shift" onclick="toggleShift()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow">
+                    กดเริ่มงาน
+                </button>
+            </div>
 
-          <div class="extra-small text-muted text-center border-top pt-2" id="recFineNote">
-            * เอกสารนี้สร้างขึ้นโดยระบบอัตโนมัติ ชำระผ่านระบบ PromptPay 0658351446
-          </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white p-4 rounded-xl shadow border text-center">
+                    <span class="text-[11px] text-gray-500 font-bold block">ยอดเงินที่ต้องเก็บในวันนี้</span>
+                    <p class="font-bold text-indigo-600 text-lg mt-1" id="rider-target-today">0 ฿</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow border text-center">
+                    <span class="text-[11px] text-gray-500 font-bold block">รายได้คอมฯ ที่ทำได้วันนี้ (7%)</span>
+                    <p class="font-bold text-emerald-600 text-lg mt-1" id="rider-collected-today">0 ฿</p>
+                </div>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl shadow flex justify-between items-center">
+                <div>
+                    <span class="text-xs text-amber-800 font-bold block">ยอดเงินสดที่ถืออยู่ (เช็คยอดเป๊ะๆ)</span>
+                    <span class="text-[10px] text-amber-600">ตรวจสอบความถูกต้องก่อนโอนคืนบริษัท</span>
+                </div>
+                <span class="text-xl font-bold text-amber-700" id="rider-cash-holding-box">0 ฿</span>
+            </div>
+
+            <!-- Tab เมนู 3 ช่องหลัก + รอตรวจสอบ -->
+            <div class="bg-white p-1 rounded-xl shadow border grid grid-cols-4 gap-1">
+                <button onclick="switchRiderTab('pending')" id="tab-btn-pending" class="py-2 text-[11px] font-bold rounded-lg transition bg-emerald-600 text-white text-center">ยังไม่เก็บ</button>
+                <button onclick="switchRiderTab('completed')" id="tab-btn-completed" class="py-2 text-[11px] font-bold rounded-lg transition text-gray-600 text-center">เก็บแล้ว</button>
+                <button onclick="switchRiderTab('issue')" id="tab-btn-issue" class="py-2 text-[11px] font-bold rounded-lg transition text-gray-600 text-center">ติดปัญหา</button>
+                <button onclick="switchRiderTab('waiting')" id="tab-btn-waiting" class="py-2 text-[11px] font-bold rounded-lg transition text-gray-600 text-center">รอตรวจสอบ</button>
+            </div>
+
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-gray-700 text-sm flex items-center gap-1">
+                        <i data-lucide="list-todo" class="w-4 h-4"></i> <span id="rider-list-title">รายการงานที่ยังไม่ได้เก็บเงิน</span>
+                    </h3>
+                    <span id="rider-current-page-indicator" class="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-bold">กำลังแสดง: ยังไม่เก็บ</span>
+                </div>
+                <div id="rider-task-list" class="space-y-3"></div>
+            </div>
         </div>
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">ปิด</button>
+    </div>
+
+    <!-- 4. ADMIN & MASTER INTERFACE -->
+    <div id="admin-app" class="hidden min-h-screen flex flex-col md:flex-row">
+        <aside id="sidebar" class="bg-slate-900 text-white w-full md:w-64 fixed md:relative z-30 transition-all duration-300 transform -translate-x-full md:translate-x-0 h-screen flex flex-col">
+            <div class="p-4 font-bold text-xl border-b border-slate-800 flex justify-between items-center">
+                <span id="admin-sidebar-role" class="text-indigo-400">ADMIN SYSTEM</span>
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400"><i data-lucide="x"></i></button>
+            </div>
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="#" onclick="showAdminTab('dash')" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2"><i data-lucide="layout-dashboard"></i> ภาพรวม / แดชบอร์ดการเงิน</a>
+                <a href="#" onclick="showAdminTab('loans')" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2"><i data-lucide="file-text"></i> จัดการสินเชื่อ & วงเงินลงทุน</a>
+                <a href="#" onclick="showAdminTab('uncollectible')" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2 text-rose-400"><i data-lucide="alert-octagon"></i> ยอดเงินที่ไม่สามารถเก็บได้</a>
+                <a href="#" onclick="showAdminTab('users')" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2"><i data-lucide="users"></i> จัดการบัญชี Rider & Admin</a>
+                <a href="#" onclick="showAdminTab('approve')" id="nav-master-approve" class="p-3 rounded hover:bg-slate-800 flex items-center justify-between text-amber-400 hidden">
+                    <span class="flex items-center gap-2"><i data-lucide="user-check"></i> อนุมัติผู้ใช้ (Master)</span>
+                    <span id="badge-pending-count" class="bg-amber-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                </a>
+                <a href="#" onclick="showAdminTab('slips')" class="p-3 rounded hover:bg-slate-800 flex items-center justify-between text-blue-400">
+                    <span class="flex items-center gap-2"><i data-lucide="receipt"></i> ตรวจสอบสลิปลูกค้า (QR)</span>
+                    <span id="badge-slip-count" class="bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                </a>
+                <a href="#" onclick="showAdminTab('remit')" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2"><i data-lucide="banknote"></i> ตรวจสลิปเงินสดค้างส่ง</a>
+                <a href="#" onclick="showAdminTab('payroll')" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2"><i data-lucide="wallet-cards"></i> เงินเดือน & คอมมิชชั่น</a>
+                <a href="#" onclick="openLogModal();loadServerLogs()" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2 text-cyan-300"><i data-lucide="scroll-text"></i> SYSTEM LOG</a>
+            </nav>
+            <div class="p-4 border-t border-slate-800">
+                <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 p-2 rounded font-bold text-sm">ออกจากระบบ</button>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-h-screen">
+            <header class="bg-slate-800 text-white p-4 flex justify-between items-center md:hidden sticky top-0 z-20">
+                <button onclick="toggleSidebar()" class="text-white"><i data-lucide="menu" class="w-7 h-7"></i></button>
+                <span class="font-bold">ADMIN MANAGEMENT</span>
+                <div></div>
+            </header>
+
+            <main class="p-4 md:p-8 flex-1 space-y-6">
+                <!-- Tab 1: Dashboard & Financials -->
+                <div id="admin-tab-dash" class="space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold">แดชบอร์ดการเงิน & ภาพรวมบริษัท</h2>
+                            <p class="text-xs text-gray-500">เปรียบเทียบวงเงินลงทุน ยอดที่ต้องเก็บ และคอมมิชชั่นไรเดอร์ 7%</p>
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button onclick="refreshFromGoogleSheets()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm flex items-center gap-2">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh ข้อมูล
+                            </button>
+                            <button onclick="adminCloseDay()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm">
+                                กดปิดรอบวัน (Cut-off & ระงับผู้ค้างเงิน)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 text-blue-800">
+                            <i data-lucide="calendar-clock" class="w-5 h-5"></i>
+                            <span class="text-sm font-bold">ข้อมูลจาก Google Sheets ล่าสุด</span>
+                        </div>
+                        <span id="latest-update-text" class="text-sm font-semibold text-blue-700">ยังไม่ได้ Refresh</span>
+                    </div>
+
+                    <div class="bg-slate-900 text-white rounded-xl p-4"><div class="flex justify-between items-center mb-2"><b>System Log ล่าสุด</b><button onclick="openLogModal();loadServerLogs()" class="bg-cyan-600 px-3 py-1 rounded-lg text-xs font-bold">ดู/คัดลอก LOG</button></div><div id="fdg-log-preview" class="max-h-40 overflow-y-auto"></div></div>
+                    <!-- ส่วนแสดงข้อมูลวงเงินลงทุนสำหรับ Master และ Admin -->
+                    <div class="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <span class="text-xs uppercase tracking-wider text-indigo-300 font-bold block" id="investment-role-indicator">วงเงินลงทุนบริษัท (Investment Capital)</span>
+                            <h3 class="text-3xl font-extrabold mt-1" id="display-investment-limit">500,000 ฿</h3>
+                            <p class="text-xs text-gray-300 mt-1" id="investment-permission-desc">Master เป็นผู้กำหนดวงเงินลงทุน | Admin ใช้ตรวจสอบเพื่อตัดสินใจอนุมัติปล่อยสินเชื่อ</p>
+                        </div>
+                        <div id="master-investment-control" class="hidden flex items-center gap-2">
+                            <input type="number" id="input-master-investment" placeholder="ระบุวงเงินใหม่" class="p-2 rounded-lg text-slate-900 font-bold text-sm outline-none w-40">
+                            <button onclick="updateMasterInvestmentLimit()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2 rounded-lg text-sm shadow">ตั้งค่าวงเงิน</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-xl shadow border">
+                            <span class="text-xs text-gray-500 font-bold">ยอดที่ต้องเก็บวันนี้ทั้งหมด</span>
+                            <p class="text-2xl font-bold text-slate-800" id="dash-target-total">0 ฿</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow border">
+                            <span class="text-xs text-gray-500 font-bold">ยอดที่เก็บได้จริงวันนี้</span>
+                            <p class="text-2xl font-bold text-emerald-600" id="dash-actual-total">0 ฿</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow border">
+                            <span class="text-xs text-gray-500 font-bold">ยอดโอน QR / เงินสดค้าง</span>
+                            <p class="text-lg font-bold text-blue-600" id="dash-qr-total">QR: 0 ฿</p>
+                            <p class="text-lg font-bold text-amber-600" id="dash-cash-total">เงินสด: 0 ฿</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow border">
+                            <span class="text-xs text-gray-500 font-bold">รายรับสุทธิบริษัท (หักคอมฯ ไรเดอร์ 7%)</span>
+                            <p class="text-2xl font-bold text-indigo-600" id="dash-net-total">0 ฿</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow overflow-hidden">
+                        <div class="p-4 border-b font-bold text-gray-700">ติดตามสถานะการทำงานของ Rider & ค่าคอมมิชชั่นสะสม (7%)</div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-3">ชื่อ Rider</th>
+                                        <th class="p-3">สถานะกะ</th>
+                                        <th class="p-3">ยอดโอน (QR)</th>
+                                        <th class="p-3">เงินสดค้างส่ง</th>
+                                        <th class="p-3">ค่าคอมฯ ได้รับ (7%)</th>
+                                        <th class="p-3">สถานะบัญชี</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-rider-monitor"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Loan Applications & Task Assignment -->
+                <div id="admin-tab-loans" class="hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold">จัดการสินเชื่อลูกค้า & วงเงินลงทุน</h2>
+                        <div class="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-xl text-right">
+                            <span class="text-xs text-indigo-600 font-bold block">เงินทุนพร้อมปล่อยสินเชื่อ:</span>
+                            <span class="text-lg font-extrabold text-indigo-900" id="loan-available-capital-badge">0 ฿</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow space-y-4">
+                        <h3 class="font-bold text-lg border-b pb-2">เพิ่มข้อมูลลูกค้าขอสินเชื่อใหม่ (ตรวจสอบเทียบกับวงเงินลงทุนที่มีอยู่)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <input type="text" id="loan-cust-name" placeholder="ชื่อ-นามสกุล ลูกค้า" class="p-2 border rounded">
+                            <input type="text" id="loan-cust-phone" placeholder="เบอร์โทรศัพท์" class="p-2 border rounded">
+                            <input type="number" id="loan-cust-amount" placeholder="วงเงินที่ขอ (บาท)" class="p-2 border rounded">
+                            <input type="number" id="loan-cust-installment" placeholder="ค่างวดต่อวัน (บาท)" class="p-2 border rounded">
+                            <input type="number" id="loan-cust-term" placeholder="ระยะเวลา (วัน)" class="p-2 border rounded">
+                        </div>
+                        <div class="flex justify-end">
+                            <button onclick="addNewLoanCustomer()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold text-sm">บันทึกข้อมูลลูกค้า</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow overflow-hidden">
+                        <div class="p-4 border-b font-bold text-gray-700">รายการคำขอสินเชื่อ & จัดสรรงานให้ไรเดอร์</div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-3">ชื่อลูกค้า / เบอร์โทร</th>
+                                        <th class="p-3">วงเงินขอสินเชื่อ</th>
+                                        <th class="p-3">ค่างวด/วัน</th>
+                                        <th class="p-3">ระยะเวลา</th>
+                                        <th class="p-3">สถานะสินเชื่อ</th>
+                                        <th class="p-3">มอบหมาย Rider</th>
+                                        <th class="p-3">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-loan-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow p-4 space-y-3">
+                        <h3 class="font-bold text-red-600 text-sm flex items-center gap-1">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i> หมายเหตุจากไรเดอร์ (งานที่ติดปัญหา / ขอเลื่อน / ไม่สามารถติดต่อได้)
+                        </h3>
+                        <div id="admin-remarks-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Tab: Uncollectible Amount (ยอดเงินที่ไม่สามารถเก็บได้) -->
+                <div id="admin-tab-uncollectible" class="hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold text-rose-700">ยอดเงินที่ไม่สามารถเก็บได้ (Bad Debt / Uncollectible Amount)</h2>
+                            <p class="text-xs text-gray-500">บันทึกรายการบัญชีที่ลูกค้าไม่สามารถชำระได้จริง เพื่อทำเรื่องตัดหนี้สูญและคำนวณผลกระทบต่อเงินทุน</p>
+                        </div>
+                        <div class="bg-rose-50 border border-rose-200 px-4 py-2 rounded-xl text-right">
+                            <span class="text-xs text-rose-600 font-bold block">ยอดหนี้สูญรวมทั้งหมด:</span>
+                            <span class="text-xl font-extrabold text-rose-700" id="total-uncollectible-badge">0 ฿</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow overflow-hidden">
+                        <div class="p-4 border-b font-bold text-gray-700 flex justify-between items-center">
+                            <span>รายการที่ไรเดอร์แจ้งเก็บเงินไม่ได้ / ติดปัญหาถาวร</span>
+                            <span class="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded">อัปเดตแบบเรียลไทม์</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-3">ชื่อลูกค้า / เบอร์โทร</th>
+                                        <th class="p-3">ยอดหนี้คงเหลือค้าง</th>
+                                        <th class="p-3">ค่างวดต่อวัน</th>
+                                        <th class="p-3">เหตุผลที่ไม่สามารถเก็บได้</th>
+                                        <th class="p-3">ผู้รับผิดชอบเดิม (Rider)</th>
+                                        <th class="p-3">จัดการ (ตัดหนี้สูญ / พักหนี้)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-uncollectible-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: User Management -->
+                <div id="admin-tab-users" class="hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold">จัดการบัญชี Rider & Admin (Master Control)</h2>
+                        <span id="master-badge-indicator" class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-bold">โหมด Master ควบคุมสูงสุด</span>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow space-y-4">
+                        <h3 class="font-bold text-lg border-b pb-2">สร้างบัญชีผู้ใช้ใหม่ (พร้อมข้อมูลธนาคาร & ที่อยู่)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input type="text" id="new-user-fullname" placeholder="ชื่อ-นามสกุลจริง" class="p-2 border rounded text-sm">
+                            <input type="text" id="new-user-phone" placeholder="เบอร์โทรศัพท์ติดต่อ" class="p-2 border rounded text-sm">
+                            <select id="new-user-role" class="p-2 border rounded text-sm">
+                                <option value="rider">Rider (ไรเดอร์ - คอมฯ 7%)</option>
+                                <option value="admin">Admin (แอดมิน - อนุมัติสินเชื่อ)</option>
+                            </select>
+                            <input type="text" id="new-user-username" placeholder="Username" class="p-2 border rounded text-sm">
+                            <input type="password" id="new-user-password" placeholder="Password" class="p-2 border rounded text-sm">
+                            <input type="number" id="new-user-salary" placeholder="เงินเดือน Admin (บาท)" min="0" class="p-2 border rounded text-sm">
+                            <input type="text" id="new-user-bankname" placeholder="ชื่อธนาคาร (เช่น กสิกร, ไทยพาณิชย์)" class="p-2 border rounded text-sm">
+                            <input type="text" id="new-user-bankacc" placeholder="เลขบัญชีธนาคาร" class="p-2 border rounded text-sm">
+                            <textarea id="new-user-address" placeholder="ที่อยู่ปัจจุบัน" class="p-2 border rounded text-sm md:col-span-2" rows="2"></textarea>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <p class="text-xs text-amber-600">* บัญชีที่สร้างจะต้องรอ Master อนุมัติการใช้งาน</p>
+                            <button onclick="createUser()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold text-sm">สร้างบัญชีพนักงาน</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow overflow-hidden">
+                        <div class="p-4 border-b font-bold text-gray-700">รายชื่อผู้ใช้งานระบบทั้งหมด</div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-3">ชื่อ-นามสกุล / เบอร์โทร</th>
+                                        <th class="p-3">สิทธิ์</th>
+                                        <th class="p-3">ข้อมูลธนาคาร</th>
+                                        <th class="p-3">สถานะบัญชี</th>
+                                        <th class="p-3">จัดการ (Master)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-user-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Master Key Approval Center -->
+                <div id="admin-tab-approve" class="hidden space-y-6">
+                    <h2 class="text-2xl font-bold text-amber-600">ศูนย์อนุมัติผู้ใช้งาน (Master Key Panel)</h2>
+                    <div class="bg-white rounded-xl shadow overflow-hidden">
+                        <div class="p-4 border-b font-bold text-gray-700">รายการบัญชีที่รอการอนุมัติ / ถูกระงับ</div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-3">ชื่อ</th>
+                                        <th class="p-3">Username</th>
+                                        <th class="p-3">สิทธิ์</th>
+                                        <th class="p-3">สถานะ</th>
+                                        <th class="p-3">การอนุมัติ (Master Only)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="master-approve-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <div class="p-4 border-b font-bold text-gray-700">คำขอลบบัญชี (Master ต้องยืนยัน)</div>
+                    <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="p-3">ชื่อ</th><th class="p-3">ประเภท</th><th class="p-3">ผู้ขอ</th><th class="p-3">เวลา</th><th class="p-3">จัดการ</th></tr></thead><tbody id="master-delete-list"></tbody></table></div>
+                </div>
+
+                <!-- Tab 5: Admin Slip Verification -->
+                <div id="admin-tab-slips" class="hidden space-y-4">
+                    <h2 class="text-2xl font-bold">ตรวจสอบสลิปโอนเงินของลูกค้า (QR Code)</h2>
+                    <div id="admin-customer-slips-list" class="space-y-3"></div>
+                </div>
+
+                <div id="admin-tab-payroll" class="hidden space-y-6">
+                    <div class="flex justify-between items-center"><h2 class="text-2xl font-bold">เงินเดือน & คอมมิชชั่น</h2><span class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold">Rider 7%</span></div>
+                    <div class="bg-white p-5 rounded-xl shadow space-y-4">
+                        <div class="grid md:grid-cols-4 gap-3">
+                            <select id="pay-user" class="p-3 border rounded-lg"></select>
+                            <input id="pay-month" type="number" min="1" max="12" class="p-3 border rounded-lg" placeholder="เดือน">
+                            <input id="pay-year" type="number" class="p-3 border rounded-lg" placeholder="ปี ค.ศ.">
+                            <input id="pay-base" type="number" min="0" class="p-3 border rounded-lg" placeholder="เงินเดือน Admin">
+                        </div>
+                        <div class="grid md:grid-cols-3 gap-3">
+                            <div class="bg-indigo-50 p-3 rounded-lg"><div class="text-xs text-indigo-700">คอมมิชชั่น Rider 7%</div><b id="pay-commission">0.00 ฿</b></div>
+                            <div class="bg-emerald-50 p-3 rounded-lg"><div class="text-xs text-emerald-700">รวมจ่าย</div><b id="pay-total">0.00 ฿</b></div>
+                            <button onclick="createPayrollFromUI()" class="bg-indigo-600 text-white rounded-lg font-bold">บันทึกเงินเดือนรอบนี้</button>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow overflow-hidden"><div class="p-4 font-bold border-b">ประวัติการจ่ายเงินเดือน</div><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-3">พนักงาน</th><th class="p-3">งวด</th><th class="p-3">ฐาน</th><th class="p-3">คอมฯ</th><th class="p-3">รวม</th><th class="p-3">สถานะ</th><th class="p-3">จัดการ</th></tr></thead><tbody id="payroll-list"></tbody></table></div></div>
+                </div>
+
+                <!-- Tab 6: Remittance Check -->
+                <div id="admin-tab-remit" class="hidden space-y-4">
+                    <h2 class="text-2xl font-bold">ตรวจสอบการโอนเงินสดคืนบริษัทจาก Rider</h2>
+                    <div id="admin-remit-list" class="space-y-3"></div>
+                </div>
+            </main>
         </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Bottom Nav -->
-  <div class="bottom-nav">
-    <div class="nav-item-btn active" id="navSelect" onclick="switchTab('page-select')">
-      <i class="bi bi-calculator d-block fs-5"></i> ขอสินเชื่อ
+    <!-- MODAL: Collect Payment -->
+    <div id="modal-collect" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-bold border-b pb-2">บันทึกการรับชำระเงิน (คอมฯ 7% สำหรับไรเดอร์)</h3>
+            <p class="text-sm text-gray-600">ลูกค้า: <span id="m-cust-name" class="font-bold"></span></p>
+            
+            <div id="m-call-container"></div>
+
+            <p class="text-sm text-gray-600">ค่างวดวันนี้: <span id="m-cust-amount-text" class="font-bold text-indigo-600"></span></p>
+            <p class="text-xs text-gray-500" id="m-balance-preview"></p>
+            
+            <div class="space-y-2">
+                <label class="text-sm font-medium">รูปแบบการจ่ายเงิน</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="setPayMethod('โอน')" id="btn-pay-transfer" class="p-3 border rounded-lg font-bold text-center text-xs">สแกน QR Code (รอตรวจสอบ)</button>
+                    <button type="button" onclick="setPayMethod('เงินสด')" id="btn-pay-cash" class="p-3 border rounded-lg font-bold text-center text-xs">เงินสด (รับมาถือไว้ทันที)</button>
+                </div>
+            </div>
+
+            <div id="slip-box" class="space-y-2">
+                <label class="text-sm font-medium">หลักฐานสลิปการโอนเงิน</label>
+                <label class="flex flex-col items-center justify-center border-2 border-dashed border-indigo-300 bg-indigo-50 hover:bg-indigo-100 rounded-xl p-4 cursor-pointer transition">
+                    <i data-lucide="upload-cloud" class="w-8 h-8 text-indigo-600 mb-1"></i>
+                    <span class="text-xs font-bold text-indigo-700" id="slip-file-label">คลิกเพื่อถ่ายรูปหรืออัปโหลดสลิป</span>
+                    <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleCustomerSlipImage(this)">
+                </label>
+                
+                <div id="slip-preview-wrapper" class="hidden relative w-32 mx-auto mt-2">
+                    <img id="slip-image-preview" src="" alt="สลิปโอนเงิน" class="w-full h-32 object-cover rounded-lg border shadow" />
+                    <button type="button" onclick="removeSlipImage()" class="absolute -top-2 -right-2 bg-red-600 text-white border-2 border-white rounded-full w-7 h-7 flex items-center justify-center font-bold shadow-lg cursor-pointer hover:bg-red-700">✕</button>
+                </div>
+            </div>
+
+            <div class="space-y-3 pt-3 border-t">
+                <p class="text-xs font-bold text-indigo-700">ตัวเลือกการชำระเงินเพิ่มเติมสำหรับลูกค้า:</p>
+                <div class="grid grid-cols-1 gap-2">
+                    <button type="button" onclick="handleFloatingInterest()" class="w-full bg-amber-500 hover:bg-amber-600 text-white p-2.5 rounded-lg font-bold text-xs text-left flex items-center justify-between">
+                        <span>💡 จ่ายเฉพาะดอกเบี้ย (ดอกลอย - ไม่หักเงินต้น / ได้รับคอมฯ 7%)</span>
+                    </button>
+                    <button type="button" onclick="toggleCloseAccountOptions()" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-2.5 rounded-lg font-bold text-xs text-left flex items-center justify-between">
+                        <span>🏁 ปิดบัญชี (ชำระยอดคงเหลือทั้งหมด)</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div id="close-account-sub-options" class="hidden space-y-2 bg-purple-50 p-3 rounded-xl border border-purple-200">
+                    <p class="text-xs font-bold text-purple-800">กรุณาเลือกหัวข้อย่อยการชำระปิดบัญชี:</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="submitCloseAccount('QR')" class="p-2 bg-blue-600 text-white rounded font-bold text-xs">สแกน QR Code</button>
+                        <button type="button" onclick="submitCloseAccount('CASH')" class="p-2 bg-amber-600 text-white rounded font-bold text-xs">เงินสด</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-3 pt-3 border-t">
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border">
+                    <div>
+                        <span class="text-xs font-bold text-red-600 block">งานติดปัญหา / เก็บเงินไม่ได้ (บันทึกยอดที่ไม่สามารถเก็บได้)</span>
+                        <span class="text-[10px] text-gray-500">เปิดสวิตช์เพื่อส่งเข้ารายการยอดเงินที่ไม่สามารถเก็บได้</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle-fail-switch" onchange="toggleFailSection(this)" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                    </label>
+                </div>
+
+                <div id="fail-reason-box" class="hidden space-y-2 bg-red-50 p-3 rounded-xl border border-red-200">
+                    <label class="text-xs font-bold text-red-700">ระบุเหตุผลที่ไม่สามารถเก็บเงินได้</label>
+                    <input type="text" id="collect-remark" placeholder="เช่น ลูกค้าหนีหาย, ปิดกิจการ, ติดต่อไม่ได้ถาวร" class="w-full p-2 border rounded text-xs">
+                    <p class="text-[11px] text-red-600 font-bold">* รายการจะถูกย้ายไปยังเมนู "ยอดเงินที่ไม่สามารถเก็บได้" ฝั่งแอดมินทันที</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4 border-t">
+                <button onclick="closeModal('modal-collect')" class="px-4 py-2 text-gray-500 text-sm">ยกเลิก</button>
+                <button id="btn-submit-collect" onclick="submitCollect()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold text-sm">ยืนยันรับชำระเงินปกติ (+คอมฯ 7%)</button>
+            </div>
+        </div>
     </div>
-    <div class="nav-item-btn" id="navPayment" onclick="switchTab('page-payment')">
-      <i class="bi bi-receipt d-block fs-5"></i> ตารางส่งเงิน
+
+    <!-- MODAL: Remit Cash QR PromptPay -->
+    <div id="modal-remit" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-sm w-full p-6 space-y-4 text-center relative">
+            <h3 class="text-lg font-bold border-b pb-2">โอนเงินสดคืนบริษัท (PromptPay)</h3>
+            <p class="text-sm text-gray-600">ยอดเงินสดค้างนำส่ง: <strong class="text-amber-600 text-lg" id="remit-cash-amount">0 ฿</strong></p>
+            
+            <div class="bg-gray-50 p-4 rounded-xl border flex flex-col items-center justify-center space-y-2">
+                <img id="qr-code-img" src="" alt="PromptPay QR Code" class="w-48 h-48 object-contain bg-white p-2 border rounded shadow-sm">
+                <p class="text-xs text-gray-500 font-semibold">เบอร์พร้อมเพย์: 0658351446</p>
+            </div>
+
+            <div class="space-y-1 text-left">
+                <label class="text-xs font-medium">แนบสลิปการโอนเงินคืน</label>
+                <label class="flex flex-col items-center justify-center border-2 border-dashed border-amber-300 bg-amber-50 hover:bg-amber-100 rounded-xl p-3 cursor-pointer transition">
+                    <span class="text-xs font-bold text-amber-700" id="remit-slip-label">คลิกถ่ายรูป / อัปโหลดสลิปคืนบริษัท</span>
+                    <input type="file" accept="image/*" id="remit-slip" class="hidden" onchange="handleRemitSlip(this)">
+                </label>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t">
+                <button onclick="closeModal('modal-remit')" class="px-4 py-2 text-gray-500 text-sm">ยกเลิก</button>
+                <button onclick="startRemitLoadingProcess()" class="px-4 py-2 bg-amber-600 text-white rounded-lg font-bold text-sm">ส่งสลิปยืนยันการคืนเงิน</button>
+            </div>
+        </div>
     </div>
-    <div class="nav-item-btn" id="navProfile" onclick="switchTab('page-profile')">
-      <i class="bi bi-person d-block fs-5"></i> โปรไฟล์
+
+    <!-- MODAL: Loading Progress & Success Checkmark Popup -->
+    <div id="modal-loading-progress" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-8 text-center space-y-6">
+            <div id="progress-container" class="space-y-4">
+                <div class="w-20 h-20 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <h4 class="font-bold text-lg text-slate-800">กำลังส่งยอดเงินสดคืนบริษัท...</h4>
+                <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div id="progress-bar-fill" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
+                </div>
+                <span id="progress-percent-text" class="text-xl font-bold text-amber-600">0%</span>
+            </div>
+            
+            <div id="success-checkmark-container" class="hidden flex flex-col items-center space-y-4">
+                <svg class="checkmark-circle mx-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle class="checkmark-circle" cx="26" cy="26" r="23" fill="none"/>
+                    <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
+                <span class="text-xl font-bold text-emerald-600">ส่งยอดเงินสำเร็จ!</span>
+                <p class="text-xs text-gray-500">ยอดเงินสดติดตัวถูกรีเซ็ตเป็น 0 บาทเรียบร้อยแล้ว</p>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // -------------------------------------------------------------
-    // Global States & Configurations
-    // -------------------------------------------------------------
-    const PROMPTPAY_PHONE = "0658351446";
-    const phayaoData = {
-      "เมืองพะเยา": ["เวียง", "แม่ต๋ำ", "ท่าวังทอง", "บ้านต๋อม", "บ้านต๊ำ", "ท่าจำปี", "บ้านตุ่น", "แม่นาเรือ", "จำป่าหวาย", "แม่ปืม", "แม่กา", "แม่ใส", "บ้านสาง", "สันป่าม่วง", "บ้านใหม่"],
-      "ดอกคำใต้": ["ดอนศรีชุม", "ดอกคำใต้", "ห้วยลาน", "สันโค้ง", "ป่าซาง", "หนองหล่ม", "ดอนงิ้ว", "บ้านถ้ำ", "บุญเกิด", "สว่าง", "คือเวียง", "ดงสุวรรณ"],
-      "แม่ใจ": ["ศรีถ้อย", "แม่ใจ", "ป่าแฝก", "เจริญราษฎร์", "บ้านเหล่า", "แม่สุก"],
-      "จุน": ["ห้วยข้าวก่ำ", "จุน", "ห้วยยางขาม", "ลอ", "ทุ่งรวงทอง", "หงส์หิน", "พระธาตุขิงแกง"],
-      "ปง": ["ปง", "นาปรัง", "งิม", "ผาช้างน้อย", "ควร", "ออย", "ขุนควร"],
-      "เชียงคำ": ["หย่วน", "ทุ่งกล้วย", "ร่มเย็น", "แม่ลาว", "น้ำแวน", "ฝายกวาง", "เจดีย์คำ", "เชียงบาน", "ทุ่งผาสุก", "อ่างทอง"],
-      "เชียงม่วน": ["เชียงม่วน", "บ้านสระ", "บ้านมาง"],
-      "ภูซาง": ["ภูซาง", "ป่าสัก", "ทุ่งกล้วย", "สบบง", "เชียงแรง"],
-      "ภูกามยาว": ["แม่อิง", "ดงเจน", "ห้วยแก้ว"]
-    };
-
-    let fileStore = {};
-    let deferredPrompt;
-    let canvas, ctx, isDrawing = false;
-    let currentServerTime = new Date();
-    let isLateFine = false;
-
-    // App Data State
-    let userProfile = {
-      uid: "PY-" + Math.floor(1000 + Math.random() * 9000),
-      loanStatus: "NOT_APPLIED", // NOT_APPLIED, ACTIVE, CLOSED
-      history: []
-    };
-
-    window.onload = function() {
-      initDistrictDropdown('homeDistrict');
-      initDistrictDropdown('workDistrict');
-      initSignaturePad();
-      calculateLoan();
-      loadAutoSavedData();
-      startFoxServerClock();
-      checkLoanRights();
-    };
-
-    // -------------------------------------------------------------
-    // 1. Fox Server Time Check (ป้องกันการปรับเวลาในเครื่อง)
-    // -------------------------------------------------------------
-    async function startFoxServerClock() {
-      await fetchServerTime();
-      setInterval(async () => {
-        currentServerTime.setSeconds(currentServerTime.getSeconds() + 1);
-        updateClockDisplay();
-      }, 1000);
-      
-      // Sync ใหม่ทุก 1 นาที
-      setInterval(fetchServerTime, 60000);
-    }
-
-    async function fetchServerTime() {
-      try {
-        const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Bangkok');
-        const data = await res.json();
-        currentServerTime = new Date(data.datetime);
-      } catch (err) {
-        currentServerTime = new Date(); // Fallback
-      }
-      updateClockDisplay();
-    }
-
-    function updateClockDisplay() {
-      const hours = currentServerTime.getHours();
-      const mins = String(currentServerTime.getMinutes()).padStart(2, '0');
-      const secs = String(currentServerTime.getSeconds()).padStart(2, '0');
-      
-      document.getElementById('clockDisplay').innerText = `${hours}:${mins}:${secs} น.`;
-
-      // ตรวจสอบเงื่อนไข 18:00 น.
-      isLateFine = hours >= 18;
-      updatePaySummary();
-    }
-
-    // -------------------------------------------------------------
-    // 2. Control Loan Rights & Repetitive Rules
-    // -------------------------------------------------------------
-    function checkLoanRights() {
-      const savedStatus = localStorage.getItem('loan_status');
-      if (savedStatus) userProfile.loanStatus = savedStatus;
-
-      const btnNext = document.getElementById('btnNextToForm');
-      const alertBox = document.getElementById('activeContractAlert');
-
-      if (userProfile.loanStatus === 'ACTIVE') {
-        btnNext.disabled = true;
-        btnNext.innerText = "ท่านมีสัญญาค้างชำระอยู่";
-        alertBox.classList.remove('d-none');
-        document.getElementById('profLoanStatus').className = "badge bg-danger";
-        document.getElementById('profLoanStatus').innerText = "มีสัญญาผ่อนชำระ";
-        document.getElementById('btnSimulateCloseLoan').classList.remove('d-none');
-      } else {
-        btnNext.disabled = false;
-        btnNext.innerText = "ถัดไป: กรอกข้อมูลผู้กู้";
-        alertBox.classList.add('d-none');
-        document.getElementById('profLoanStatus').className = "badge bg-success";
-        document.getElementById('profLoanStatus').innerText = "ปกติ (พร้อมกู้ใหม่)";
-        document.getElementById('btnSimulateCloseLoan').classList.add('d-none');
-      }
-
-      document.getElementById('profUid').innerText = "UID: " + userProfile.uid;
-    }
-
-    function simulateCloseLoan() {
-      userProfile.loanStatus = 'CLOSED';
-      localStorage.setItem('loan_status', 'CLOSED');
-      checkLoanRights();
-      alert('ปิดสัญญาเรียบร้อยแล้ว! ลูกค้าสามารถยื่นกู้รอบใหม่ได้ทันทีโดยใช้ข้อมูลเดิม');
-      switchTab('page-select');
-    }
-
-    // -------------------------------------------------------------
-    // 3. PWA Installation Handler
-    // -------------------------------------------------------------
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('btnPwaInstall').style.display = 'inline-block';
-    });
-
-    function installPWA() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choice) => {
-          if (choice.outcome === 'accepted') document.getElementById('btnPwaInstall').style.display = 'none';
-          deferredPrompt = null;
-        });
-      } else {
-        alert("วิธีติดตั้งบน iOS (Safari):\nกดปุ่ม แชร์ (Share) ด้านล่าง แล้วเลือก 'เพิ่มไปยังหน้าจอหลัก' (Add to Home Screen)");
-      }
-    }
-
-    // -------------------------------------------------------------
-    // 4. Input Formatters & GPS
-    // -------------------------------------------------------------
-    function formatNationalID(input) {
-      let val = input.value.replace(/\D/g, '');
-      if (val.length > 13) val = val.substring(0, 13);
-      let res = val;
-      if (val.length > 1) res = val.substring(0, 1) + '-' + val.substring(1);
-      if (val.length > 5) res = res.substring(0, 6) + '-' + val.substring(5);
-      if (val.length > 10) res = res.substring(0, 12) + '-' + val.substring(10);
-      if (val.length > 12) res = res.substring(0, 15) + '-' + val.substring(12);
-      input.value = res;
-    }
-
-    function formatPhone(input) {
-      let val = input.value.replace(/\D/g, '');
-      if (val.length > 10) val = val.substring(0, 10);
-      let res = val;
-      if (val.length > 3) res = val.substring(0, 3) + '-' + val.substring(3);
-      if (val.length > 6) res = res.substring(0, 7) + '-' + val.substring(6);
-      input.value = res;
-    }
-
-    function formatBankAcc(input) { input.value = input.value.replace(/\D/g, ''); }
-
-    function getCurrentLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
-            document.getElementById('inpGps').value = coords;
-            autoSave();
-            alert('ปักหมุดพิกัด GPS หน้าร้านสำเร็จ!');
-          },
-          () => alert('ไม่สามารถดึงตำแหน่งได้ กรุณาเปิด GPS บนมือถือครับ')
-        );
-      } else {
-        alert('อุปกรณ์นี้ไม่รองรับการดึงพิกัด GPS');
-      }
-    }
-
-    // -------------------------------------------------------------
-    // 5. Compression + Watermark + Reset [X]
-    // -------------------------------------------------------------
-    function processImageWithWatermark(input, id) {
-      const file = input.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = function() {
-          const canvasObj = document.createElement('canvas');
-          const MAX_WIDTH = 1200;
-          const scale = MAX_WIDTH / img.width;
-          
-          canvasObj.width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
-          canvasObj.height = img.width > MAX_WIDTH ? img.height * scale : img.height;
-
-          const ctxObj = canvasObj.getContext('2d');
-          ctxObj.drawImage(img, 0, 0, canvasObj.width, canvasObj.height);
-
-          // Watermark
-          const text = "ใช้สำหรับขอสินเชื่อเพื่อคนพะเยาเท่านั้น";
-          const fontSize = Math.floor(canvasObj.width / 22);
-          ctxObj.save();
-          ctxObj.translate(canvasObj.width / 2, canvasObj.height / 2);
-          ctxObj.rotate(-Math.PI / 6);
-          ctxObj.font = `bold ${fontSize}px sans-serif`;
-          ctxObj.fillStyle = "rgba(220, 38, 38, 0.45)";
-          ctxObj.textAlign = "center";
-          ctxObj.fillText(text, 0, 0);
-          ctxObj.restore();
-
-          const compressedUrl = canvasObj.toDataURL('image/jpeg', 0.7);
-
-          document.getElementById('preview' + id).src = compressedUrl;
-          document.getElementById('preview' + id).classList.remove('d-none');
-          document.getElementById('label' + id).classList.add('d-none');
-          document.getElementById('btnRemove' + id).classList.remove('d-none');
-
-          fileStore[id] = compressedUrl;
-        };
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function removeImage(e, id) {
-      e.stopPropagation();
-      delete fileStore[id];
-      document.getElementById('file' + id).value = '';
-      document.getElementById('preview' + id).classList.add('d-none');
-      document.getElementById('label' + id).classList.remove('d-none');
-      document.getElementById('btnRemove' + id).classList.add('d-none');
-    }
-
-    // -------------------------------------------------------------
-    // 6. A4 Contract & Digital Signature Canvas
-    // -------------------------------------------------------------
-    function initSignaturePad() {
-      canvas = document.getElementById('signaturePad');
-      ctx = canvas.getContext('2d');
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#0f172a';
-
-      canvas.addEventListener('touchstart', startDrawing);
-      canvas.addEventListener('touchmove', draw);
-      canvas.addEventListener('touchend', stopDrawing);
-      canvas.addEventListener('mousedown', startDrawing);
-      canvas.addEventListener('mousemove', draw);
-      canvas.addEventListener('mouseup', stopDrawing);
-    }
-
-    function startDrawing(e) {
-      isDrawing = true;
-      ctx.beginPath();
-      const pos = getPos(e);
-      ctx.moveTo(pos.x, pos.y);
-    }
-
-    function draw(e) {
-      if (!isDrawing) return;
-      e.preventDefault();
-      const pos = getPos(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-    }
-
-    function stopDrawing() { isDrawing = false; }
-
-    function getPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return { x: clientX - rect.left, y: clientY - rect.top };
-    }
-
-    function clearSignature() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function goToContractPage() {
-      if (!fileStore[1] || !fileStore[2]) {
-        alert('กรุณาแนบภาพบัตรประชาชนและภาพถ่ายคู่บัตรให้ครบถ้วนครับ');
-        return;
-      }
-
-      document.getElementById('docContractName').innerText = document.getElementById('inpName').value;
-      document.getElementById('docContractID').innerText = document.getElementById('inpNationalID').value;
-      document.getElementById('docContractAmount').innerText = document.getElementById('selectAmount').value + " บาท";
-
-      switchTab('page-contract');
-      setTimeout(initSignaturePad, 200);
-    }
-
-    // -------------------------------------------------------------
-    // 7. Payment Calculation & Dynamic PromptPay QR Code
-    // -------------------------------------------------------------
-    function calculateLoan() {
-      const amount = parseFloat(document.getElementById('selectAmount').value);
-      const days = parseInt(document.getElementById('selectDays').value);
-      const freq = parseInt(document.getElementById('selectFreq').value);
-
-      const totalPay = amount * 1.20;
-      const totalInstallments = Math.ceil(days / freq);
-      const payPer = totalPay / totalInstallments;
-      const interestPer = (amount * 0.20) / totalInstallments;
-
-      document.getElementById('calcDisplayAmount').innerText = '฿ ' + amount.toLocaleString();
-      document.getElementById('calcDisplaySummary').innerText = `จ่ายงวดละ ฿ ${payPer.toFixed(2)} (${totalInstallments} งวด / ดอกเบี้ย 20%)`;
-      document.getElementById('payAmountDue').innerText = `฿ ${payPer.toFixed(2)}`;
-      document.getElementById('payInterestOnly').innerText = `฿ ${interestPer.toFixed(2)}`;
-
-      updatePaySummary();
-    }
-
-    function updatePaySummary() {
-      const isInterestOnly = document.getElementById('payInterest').checked;
-      const basePay = isInterestOnly ? 
-        parseFloat(document.getElementById('payInterestOnly').innerText.replace('฿ ', '')) : 
-        parseFloat(document.getElementById('payAmountDue').innerText.replace('฿ ', ''));
-
-      const fine = isLateFine ? 50 : 0;
-      const total = basePay + fine;
-
-      document.getElementById('summaryBasePay').innerText = `฿ ${basePay.toFixed(2)}`;
-      document.getElementById('summaryFine').innerText = `฿ ${fine.toFixed(2)}`;
-      document.getElementById('summaryTotalPay').innerText = `฿ ${total.toFixed(2)}`;
-
-      if (isLateFine) {
-        document.getElementById('rowFine').style.display = 'flex';
-        document.getElementById('fineReasonText').style.display = 'block';
-      } else {
-        document.getElementById('rowFine').style.display = 'none';
-        document.getElementById('fineReasonText').style.display = 'none';
-      }
-    }
-
-    function openQrModal() {
-      const totalPayStr = document.getElementById('summaryTotalPay').innerText.replace('฿ ', '');
-      const isInterestOnly = document.getElementById('payInterest').checked;
-
-      // PromptPay Dynamic QR Code URL
-      const qrUrl = `https://promptpay.io/${PROMPTPAY_PHONE}/${totalPayStr}.png`;
-      document.getElementById('imgPromptPayQr').src = qrUrl;
-      document.getElementById('modalQrAmount').innerText = `฿ ${totalPayStr}`;
-      document.getElementById('modalPayTypeTitle').innerText = isInterestOnly ? "ชำระเฉพาะดอกเบี้ย (ดอกลอย)" : "ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)";
-
-      const modal = new bootstrap.Modal(document.getElementById('qrModal'));
-      modal.show();
-    }
-
-    function submitPaymentSlip() {
-      if (!fileStore['Slip']) {
-        alert('กรุณาแนบภาพสลิปการโอนเงินก่อนส่งครับ');
-        return;
-      }
-
-      const totalPayStr = document.getElementById('summaryTotalPay').innerText.replace('฿ ', '');
-      const isInterestOnly = document.getElementById('payInterest').checked;
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('th-TH') + ' ' + now.toLocaleTimeString('th-TH');
-
-      const receiptItem = {
-        rcNo: "RC-" + Math.floor(10000 + Math.random() * 90000),
-        date: dateStr,
-        type: isInterestOnly ? "ชำระเฉพาะดอกเบี้ย (ดอกลอย)" : "ชำระเต็มงวด (ต้น+ดอก)",
-        base: document.getElementById('summaryBasePay').innerText.replace('฿ ', ''),
-        fine: isLateFine ? "50.00" : "0.00",
-        total: totalPayStr
-      };
-
-      userProfile.history.unshift(receiptItem);
-      renderPayHistory();
-
-      // ปิด Modal QR
-      bootstrap.Modal.getInstance(document.getElementById('qrModal')).hide();
-      removeImage(new Event('click'), 'Slip');
-      
-      alert('ส่งสลิปชำระเงินเรียบร้อยแล้ว! แอดมินจะดำเนินการตรวจสอบสลิปของท่าน');
-    }
-
-    function renderPayHistory() {
-      const tbody = document.getElementById('payHistoryList');
-      if (userProfile.history.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-muted py-3">ยังไม่มีประวัติการชำระเงิน</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = '';
-      userProfile.history.forEach((item, index) => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${item.date}</td>
-            <td>${item.type}</td>
-            <td class="fw-bold text-primary">฿ ${item.total}</td>
-            <td>
-              <button class="btn btn-xs btn-outline-primary py-0 px-1 extra-small" onclick="showReceiptModal(${index})">ดูใบเสร็จ</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function showReceiptModal(index) {
-      const item = userProfile.history[index];
-      document.getElementById('recUid').innerText = "UID: " + userProfile.uid;
-      document.getElementById('recNo').innerText = item.rcNo;
-      document.getElementById('recDate').innerText = item.date;
-      document.getElementById('recName').innerText = document.getElementById('inpName').value || "ผู้ขอสินเชื่อ";
-      document.getElementById('recType').innerText = item.type;
-      document.getElementById('recItemTitle').innerText = item.type;
-      document.getElementById('recBaseAmount').innerText = item.base;
-      document.getElementById('recFineAmount').innerText = item.fine;
-      document.getElementById('recTotalAmount').innerText = item.total;
-
-      if (parseFloat(item.fine) > 0) {
-        document.getElementById('recFineRow').style.display = 'table-row';
-        document.getElementById('recFineNote').innerText = "* รวมค่าปรับส่งเกินเวลา 18:00 น. (50 บาท) ตรวจสอบโดย Server";
-      } else {
-        document.getElementById('recFineRow').style.display = 'none';
-        document.getElementById('recFineNote').innerText = "* ชำระตรงเวลา ชำระผ่านระบบ PromptPay 0658351446";
-      }
-
-      const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
-      receiptModal.show();
-    }
-
-    // -------------------------------------------------------------
-    // Helper & Auto Save
-    // -------------------------------------------------------------
-    function initDistrictDropdown(id) {
-      const distSelect = document.getElementById(id);
-      distSelect.innerHTML = '<option value="">-- เลือกอำเภอ --</option>';
-      Object.keys(phayaoData).forEach(d => distSelect.innerHTML += `<option value="${d}">${d}</option>`);
-    }
-
-    function updateSubDistricts(distId, subId) {
-      const dist = document.getElementById(distId).value;
-      const subSelect = document.getElementById(subId);
-      subSelect.innerHTML = '<option value="">-- เลือกตำบล --</option>';
-      if (dist && phayaoData[dist]) {
-        phayaoData[dist].forEach(s => subSelect.innerHTML += `<option value="${s}">${s}</option>`);
-      }
-    }
-
-    function toggleSubmitBtn() {
-      document.getElementById('btnSubmitApp').disabled = !document.getElementById('chkPdpa').checked;
-    }
-
-    function autoSave() {
-      const data = {
-        name: document.getElementById('inpName').value,
-        idCard: document.getElementById('inpNationalID').value,
-        phone: document.getElementById('inpPhone').value,
-        homeAddr: document.getElementById('inpHomeAddr').value,
-        homeDist: document.getElementById('homeDistrict').value,
-        homeSubDist: document.getElementById('homeSubDistrict').value,
-        shopName: document.getElementById('inpShopName').value,
-        workDist: document.getElementById('workDistrict').value,
-        workSubDist: document.getElementById('workSubDistrict').value,
-        gps: document.getElementById('inpGps').value,
-        bank: document.getElementById('inpBank').value,
-        bankAcc: document.getElementById('inpBankAcc').value
-      };
-      localStorage.setItem('draft_app_data', JSON.stringify(data));
-    }
-
-    function loadAutoSavedData() {
-      const draft = localStorage.getItem('draft_app_data');
-      if (draft) {
-        const d = JSON.parse(draft);
-        document.getElementById('inpName').value = d.name || '';
-        document.getElementById('inpNationalID').value = d.idCard || '';
-        document.getElementById('inpPhone').value = d.phone || '';
-        document.getElementById('inpHomeAddr').value = d.homeAddr || '';
-        document.getElementById('inpShopName').value = d.shopName || '';
-        document.getElementById('inpGps').value = d.gps || '';
-        document.getElementById('inpBank').value = d.bank || '';
-        document.getElementById('inpBankAcc').value = d.bankAcc || '';
-      }
-    }
-
-    function goToUploadPage() {
-      const name = document.getElementById('inpName').value;
-      const idCard = document.getElementById('inpNationalID').value.replace(/\D/g, '');
-      const phone = document.getElementById('inpPhone').value.replace(/\D/g, '');
-
-      if (!name || idCard.length !== 13 || phone.length !== 10) {
-        alert('กรุณากรอกชื่อ, เลขบัตรประชาชน (13 หลัก) และเบอร์โทร (10 หลัก) ให้ถูกต้องครบถ้วนครับ');
-        return;
-      }
-      switchTab('page-upload');
-    }
-
-    function submitApplication() {
-      // Update Profile Information
-      document.getElementById('profName').innerText = document.getElementById('inpName').value;
-      document.getElementById('profPhone').innerText = document.getElementById('inpPhone').value;
-      document.getElementById('profID').innerText = document.getElementById('inpNationalID').value;
-      document.getElementById('profBank').innerText = document.getElementById('inpBank').value;
-      document.getElementById('profBankAcc').innerText = document.getElementById('inpBankAcc').value;
-
-      switchTab('page-status');
-    }
-
-    function simulateAdminDecision(isApproved) {
-      if (isApproved) {
-        document.getElementById('statusPendingBox').classList.add('d-none');
-        document.getElementById('statusApprovedBox').classList.remove('d-none');
+    <!-- MODAL: History of Remittances -->
+    <div id="modal-history" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-lg font-bold">ประวัติการส่งยอดเงินสดคืนบริษัท</h3>
+                <button onclick="closeModal('modal-history')" class="text-gray-400 hover:text-gray-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="rider-history-list" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: Loan Edit (Admin) -->
+    <div id="modal-edit-loan" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-lg font-bold border-b pb-2">ปรับยอดหนี้ & ระยะเวลาสินเชื่อ</h3>
+            <input type="hidden" id="edit-loan-id">
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs font-medium text-gray-700">ชื่อลูกค้า</label>
+                    <input type="text" id="edit-loan-name" disabled class="w-full p-2 border rounded bg-gray-100 text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-gray-700">ยอดหนี้คงเหลือรวม (บาท)</label>
+                    <input type="number" id="edit-loan-amount" class="w-full p-2 border rounded text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-gray-700">ค่างวดต่อวัน (บาท)</label>
+                    <input type="number" id="edit-loan-installment" class="w-full p-2 border rounded text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-gray-700">ระยะเวลา (วัน)</label>
+                    <input type="number" id="edit-loan-term" class="w-full p-2 border rounded text-sm">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-4 border-t">
+                <button onclick="closeModal('modal-edit-loan')" class="px-4 py-2 text-gray-500 text-sm">ยกเลิก</button>
+                <button onclick="saveEditLoan()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm">บันทึกการแก้ไข</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: View Customer Slip (Admin) -->
+    <div id="modal-view-slip" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 text-center">
+            <h3 class="text-lg font-bold border-b pb-2">ตรวจสอบสลิปลูกค้าโอนเงิน</h3>
+            <p class="text-sm text-gray-650" id="view-slip-cust-name"></p>
+            <div class="bg-gray-100 p-2 rounded-xl flex justify-center items-center">
+                <img id="admin-slip-img-preview" src="" alt="Customer Slip" class="max-h-72 object-contain rounded border">
+            </div>
+            <div class="flex justify-end gap-2 pt-3 border-t">
+                <button onclick="closeModal('modal-view-slip')" class="px-4 py-2 text-gray-500 text-sm">ปิด</button>
+                <button onclick="approveCustomerSlip()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold text-sm">อนุมัติสลิปนี้ (เงินเข้าบริษัท + คอมฯ 7%)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+                let targetLoginRole = ''; 
+        let currentUser = null; 
+        let isMaster = false;
         
-        userProfile.loanStatus = 'ACTIVE';
-        localStorage.setItem('loan_status', 'ACTIVE');
-        checkLoanRights();
-      } else {
-        document.getElementById('statusPendingBox').classList.add('d-none');
-        document.getElementById('statusRejectedBox').classList.remove('d-none');
-      }
-    }
+        let selectedPayMethod = 'โอน';
+        let hasSlipImage = false;
+        let activeTaskId = null;
+        let currentRiderTab = 'pending'; 
 
-    function resetToReApply() {
-      document.getElementById('statusPendingBox').classList.remove('d-none');
-      document.getElementById('statusRejectedBox').classList.add('d-none');
-      switchTab('page-select');
-    }
+        // Global Investment Capital (Master can set, Admin can view)
+        let companyInvestmentCapital = 500000;
 
-    function copyBankAcc() {
-      const acc = document.getElementById('profBankAcc').innerText;
-      navigator.clipboard.writeText(acc);
-      alert('คัดลอกเลขที่บัญชีแล้ว: ' + acc);
-    }
+        let users = [];
+        let customers = [];
+        let transactions = [];
+        let remittances = [];
+        let remittanceHistory = [];
+        let activeAdminSlipCustId = null;
 
-    function switchTab(pageId) {
-      document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.nav-item-btn').forEach(n => n.classList.remove('active'));
-      
-      document.getElementById(pageId).classList.add('active');
-      if (pageId === 'page-select') document.getElementById('navSelect').classList.add('active');
-      if (pageId === 'page-payment') document.getElementById('navPayment').classList.add('active');
-      if (pageId === 'page-profile') document.getElementById('navProfile').classList.add('active');
-    }
-  </script>
+        // Google Apps Script Endpoint URL
+        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzw16zt1CduZ6rgws8aLP8GTaeu4fiNmKhXNeiCn1-pXujaQiLerKyoHZqvYYhVIE6s8A/exec";
+
+        let authToken = '';
+        let backendLastUpdated = '';
+        const FDG_VERSION = '1.7.1-fast-sync-lock';
+        let systemLogs = [];
+        let payroll = [];
+        let deleteRequests = [];
+        let commissionLedger = [];
+
+        // Global action loader: one lock for every network-changing/user API action.
+        let fdgActionBusy = false;
+        let fdgActionTimer = null;
+        let fdgActionEndTimer = null;
+        let fdgActionProgress = 0;
+        let fdgActionLabel = 'กำลังดำเนินการ...';
+
+        function fdgActionStart(label='กำลังดำเนินการ...') {
+            if (fdgActionEndTimer) { clearTimeout(fdgActionEndTimer); fdgActionEndTimer = null; }
+            fdgActionLabel = label;
+            fdgActionBusy = true;
+            fdgActionProgress = 0;
+            const box=document.getElementById('fdg-action-loader');
+            if (!box) return;
+            box.classList.remove('hidden');
+            box.setAttribute('aria-busy','true');
+            document.getElementById('fdg-action-title').innerText=label;
+            document.getElementById('fdg-action-percent').innerText='0%';
+            document.getElementById('fdg-action-progress').style.width='0%';
+            if (fdgActionTimer) clearInterval(fdgActionTimer);
+            fdgActionTimer=setInterval(()=>{
+                if (!fdgActionBusy) return;
+                // No fake 100%: while the request is still running, stop at 92%.
+                if (fdgActionProgress < 92) {
+                    const step = fdgActionProgress < 60 ? 3 : 1;
+                    fdgActionProgress=Math.min(92,fdgActionProgress+step);
+                    document.getElementById('fdg-action-percent').innerText=fdgActionProgress+'%';
+                    document.getElementById('fdg-action-progress').style.width=fdgActionProgress+'%';
+                }
+            },120);
+        }
+
+        function fdgActionTouch(label) {
+            if (!fdgActionBusy) fdgActionStart(label);
+            else {
+                if (label) document.getElementById('fdg-action-title').innerText=label;
+                if (fdgActionEndTimer) { clearTimeout(fdgActionEndTimer); fdgActionEndTimer=null; }
+            }
+        }
+
+        function fdgActionFinish(success=true, message='') {
+            if (!fdgActionBusy) return;
+            if (fdgActionTimer) { clearInterval(fdgActionTimer); fdgActionTimer=null; }
+            fdgActionProgress=100;
+            const pct=document.getElementById('fdg-action-percent');
+            const fill=document.getElementById('fdg-action-progress');
+            const title=document.getElementById('fdg-action-title');
+            if (pct) pct.innerText='100%';
+            if (fill) { fill.style.width='100%'; fill.classList.toggle('bg-red-500',!success); fill.classList.toggle('bg-indigo-600',success); }
+            if (title) title.innerText=message || (success?'ดำเนินการสำเร็จ':'ดำเนินการไม่สำเร็จ');
+            fdgActionEndTimer=setTimeout(()=>{
+                fdgActionBusy=false;
+                const box=document.getElementById('fdg-action-loader');
+                if (box) { box.classList.add('hidden'); box.setAttribute('aria-busy','false'); }
+                if (fill) { fill.classList.remove('bg-red-500'); fill.classList.add('bg-indigo-600'); }
+                fdgActionEndTimer=null;
+            },350);
+        }
+
+        function fdgActionReject() {
+            showToast('กำลังดำเนินการอยู่ กรุณารอให้โหลดถึง 100% ก่อนกดซ้ำ', false);
+            return true;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            let percent = 0;
+            const interval = setInterval(() => {
+                percent += 10;
+                document.getElementById('loader-percent').innerText = `${percent}%`;
+                if (percent >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('loading-box').classList.add('hidden');
+                    document.getElementById('success-box').classList.remove('hidden');
+                    document.getElementById('success-box').classList.add('flex');
+                    setTimeout(() => {
+                        document.getElementById('preloader').classList.add('hidden');
+                        document.getElementById('portal-screen').classList.remove('hidden');
+                    }, 1000);
+                }
+            }, 50);
+        });
+
+        document.addEventListener('change', e => { if(['pay-user','pay-month','pay-year','pay-base'].includes(e.target?.id)) updatePayrollPreview(); });
+
+        function showToast(msg, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-icon').innerHTML = isSuccess ? '<i data-lucide="check-circle" class="w-6 h-6 text-emerald-500"></i>' : '<i data-lucide="alert-circle" class="w-6 h-6 text-red-500"></i>';
+            document.getElementById('toast-message').innerText = msg;
+            lucide.createIcons();
+            toast.classList.remove('hidden', 'translate-x-full');
+            setTimeout(() => toast.classList.add('translate-x-full'), 3000);
+        }
+
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === "password" ? "text" : "password";
+            lucide.createIcons();
+        }
+
+        function openLogin(role) {
+            targetLoginRole = role;
+            document.getElementById('portal-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-title').innerText = role === 'admin' ? 'เข้าสู่ระบบ (Admin / Master)' : 'เข้าสู่ระบบ (Rider App)';
+            document.getElementById('login-subtitle').innerText = role === 'admin' ? 'กรอกบัญชี Admin หรือใช้ Master Key' : 'กรอกบัญชี Rider เพื่อเริ่มงาน';
+        }
+
+        function backToPortal() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('portal-screen').classList.remove('hidden');
+        }
+
+        async function handleLogin() {
+            const userInp = document.getElementById('login-username').value.trim();
+            const passInp = document.getElementById('login-password').value.trim();
+
+            if (!userInp && !passInp) {
+                showToast('กรุณากรอก Username และ Password', false);
+                return;
+            }
+
+            try {
+                addClientLog('INFO','login_attempt','กำลังส่งคำขอตรวจสอบบัญชีไปยัง Server',{targetRole:targetLoginRole});
+                showToast('กำลังตรวจสอบบัญชี...', true);
+                const result = await gasPost('login', { role: targetLoginRole, username: userInp, password: passInp });
+                if (!result || result.status !== 'success') {
+                    addClientLog('ERROR','login',result && result.message ? result.message : 'เข้าสู่ระบบไม่สำเร็จ');
+                    showToast(result && result.message ? result.message : 'เข้าสู่ระบบไม่สำเร็จ', false);
+                    return;
+                }
+
+                authToken = result.token;
+                addClientLog('INFO','login_success','Server ยืนยันการเข้าสู่ระบบแล้ว',{isMaster:!!result.isMaster,role:result.user?.role});
+                isMaster = !!result.isMaster;
+                currentUser = result.user;
+                await refreshFromGoogleSheets(false);
+                currentUser = result.isMaster ? result.user : (users.find(u => String(u.id) === String(result.user.id)) || result.user);
+                isMaster = !!result.isMaster;
+                showToast(isMaster ? 'เข้าสู่ระบบ Master สำเร็จ' : `ยินดีต้อนรับ ${currentUser.name}`, true);
+                openDashboard(isMaster ? 'admin' : currentUser.role);
+                startSyncTimers();
+            } catch (err) {
+                console.error(err);
+                showToast('ไม่สามารถเชื่อมต่อ Google Apps Script ได้', false);
+            }
+        }
+
+        async function gasGet(action, options = {}) {
+            if (!authToken) throw new Error('ยังไม่ได้เข้าสู่ระบบ');
+            const silent=!!options.silent;
+            if (!silent && fdgActionBusy && options.rejectIfBusy) { fdgActionReject(); throw new Error('BUSY'); }
+            if (!silent) fdgActionStart(options.label || 'กำลังโหลดข้อมูล...');
+            const url = `${GAS_ENDPOINT}?action=${encodeURIComponent(action)}&token=${encodeURIComponent(authToken)}&_=${Date.now()}`;
+            try {
+                const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data=await response.json();
+                if (!silent) fdgActionFinish(data?.status !== 'error', data?.status === 'error' ? (data.message||'ดำเนินการไม่สำเร็จ') : 'ดำเนินการสำเร็จ');
+                return data;
+            } catch(e) {
+                if (!silent) fdgActionFinish(false, e.message||'เชื่อมต่อไม่สำเร็จ');
+                throw e;
+            }
+        }
+
+        async function gasPost(action, payload = {}, options = {}) {
+            const silent=!!options.silent;
+            if (!silent) fdgActionStart(options.label || 'กำลังบันทึกข้อมูล...');
+            try {
+                const response = await fetch(GAS_ENDPOINT, {
+                    method: 'POST',
+                    body: JSON.stringify(Object.assign({ action, clientVersion: FDG_VERSION }, payload)),
+                    cache: 'no-store'
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data=await response.json();
+                if (!silent) fdgActionFinish(data?.status !== 'error', data?.status === 'error' ? (data.message||'ดำเนินการไม่สำเร็จ') : 'บันทึกสำเร็จ');
+                return data;
+            } catch(e) {
+                if (!silent) fdgActionFinish(false, e.message||'เชื่อมต่อไม่สำเร็จ');
+                throw e;
+            }
+        }
+
+        function setLatestUpdate(stamp) {
+            backendLastUpdated = stamp || backendLastUpdated;
+            const el = document.getElementById('latest-update-text');
+            if (!el) return;
+            if (!backendLastUpdated) {
+                el.innerText = 'ยังไม่มีข้อมูลการอัปเดต';
+                return;
+            }
+            const d = new Date(backendLastUpdated);
+            el.innerText = isNaN(d.getTime()) ? String(backendLastUpdated) : d.toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'medium' });
+        }
+
+        function addClientLog(level, action, message, details={}) {
+            const entry = { timestamp:new Date().toISOString(), level, action, userId:currentUser?.id||'', userName:currentUser?.name||'', role:currentUser?.role||'', message, details:JSON.stringify(details), success:level!=='ERROR', clientVersion:FDG_VERSION, requestId:'' };
+            systemLogs = [entry].concat(systemLogs || []).slice(0,200);
+            renderLogPreview();
+        }
+
+        function renderLogPreview() {
+            const box=document.getElementById('fdg-log-preview');
+            if(!box)return;
+            box.innerHTML=(systemLogs||[]).slice(0,20).map(l=>{
+                const t=new Date(l.timestamp); const ts=isNaN(t)?l.timestamp:t.toLocaleString('th-TH');
+                const cls=l.level==='ERROR'?'text-red-600':l.level==='WARN'?'text-amber-600':'text-emerald-600';
+                return `<div class="border-b py-2 text-xs"><span class="${cls} font-bold">[${l.level||'INFO'}]</span> <span class="text-gray-400">${ts}</span> <b>${l.action||''}</b> — ${l.message||''}</div>`;
+            }).join('') || '<div class="text-xs text-gray-400 p-3">ยังไม่มี LOG</div>';
+        }
+
+        async function loadServerLogs() {
+            try {
+                const r=await gasGet('getLogs',{silent:true});
+                if(r.status==='success') { systemLogs=r.logs||[]; renderLogPreview(); }
+            } catch(e) { addClientLog('ERROR','getLogs','โหลด LOG จาก Server ไม่สำเร็จ',{error:e.message}); }
+        }
+
+        function openLogModal(){
+            const modal=document.getElementById('fdg-log-modal');
+            if(!modal)return;
+            const text=(systemLogs||[]).map(l=>JSON.stringify(l)).join('\n');
+            document.getElementById('fdg-log-copy-area').value=text;
+            modal.classList.remove('hidden');
+        }
+        function closeLogModal(){document.getElementById('fdg-log-modal')?.classList.add('hidden');}
+        async function copyLogs(){
+            const area=document.getElementById('fdg-log-copy-area');
+            try{await navigator.clipboard.writeText(area.value);showToast('คัดลอก LOG ทั้งหมดแล้ว',true);}catch(e){area.select();document.execCommand('copy');showToast('คัดลอก LOG แล้ว',true);}
+        }
+
+        async function refreshFromGoogleSheets(showMessage = true, internal = false) {
+            if (!authToken) {
+                if (showMessage) showToast('กรุณาเข้าสู่ระบบก่อน Refresh ข้อมูล', false);
+                return false;
+            }
+            try {
+                fdgActionTouch('กำลังซิงก์ข้อมูลจาก Google Sheets...');
+                if (showMessage) showToast('กำลัง Refresh ข้อมูลจาก Google Sheets...', true);
+                const data = await gasGet('getAllData', { silent: true });
+                if (!data || data.status !== 'success') throw new Error(data && data.message ? data.message : 'โหลดข้อมูลไม่สำเร็จ');
+                users = (Array.isArray(data.users) ? data.users : []).map(u => Object.assign({
+                    id:null,name:'',phone:'',address:'',bankName:'',bankAcc:'',
+                    username:'',role:'',isApproved:true,status:'active',
+                    isOnline:false,cashHold:0,qrHold:0,incomeYesterday:0,incomeToday:0,incomeMonth:0,salary:0
+                }, u, { bankName: u.bankName || u.bankname || '', bankAcc: u.bankAcc || u.bankacc || '' }));
+                customers = (Array.isArray(data.customers) ? data.customers : []).map(c => Object.assign({
+                    id:c.uid || c.id, _sheetUid:c.uid || c.id,
+                    name:c.fullname || c.name || '', phone:c.phone || '',
+                    remainingAmount:Number(c.remainingBalance ?? c.remainingAmount ?? 0),
+                    installment:Number(c.installment || 0), term:Number(c.term || 0),
+                    riderId:c.riderId || null, status:String(c.status || 'pending').toLowerCase(),
+                    payStatus:c.payStatus || 'pending', remark:c.remark || '', slipImage:c.slipImage || null
+                }, c));
+                transactions = Array.isArray(data.transactions) ? data.transactions : [];
+                payroll = Array.isArray(data.payroll) ? data.payroll : [];
+                commissionLedger = Array.isArray(data.commissionLedger) ? data.commissionLedger : [];
+                deleteRequests = Array.isArray(data.deleteRequests) ? data.deleteRequests : [];
+                systemLogs = Array.isArray(data.logs) ? data.logs : [];
+                remittances = Array.isArray(data.remittances) ? data.remittances : [];
+                remittanceHistory = Array.isArray(data.remittanceHistory) ? data.remittanceHistory : [];
+                companyInvestmentCapital = Number(data.companyInvestmentCapital || 0);
+                setLatestUpdate(data.lastUpdated || '');
+                addClientLog('INFO','refresh','โหลดข้อมูลจาก Google Sheets สำเร็จ',{users:users.length,customers:customers.length,transactions:transactions.length});
+                renderLogPreview();
+
+                if (currentUser && !isMaster) {
+                    currentUser = users.find(u => String(u.id) === String(currentUser.id)) || currentUser;
+                }
+                if (document.getElementById('admin-app') && !document.getElementById('admin-app').classList.contains('hidden')) {
+                    renderAdmin();
+                    await refreshRiderPresence();
+                }
+                if (document.getElementById('rider-app') && !document.getElementById('rider-app').classList.contains('hidden')) renderRider();
+                if (showMessage) showToast('Refresh ข้อมูลจาก Google Sheets สำเร็จ', true);
+                fdgActionFinish(true, 'ซิงก์ข้อมูลสำเร็จ');
+                return true;
+            } catch (err) {
+                console.error(err);
+                if (showMessage) showToast('Refresh ไม่สำเร็จ: ' + (err.message || 'ไม่สามารถดึงข้อมูลจาก Google Sheets ได้'), false);
+                addClientLog('ERROR','refresh','Refresh failed',{error:err.message});
+                fdgActionFinish(false, 'ซิงก์ข้อมูลไม่สำเร็จ');
+                return false;
+            }
+        }
+
+        let presenceTimer = null;
+        let heartbeatTimer = null;
+        let presenceBusy = false;
+        let heartbeatBusy = false;
+
+        async function refreshRiderPresence() {
+            if (!authToken || presenceBusy) return false;
+            presenceBusy = true;
+            try {
+                const data = await gasGet('presence', {silent:true});
+                if (!data || data.status !== 'success') throw new Error(data?.message || 'Presence failed');
+                const map = {};
+                (data.presence || []).forEach(p => { map[String(p.id)] = p; });
+                users = users.map(u => {
+                    const p = map[String(u.id)];
+                    return p ? Object.assign({}, u, {isOnline: !!p.isOnline, lastSeen: p.lastSeen || u.lastSeen || ''}) : u;
+                });
+                if (document.getElementById('admin-app') && !document.getElementById('admin-app').classList.contains('hidden')) renderAdmin();
+                return true;
+            } catch (e) {
+                addClientLog('ERROR','presence','โหลดสถานะ Rider ไม่สำเร็จ',{error:e.message});
+                return false;
+            } finally { presenceBusy = false; }
+        }
+
+        function stopSyncTimers() {
+            if (presenceTimer) clearInterval(presenceTimer);
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+            presenceTimer = null; heartbeatTimer = null;
+        }
+
+        function startSyncTimers() {
+            stopSyncTimers();
+            if (!authToken) return;
+            if (isMaster || currentUser?.role === 'admin') {
+                refreshRiderPresence();
+                presenceTimer = setInterval(refreshRiderPresence, 5000);
+            }
+            if (currentUser?.role === 'rider' && currentUser?.isOnline) {
+                const beat = async () => {
+                    if (!authToken || heartbeatBusy || !currentUser?.isOnline) return;
+                    heartbeatBusy = true;
+                    try {
+                        const r = await gasPost('heartbeat', {token: authToken}, {silent:true});
+                        if (r.status === 'success') currentUser.lastSeen = r.lastSeen;
+                    } catch(e) {
+                        addClientLog('WARN','heartbeat','ส่งสถานะออนไลน์ไม่สำเร็จ',{error:e.message});
+                    } finally { heartbeatBusy = false; }
+                };
+                beat();
+                heartbeatTimer = setInterval(beat, 15000);
+            }
+        }
+
+        async function syncCustomer(c) {
+            if (!c) return;
+            const uid = c._sheetUid;
+            if (!uid) return;
+            await gasPost('updateCustomer', {
+                token: authToken,
+                uid,
+                fields: {
+                    fullname: c.name || '',
+                    phone: c.phone || '',
+                    loanAmount: Number(c.loanAmount || c.remainingAmount || 0),
+                    remainingBalance: Number(c.remainingAmount || 0),
+                    status: String(c.status || '').toUpperCase(),
+                    startDate: c.startDate || '',
+                    startTimestamp: c.startTimestamp || ''
+                },
+                meta: { installment: Number(c.installment || 0), term: Number(c.term || 0), riderId: c.riderId || null, payStatus: c.payStatus || 'pending', remark: c.remark || '', slipImage: c.slipImage || null, pendingTxId: c.pendingTxId || null }
+            });
+        }
+
+        async function syncUser(u) {
+            if (!u) return;
+            const id = u._sheetId || u.id;
+            const state = { isOnline: !!u.isOnline, cashHold: Number(u.cashHold || 0), qrHold: Number(u.qrHold || 0), incomeYesterday: Number(u.incomeYesterday || 0), incomeToday: Number(u.incomeToday || 0), incomeMonth: Number(u.incomeMonth || 0) };
+            if (!isMaster && u.role === 'rider') {
+                return gasPost('setRiderState', { token: authToken, id: String(id), state });
+            }
+            return gasPost('updateUser', {
+                token: authToken,
+                id: String(id),
+                fields: { name: u.name || '', phone: u.phone || '', role: u.role || '', username: u.username || '', bankname: u.bankName || '', bankacc: u.bankAcc || '', address: u.address || '', isApproved: !!u.isApproved, status: u.status || 'active' },
+                meta: state
+            });
+        }
+
+        async function addTransaction(fields) {
+            return gasPost('addTransaction', { token: authToken, fields });
+        }
+        function openDashboard(role) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+
+            if (role === 'admin') {
+                document.getElementById('admin-app').classList.remove('hidden');
+                document.getElementById('admin-sidebar-role').innerText = isMaster ? 'MASTER SYSTEM (สิทธิ์สูงสุด)' : 'ADMIN SYSTEM (ตรวจสอบเงินทุน)';
+                
+                const masterControl = document.getElementById('master-investment-control');
+                const roleIndicator = document.getElementById('investment-role-indicator');
+                const permDesc = document.getElementById('investment-permission-desc');
+
+                if (isMaster) {
+                    document.getElementById('nav-master-approve').classList.remove('hidden');
+                    document.getElementById('master-badge-indicator').innerText = "โหมด Master (กำหนดวงเงินลงทุน & ควบคุมระบบสูงสุด)";
+                    masterControl.classList.remove('hidden');
+                    roleIndicator.innerText = "วงเงินลงทุนบริษัท (Master ควบคุมการกำหนดวงเงิน)";
+                    permDesc.innerText = "ท่านอยู่ในฐานะ Master: สามารถเพิ่มหรือปรับลดวงเงินลงทุนบริษัทได้";
+                } else {
+                    document.getElementById('nav-master-approve').classList.add('hidden');
+                    document.getElementById('master-badge-indicator').innerText = "โหมด Admin (ตรวจสอบเงินทุนเพื่อพิจารณาอนุมัติสินเชื่อ)";
+                    masterControl.classList.add('hidden');
+                    roleIndicator.innerText = "วงเงินลงทุนบริษัท (Admin ตรวจสอบเพื่อตัดสินใจอนุมัติ)";
+                    permDesc.innerText = "ท่านอยู่ในฐานะ Admin: สามารถดูยอดเงินทุนที่มีอยู่เพื่อใช้ตัดสินใจในการอนุมัติปล่อยสินเชื่อ (ไม่มีสิทธิ์กำหนดวงเงินเอง)";
+                }
+                renderAdmin();
+            } else {
+                document.getElementById('rider-app').classList.remove('hidden');
+                document.getElementById('rider-profile-name').innerText = currentUser.name;
+                renderRider();
+            }
+        }
+
+        function logout() {
+            stopSyncTimers();
+            authToken = '';
+            backendLastUpdated = '';
+            currentUser = null;
+            isMaster = false;
+            document.getElementById('admin-app').classList.add('hidden');
+            document.getElementById('rider-app').classList.add('hidden');
+            document.getElementById('portal-screen').classList.remove('hidden');
+            showToast('ออกจากระบบเรียบร้อยแล้ว', true);
+        }
+
+        // ==================== RIDER FUNCTIONS ====================
+        function toggleRiderSidebar() {
+            document.getElementById('rider-sidebar').classList.toggle('-translate-x-full');
+        }
+
+        function switchRiderTab(tab) {
+            currentRiderTab = tab;
+            const btnPending = document.getElementById('tab-btn-pending');
+            const btnCompleted = document.getElementById('tab-btn-completed');
+            const btnIssue = document.getElementById('tab-btn-issue');
+            const btnWaiting = document.getElementById('tab-btn-waiting');
+            const titleElem = document.getElementById('rider-list-title');
+            const indicator = document.getElementById('rider-current-page-indicator');
+
+            [btnPending, btnCompleted, btnIssue, btnWaiting].forEach(b => {
+                b.className = "py-2 text-[11px] font-bold rounded-lg transition text-gray-600 text-center";
+            });
+
+            if (tab === 'pending') {
+                btnPending.className = "py-2 text-[11px] font-bold rounded-lg transition bg-emerald-600 text-white text-center";
+                titleElem.innerText = "รายการงานที่ยังไม่ได้เก็บเงิน";
+                indicator.innerText = "กำลังแสดง: ยังไม่เก็บ";
+            } else if (tab === 'completed') {
+                btnCompleted.className = "py-2 text-[11px] font-bold rounded-lg transition bg-emerald-600 text-white text-center";
+                titleElem.innerText = "รายการงานที่เก็บเงินแล้ว";
+                indicator.innerText = "กำลังแสดง: เก็บแล้ว";
+            } else if (tab === 'issue') {
+                btnIssue.className = "py-2 text-[11px] font-bold rounded-lg transition bg-red-600 text-white text-center";
+                titleElem.innerText = "รายการงานที่ติดปัญหา (ส่งไปยังยอดที่ไม่สามารถเก็บได้)";
+                indicator.innerText = "กำลังแสดง: ติดปัญหา";
+            } else if (tab === 'waiting') {
+                btnWaiting.className = "py-2 text-[11px] font-bold rounded-lg transition bg-blue-600 text-white text-center";
+                titleElem.innerText = "รายการยอดรอตรวจสอบ (ลูกค้าโอนแล้ว รอแอดมินเช็ค)";
+                indicator.innerText = "กำลังแสดง: รอตรวจสอบ";
+            }
+            renderRider();
+        }
+
+        function renderRider() {
+            document.getElementById('rider-shift-status').innerText = currentUser.isOnline ? 'กำลังปฏิบัติงาน (Online)' : 'ยังไม่เริ่มงาน (Offline)';
+            document.getElementById('rider-shift-status').className = currentUser.isOnline ? 'font-bold text-emerald-600 text-sm' : 'font-bold text-red-500 text-sm';
+            document.getElementById('btn-toggle-shift').innerText = currentUser.isOnline ? 'กดเลิกงาน' : 'กดเริ่มงาน';
+            document.getElementById('btn-toggle-shift').className = currentUser.isOnline ? 'bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow' : 'bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow';
+
+            let targetTodaySum = 0;
+            customers.filter(c => c.riderId === currentUser.id && c.status === 'approved').forEach(c => {
+                targetTodaySum += c.installment;
+            });
+
+            document.getElementById('rider-target-today').innerText = `${targetTodaySum} ฿`;
+            document.getElementById('rider-collected-today').innerText = `${currentUser.incomeToday || 0} ฿`;
+            document.getElementById('rider-cash-holding-box').innerText = `${currentUser.cashHold || 0} ฿`;
+
+            document.getElementById('rider-income-month').innerText = `${currentUser.incomeMonth || 0} ฿`;
+            document.getElementById('rider-income-yesterday').innerText = `${currentUser.incomeYesterday || 0} ฿`;
+            document.getElementById('rider-income-today').innerText = `${currentUser.incomeToday || 0} ฿`;
+            document.getElementById('rider-qr-sum').innerText = `${currentUser.qrHold || 0} ฿`;
+            document.getElementById('rider-cash-sum').innerText = `${currentUser.cashHold || 0} ฿`;
+            
+            const totalCom = (((currentUser.qrHold || 0) + (currentUser.cashHold || 0) + (currentUser.incomeToday || 0)) * 0.07) || 0;
+            document.getElementById('rider-com-sum').innerText = `${totalCom.toFixed(1)} ฿`;
+
+            const taskContainer = document.getElementById('rider-task-list');
+            taskContainer.innerHTML = '';
+
+            const myTasks = customers.filter(c => c.riderId === currentUser.id && c.status === 'approved');
+            const filteredTasks = myTasks.filter(c => {
+                if (currentRiderTab === 'pending') {
+                    return c.payStatus === 'pending';
+                } else if (currentRiderTab === 'completed') {
+                    return c.payStatus === 'success';
+                } else if (currentRiderTab === 'issue') {
+                    return c.payStatus === 'failed';
+                } else if (currentRiderTab === 'waiting') {
+                    return c.payStatus === 'pending_admin';
+                }
+            });
+
+            if (filteredTasks.length === 0) {
+                taskContainer.innerHTML = `<p class="text-xs text-gray-400 text-center py-6 bg-white rounded-xl border">ไม่มีรายการงานในหมวดหมู่นี้</p>`;
+                return;
+            }
+
+            filteredTasks.forEach(c => {
+                const remainingAfter = Math.max(0, c.remainingAmount - c.installment);
+                
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl shadow border space-y-2";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">${c.name}</h4>
+                            <a href="tel:${c.phone}" class="text-xs text-indigo-600 font-bold flex items-center gap-1 mt-0.5">
+                                <i data-lucide="phone" class="w-3.5 h-3.5"></i> โทร: ${c.phone}
+                            </a>
+                        </div>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">ค่างวด: ${c.installment} ฿</span>
+                    </div>
+                    <div class="bg-gray-50 p-2.5 rounded-lg text-xs space-y-1">
+                        <div class="flex justify-between text-gray-600">
+                            <span>ยอดหนี้คงเหลือปัจจุบัน:</span>
+                            <span class="font-bold text-slate-800">${c.remainingAmount.toLocaleString()} ฿</span>
+                        </div>
+                        <div class="flex justify-between text-emerald-700">
+                            <span>หลังหักชำระวันนี้ จะเหลือยอดคงเหลือ:</span>
+                            <span class="font-bold">${remainingAfter.toLocaleString()} ฿</span>
+                        </div>
+                    </div>
+                    ${c.remark ? `<p class="text-[11px] text-red-500 font-bold bg-red-50 p-1.5 rounded">ปัญหา / หมายเหตุ: ${c.remark}</p>` : ''}
+                    <div class="flex justify-end pt-1">
+                        ${c.payStatus === 'success' ? '<span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">✓ เก็บเงินแล้ว (รับคอมฯ 7%)</span>' : 
+                        c.payStatus === 'pending_admin' ? '<span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200">⏳ รอตรวจสอบ (ลูกค้าโอนแล้ว รอแอดมินเช็ค)</span>' :
+                        c.payStatus === 'failed' ? '<span class="text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-200">⚠️ ส่งยอดที่ไม่สามารถเก็บได้แล้ว</span>' :
+                        `<button onclick="openCollectModal(${c.id})" ${!currentUser.isOnline ? 'disabled' : ''} class="bg-emerald-600 text-white text-xs px-4 py-2 rounded-lg font-bold disabled:opacity-40 shadow w-full">บันทึกรับชำระเงิน (+คอมฯ 7%)</button>`}
+                    </div>
+                `;
+                taskContainer.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        async function toggleShift() {
+            if (currentUser.isOnline) {
+                const pendingCount = customers.filter(c => c.riderId === currentUser.id && c.status === 'approved' && c.payStatus === 'pending').length;
+                if (pendingCount > 0) {
+                    showToast(`ไม่สามารถเลิกงานได้! ยังมีงานที่ยังไม่ได้เก็บเงินค้างอยู่ ${pendingCount} รายการ`, false);
+                    return;
+                }
+                if ((currentUser.cashHold || 0) > 0) {
+                    showToast('คุณมียอดเงินสดค้างส่งบริษัท ไม่สามารถกดเลิกงานได้จนกว่าจะโอนเงินสดคืนทั้งหมด!', false);
+                    return;
+                }
+            }
+            currentUser.isOnline = !currentUser.isOnline;
+            try {
+                await gasPost('setRiderState', { token: authToken, id: String(currentUser._sheetId || currentUser.id), state: { isOnline: currentUser.isOnline, cashHold: currentUser.cashHold || 0, qrHold: currentUser.qrHold || 0, incomeYesterday: currentUser.incomeYesterday || 0, incomeToday: currentUser.incomeToday || 0, incomeMonth: currentUser.incomeMonth || 0 } });
+                showToast(currentUser.isOnline ? 'เริ่มปฏิบัติงานแล้ว' : 'ปิดกะการทำงานเรียบร้อย', true);
+                startSyncTimers();
+            } catch (err) {
+                currentUser.isOnline = !currentUser.isOnline;
+                showToast('บันทึกสถานะกะงานไม่สำเร็จ', false);
+            }
+            renderRider();
+        }
+
+        function openCollectModal(id) {
+            activeTaskId = id;
+            const c = customers.find(item => item.id === id);
+            document.getElementById('m-cust-name').innerText = c.name;
+            document.getElementById('m-cust-amount-text').innerText = `${c.installment} ฿ (ไรเดอร์ได้คอมมิชชั่น 7% = ${(c.installment * 0.07).toFixed(1)} ฿)`;
+            
+            document.getElementById('m-call-container').innerHTML = `
+                <a href="tel:${c.phone}" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-md">
+                    <i data-lucide="phone-call" class="w-5 h-5"></i> โทรหาลูกค้าเบอร์: ${c.phone} (กดโทรด่วน)
+                </a>
+            `;
+
+            const remainingAfter = Math.max(0, c.remainingAmount - c.installment);
+            document.getElementById('m-balance-preview').innerText = `ยอดหนี้ปัจจุบัน ${c.remainingAmount.toLocaleString()} ฿ ➔ หลังหักชำระวันนี้จะเหลือ ${remainingAfter.toLocaleString()} ฿`;
+
+            document.getElementById('collect-remark').value = '';
+            document.getElementById('toggle-fail-switch').checked = false;
+            document.getElementById('fail-reason-box').classList.add('hidden');
+            document.getElementById('close-account-sub-options').classList.add('hidden');
+            
+            hasSlipImage = false;
+            document.getElementById('slip-image-preview').src = '';
+            document.getElementById('slip-preview-wrapper').classList.add('hidden');
+            document.getElementById('slip-file-label').innerText = "คลิกเพื่อถ่ายรูปหรืออัปโหลดสลิป";
+
+            setPayMethod('โอน');
+            document.getElementById('modal-collect').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function setPayMethod(m) {
+            selectedPayMethod = m;
+            document.getElementById('btn-pay-transfer').className = m === 'โอน' ? 'p-3 border rounded-lg font-bold bg-blue-600 text-white text-xs' : 'p-3 border rounded-lg font-bold bg-gray-50 text-xs';
+            document.getElementById('btn-pay-cash').className = m === 'เงินสด' ? 'p-3 border rounded-lg font-bold bg-amber-600 text-white text-xs' : 'p-3 border rounded-lg font-bold bg-gray-50 text-xs';
+            document.getElementById('slip-box').className = m === 'โอน' ? 'space-y-2' : 'hidden';
+        }
+
+        function handleCustomerSlipImage(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    hasSlipImage = true;
+                    document.getElementById('slip-image-preview').src = e.target.result;
+                    document.getElementById('slip-preview-wrapper').classList.remove('hidden');
+                    document.getElementById('slip-file-label').innerText = "เปลี่ยนรูปสลิป";
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeSlipImage() {
+            hasSlipImage = false;
+            document.getElementById('slip-image-preview').src = '';
+            document.getElementById('slip-preview-wrapper').classList.add('hidden');
+            document.getElementById('slip-file-label').innerText = "คลิกเพื่อถ่ายรูปหรืออัปโหลดสลิป";
+        }
+
+        async function handleFloatingInterest() {
+            const c = customers.find(item => item.id === activeTaskId);
+            if (!c) return;
+            const interestAmount = c.installment * 0.3;
+            const commission = interestAmount * 0.07;
+            if (!confirm(`ยืนยันการรับชำระเฉพาะดอกเบี้ยจำนวน ${interestAmount} ฿? ไรเดอร์จะได้รับคอมมิชชั่น 7% (${commission.toFixed(1)} ฿)`)) return;
+            c.payStatus = 'success';
+            currentUser.incomeToday = (currentUser.incomeToday || 0) + commission;
+            currentUser.incomeMonth = (currentUser.incomeMonth || 0) + commission;
+            currentUser.cashHold = (currentUser.cashHold || 0) + interestAmount;
+            try {
+                await syncCustomer(c);
+                await syncUser(currentUser);
+                await addTransaction({ txId: `TX-${Date.now()}`, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: interestAmount, type: 'INTEREST', payMethod: 'เงินสด', status: 'SUCCESS', remark: 'ชำระเฉพาะดอกเบี้ย', date: new Date().toISOString() });
+                closeModal('modal-collect');
+                await refreshFromGoogleSheets(false);
+                showToast('บันทึกการชำระดอกเบี้ยสำเร็จ ไรเดอร์ได้รับค่าคอมมิชชั่น 7%', true);
+                renderRider();
+            } catch (err) { showToast('บันทึกการชำระดอกเบี้ยไม่สำเร็จ', false); }
+        }
+
+        function toggleCloseAccountOptions() {
+            const sub = document.getElementById('close-account-sub-options');
+            sub.classList.toggle('hidden');
+        }
+
+        async function submitCloseAccount(method) {
+            const c = customers.find(item => item.id === activeTaskId);
+            if (!c) return;
+            const totalRemaining = c.remainingAmount;
+            const commission = totalRemaining * 0.07;
+            const methodText = method === 'QR' ? 'สแกน QR Code' : 'เงินสด';
+            if (!confirm(`ยืนยันปิดบัญชีชำระยอดรวม ${totalRemaining.toLocaleString()} ฿ ด้วยวิธี: ${methodText}? ไรเดอร์จะได้รับคอมมิชชั่น 7% (${commission.toFixed(1)} ฿)`)) return;
+            try {
+                if (method === 'QR') {
+                    const txId = `TX-${Date.now()}`;
+                    c.payStatus = 'pending_admin';
+                    c.slipImage = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&q=80';
+                    c.pendingTxId = txId;
+                    await syncCustomer(c);
+                    await addTransaction({ txId, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: totalRemaining, type: 'CLOSE_ACCOUNT', payMethod: 'โอน', status: 'PENDING', remark: 'ปิดบัญชี รอตรวจสอบ', date: new Date().toISOString() });
+                } else {
+                    c.payStatus = 'success';
+                    c.slipImage = null;
+                    c.remainingAmount = 0;
+                    currentUser.incomeToday = (currentUser.incomeToday || 0) + commission;
+                    currentUser.incomeMonth = (currentUser.incomeMonth || 0) + commission;
+                    currentUser.cashHold = (currentUser.cashHold || 0) + totalRemaining;
+                    await syncCustomer(c);
+                    await syncUser(currentUser);
+                    await addTransaction({ txId: `TX-${Date.now()}`, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: totalRemaining, type: 'CLOSE_ACCOUNT', payMethod: 'เงินสด', status: 'SUCCESS', remark: 'ปิดบัญชีด้วยเงินสด', date: new Date().toISOString() });
+                }
+                closeModal('modal-collect');
+                await refreshFromGoogleSheets(false);
+                showToast(`บันทึกปิดบัญชีสำเร็จ (${methodText}) ไรเดอร์รับคอมฯ 7%`, true);
+                renderRider();
+            } catch (err) { console.error(err); showToast('บันทึกปิดบัญชีไม่สำเร็จ', false); }
+        }
+
+        function toggleFailSection(checkbox) {
+            const failBox = document.getElementById('fail-reason-box');
+            if (checkbox.checked) {
+                failBox.classList.remove('hidden');
+            } else {
+                failBox.classList.add('hidden');
+            }
+        }
+
+        async function submitCollect() {
+            const c = customers.find(item => item.id === activeTaskId);
+            if (!c) return;
+            const isFailChecked = document.getElementById('toggle-fail-switch').checked;
+            try {
+                if (isFailChecked) {
+                    const remarkText = document.getElementById('collect-remark').value.trim();
+                    if (!remarkText) { showToast('กรุณาระบุเหตุผลที่ไม่สามารถเก็บเงินได้', false); return; }
+                    c.remark = remarkText;
+                    c.payStatus = 'failed';
+                    await syncCustomer(c);
+                    await addTransaction({ txId: `TX-${Date.now()}`, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: c.installment, type: 'COLLECTION', payMethod: 'ไม่สามารถเก็บได้', status: 'FAILED', remark: remarkText, date: new Date().toISOString() });
+                    closeModal('modal-collect');
+                    await refreshFromGoogleSheets(false);
+                    showToast('บันทึกส่งเข้าหัวข้อยอดเงินที่ไม่สามารถเก็บได้เรียบร้อย', true);
+                    renderRider();
+                    return;
+                }
+                if (selectedPayMethod === 'โอน' && !hasSlipImage) {
+                    showToast('กรุณาแนบรูปภาพสลิปการโอนเงินของลูกค้า', false);
+                    return;
+                }
+                const commission = c.installment * 0.07;
+                const txId = `TX-${Date.now()}`;
+                if (selectedPayMethod === 'โอน') {
+                    c.payStatus = 'pending_admin';
+                    c.slipImage = document.getElementById('slip-image-preview').src || null;
+                    c.pendingTxId = txId;
+                    await syncCustomer(c);
+                    await addTransaction({ txId, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: c.installment, type: 'COLLECTION', payMethod: 'โอน', status: 'PENDING', remark: 'ลูกค้าโอนแล้ว รอแอดมินตรวจสอบ', date: new Date().toISOString() });
+                    showToast('ส่งสลิปเข้าสู่ช่อง "รอตรวจสอบ" เรียบร้อย', true);
+                } else {
+                    c.payStatus = 'success';
+                    c.remainingAmount = Math.max(0, c.remainingAmount - c.installment);
+                    currentUser.cashHold = (currentUser.cashHold || 0) + c.installment;
+                    currentUser.incomeToday = (currentUser.incomeToday || 0) + commission;
+                    currentUser.incomeMonth = (currentUser.incomeMonth || 0) + commission;
+                    await syncCustomer(c);
+                    await syncUser(currentUser);
+                    await addTransaction({ txId, uid: c._sheetUid || '', riderId: String(currentUser._sheetId || currentUser.id), amount: c.installment, type: 'COLLECTION', payMethod: 'เงินสด', status: 'SUCCESS', remark: 'รับชำระเงินสด', date: new Date().toISOString() });
+                    showToast('บันทึกรับเงินสดสำเร็จ! (ไรเดอร์ได้รับค่าคอมฯ 7% เรียบร้อย)', true);
+                }
+                closeModal('modal-collect');
+                await refreshFromGoogleSheets(false);
+                renderRider();
+            } catch (err) {
+                console.error(err);
+                showToast('บันทึกรายการชำระเงินไม่สำเร็จ', false);
+            }
+        }
+
+        function openRemitModal() {
+            if (!currentUser.cashHold || currentUser.cashHold <= 0) {
+                showToast('ไม่มียอดเงินสดค้างนำส่ง', false);
+                return;
+            }
+            const amount = currentUser.cashHold;
+            document.getElementById('remit-cash-amount').innerText = `${amount} ฿`;
+            document.getElementById('qr-code-img').src = `https://promptpay.io/0658351446/${amount}.png`;
+            document.getElementById('modal-remit').classList.remove('hidden');
+        }
+
+        function handleRemitSlip(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('remit-slip-label').innerText = "✓ แนบสลิปคืนบริษัทแล้ว";
+            }
+        }
+
+        async function startRemitLoadingProcess() {
+            const slipFile = document.getElementById('remit-slip').files[0];
+            if (!slipFile) { showToast('กรุณาแนบสลิปการโอนเงินคืนบริษัท', false); return; }
+            closeModal('modal-remit');
+            const loadModal = document.getElementById('modal-loading-progress');
+            loadModal.classList.remove('hidden');
+            document.getElementById('progress-container').classList.remove('hidden');
+            document.getElementById('success-checkmark-container').classList.add('hidden');
+            let progress = 0;
+            const fill = document.getElementById('progress-bar-fill');
+            const percentText = document.getElementById('progress-percent-text');
+            fill.style.width = '0%'; percentText.innerText = '0%';
+            const timer = setInterval(async () => {
+                progress += 10;
+                fill.style.width = `${progress}%`; percentText.innerText = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(timer);
+                    const remAmount = currentUser.cashHold || 0;
+                    const rm = { id: Date.now(), txId: `TX-${Date.now()}`, riderId: currentUser.id, riderName: currentUser.name, amount: remAmount, timestamp: new Date().toLocaleString('th-TH'), status: 'PENDING' };
+                    remittances.push(rm); remittanceHistory.push(Object.assign({}, rm)); currentUser.cashHold = 0;
+                    try {
+                        await syncUser(currentUser);
+                        await addTransaction({ txId: rm.txId, uid: '', riderId: String(currentUser._sheetId || currentUser.id), amount: remAmount, type: 'REMIT', payMethod: 'โอนคืนบริษัท', status: 'PENDING', remark: 'รอแอดมินตรวจสอบ', date: new Date().toISOString() });
+                        await gasPost('addRemittance', { token: authToken, remittance: rm });
+                        await refreshFromGoogleSheets(false);
+                        document.getElementById('progress-container').classList.add('hidden');
+                        document.getElementById('success-checkmark-container').classList.remove('hidden');
+                        setTimeout(() => { loadModal.classList.add('hidden'); showToast('ส่งยอดเงินคืนบริษัทสำเร็จ เงินสดติดตัวถูกรีเซ็ตเป็น 0 ฿', true); renderRider(); }, 1200);
+                    } catch (err) { console.error(err); loadModal.classList.add('hidden'); showToast('บันทึกการส่งยอดคืนบริษัทไม่สำเร็จ', false); }
+                }
+            }, 150);
+        }
+
+        function openHistoryModal() {
+            const container = document.getElementById('rider-history-list');
+            container.innerHTML = '';
+            const myHistory = remittanceHistory.filter(h => h.riderName === currentUser.name);
+            if (myHistory.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ยังไม่มีประวัติการส่งยอดเงินสด</p>';
+            } else {
+                myHistory.forEach(h => {
+                    const item = document.createElement('div');
+                    item.className = "bg-gray-50 p-3 rounded-lg border flex justify-between items-center text-xs";
+                    item.innerHTML = `
+                        <div>
+                            <p class="font-bold text-slate-800">โอนเงินสดคืน: <span class="text-emerald-600">${h.amount} ฿</span></p>
+                            <span class="text-gray-400">${h.timestamp}</span>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-1 rounded">สำเร็จ</span>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+            document.getElementById('modal-history').classList.remove('hidden');
+        }
+
+        // ==================== ADMIN & MASTER FUNCTIONS ====================
+        async function updateMasterInvestmentLimit() {
+            if (!isMaster) {
+                showToast('เฉพาะระดับ Master เท่านั้นที่มีสิทธิ์กำหนดวงเงินลงทุน!', false);
+                return;
+            }
+            const val = parseFloat(document.getElementById('input-master-investment').value);
+            if (!val || val <= 0) {
+                showToast('กรุณากรอกตัวเลขวงเงินลงทุนให้ถูกต้อง', false);
+                return;
+            }
+            try {
+                const result = await gasPost('setCompanyCapital', { token: authToken, amount: val });
+                if (result.status !== 'success') throw new Error(result.message || 'บันทึกไม่สำเร็จ');
+                companyInvestmentCapital = Number(result.amount ?? val);
+                setLatestUpdate(result.lastUpdated || new Date().toISOString());
+                document.getElementById('input-master-investment').value = '';
+                showToast(`อัปเดตวงเงินลงทุนบริษัทเป็น ${val.toLocaleString()} ฿ เรียบร้อย`, true);
+                renderAdmin();
+            } catch (err) {
+                showToast('บันทึกวงเงินลงทุนไม่สำเร็จ', false);
+            }
+        }
+
+        function renderAdmin() {
+            document.getElementById('display-investment-limit').innerText = `${companyInvestmentCapital.toLocaleString()} ฿`;
+            document.getElementById('loan-available-capital-badge').innerText = `${companyInvestmentCapital.toLocaleString()} ฿`;
+
+            let totalTarget = 0;
+            let totalActual = 0;
+            let totalQr = 0; 
+            let totalCash = 0;
+
+            customers.forEach(c => {
+                if (c.status === 'approved') {
+                    totalTarget += c.installment;
+                    if (c.payStatus === 'success') {
+                        totalActual += c.installment;
+                    }
+                }
+            });
+
+            users.filter(u => u.role === 'rider').forEach(r => {
+                totalQr += r.qrHold || 0;
+                totalCash += r.cashHold || 0;
+            });
+
+            const totalGross = totalQr + totalCash;
+            const comTotal = totalGross * 0.07;
+
+            document.getElementById('dash-target-total').innerText = `${totalTarget} ฿`;
+            document.getElementById('dash-actual-total').innerText = `${totalActual} ฿`;
+            document.getElementById('dash-qr-total').innerText = `QR: ${totalQr} ฿`;
+            document.getElementById('dash-cash-total').innerText = `เงินสด: ${totalCash} ฿`;
+            document.getElementById('dash-net-total').innerText = `${(totalGross - comTotal).toFixed(1)} ฿`;
+
+            // Monitor Rider Table
+            const monitorBody = document.getElementById('admin-rider-monitor');
+            monitorBody.innerHTML = '';
+            users.filter(u => u.role === 'rider').forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold">${r.name}</td>
+                    <td class="p-3">${r.isOnline ? '<span class="text-emerald-600 font-bold">Online</span>' : '<span class="text-gray-400">Offline</span>'}${r.lastSeen ? `<div class="text-[10px] text-gray-400">${new Date(r.lastSeen).toLocaleTimeString('th-TH')}</div>` : ''}</td>
+                    <td class="p-3">${r.qrHold || 0} ฿</td>
+                    <td class="p-3 text-amber-600 font-bold">${r.cashHold || 0} ฿</td>
+                    <td class="p-3 text-indigo-600 font-bold">${((r.qrHold + r.cashHold) * 0.07).toFixed(1)} ฿</td>
+                    <td class="p-3">${r.status === 'suspended' ? '<span class="text-red-600 font-bold">ถูกระงับ (ค้างเงินสด)</span>' : '<span class="text-emerald-600">ปกติ</span>'}</td>
+                `;
+                monitorBody.appendChild(tr);
+            });
+
+            // Loan List Table
+            const loanBody = document.getElementById('admin-loan-list');
+            loanBody.innerHTML = '';
+            const riders = users.filter(u => u.role === 'rider' && u.isApproved && u.status === 'active');
+
+            customers.forEach(c => {
+                let riderSelectOptions = `<option value="">-- เลือก Rider --</option>`;
+                riders.forEach(r => {
+                    riderSelectOptions += `<option value="${r.id}" ${c.riderId === r.id ? 'selected' : ''}>${r.name}</option>`;
+                });
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b";
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <span class="font-bold block">${c.name}</span>
+                        <span class="text-xs text-gray-500">📞 ${c.phone}</span>
+                    </td>
+                    <td class="p-3 font-bold text-slate-700">${c.remainingAmount.toLocaleString()} ฿</td>
+                    <td class="p-3 text-indigo-600 font-bold">${c.installment} ฿</td>
+                    <td class="p-3">${c.term} วัน</td>
+                    <td class="p-3">
+                        ${c.status === 'approved' ? '<span class="text-emerald-600 font-bold">✓ อนุมัติแล้ว</span>' : 
+                          c.status === 'rejected' ? '<span class="text-red-600 font-bold">✗ ปฏิเสธ</span>' : 
+                          '<span class="text-amber-500 font-bold">⏳ รอตรวจสอบ</span>'}
+                    </td>
+                    <td class="p-3">
+                        <select onchange="assignRider(${c.id}, this.value)" class="p-1 border rounded text-xs bg-gray-50">
+                            ${riderSelectOptions}
+                        </select>
+                    </td>
+                    <td class="p-3 flex gap-2">
+                        ${c.status !== 'approved' ? `<button onclick="approveLoan(${c.id}, 'approved')" class="bg-emerald-600 text-white text-xs px-2 py-1 rounded font-bold">อนุมัติ</button>` : ''}
+                        ${c.status !== 'rejected' ? `<button onclick="approveLoan(${c.id}, 'rejected')" class="bg-red-600 text-white text-xs px-2 py-1 rounded font-bold">ปฏิเสธ</button>` : ''}
+                        <button onclick="openEditLoanModal(${c.id})" class="bg-indigo-600 text-white text-xs px-2 py-1 rounded font-bold">ปรับหนี้</button>
+                    </td>
+                `;
+                loanBody.appendChild(tr);
+            });
+
+            // Uncollectible Amount Table (ยอดเงินที่ไม่สามารถเก็บได้)
+            const uncollectibleBody = document.getElementById('admin-uncollectible-list');
+            uncollectibleBody.innerHTML = '';
+            const failedTasks = customers.filter(c => c.payStatus === 'failed');
+            let totalUncollectible = 0;
+
+            if (failedTasks.length === 0) {
+                uncollectibleBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400 text-xs">ไม่มีรายการยอดเงินที่ไม่สามารถเก็บได้</td></tr>';
+            } else {
+                failedTasks.forEach(ft => {
+                    totalUncollectible += ft.remainingAmount;
+                    const riderObj = users.find(u => u.id === ft.riderId);
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b";
+                    tr.innerHTML = `
+                        <td class="p-3">
+                            <span class="font-bold block">${ft.name}</span>
+                            <span class="text-xs text-gray-500">📞 ${ft.phone}</span>
+                        </td>
+                        <td class="p-3 font-bold text-rose-600">${ft.remainingAmount.toLocaleString()} ฿</td>
+                        <td class="p-3">${ft.installment} ฿</td>
+                        <td class="p-3 text-rose-700 font-medium">${ft.remark}</td>
+                        <td class="p-3">${riderObj ? riderObj.name : 'ยังไม่ระบุ'}</td>
+                        <td class="p-3 flex gap-2">
+                            <button onclick="writeOffDebt(${ft.id})" class="bg-rose-600 text-white text-xs px-2 py-1 rounded font-bold">ตัดหนี้สูญ</button>
+                            <button onclick="restoreDebt(${ft.id})" class="bg-indigo-600 text-white text-xs px-2 py-1 rounded font-bold">ส่งกลับเก็บเงิน</button>
+                        </td>
+                    `;
+                    uncollectibleBody.appendChild(tr);
+                });
+            }
+            document.getElementById('total-uncollectible-badge').innerText = `${totalUncollectible.toLocaleString()} ฿`;
+
+            // Remarks list in loans tab
+            const remarkBox = document.getElementById('admin-remarks-list');
+            remarkBox.innerHTML = '';
+            if (failedTasks.length === 0) {
+                remarkBox.innerHTML = '<p class="text-xs text-gray-400">ไม่มีรายการงานที่ติดปัญหา</p>';
+            } else {
+                failedTasks.forEach(ft => {
+                    const div = document.createElement('div');
+                    div.className = "p-3 bg-red-50 border border-red-200 rounded-lg text-xs flex justify-between items-center";
+                    div.innerHTML = `
+                        <div>
+                            <span class="font-bold text-red-700">ลูกค้า: ${ft.name} (${ft.phone})</span>
+                            <p class="text-gray-700 mt-1">เหตุผลที่ไม่สามารถเก็บได้: <strong class="text-red-600">${ft.remark}</strong></p>
+                        </div>
+                        <span class="text-rose-600 font-bold bg-white px-2.5 py-1 rounded border">อยู่ในเมนูยอดที่ไม่สามารถเก็บได้</span>
+                    `;
+                    remarkBox.appendChild(div);
+                });
+            }
+
+            const pendingSlips = customers.filter(c => c.payStatus === 'pending_admin');
+            document.getElementById('badge-slip-count').innerText = pendingSlips.length;
+            
+            const slipListContainer = document.getElementById('admin-customer-slips-list');
+            slipListContainer.innerHTML = pendingSlips.length === 0 ? '<p class="text-gray-500 text-sm">ไม่มีสลิปลูกค้าที่รอตรวจสอบ</p>' : '';
+            pendingSlips.forEach(ps => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 rounded-xl shadow flex justify-between items-center";
+                div.innerHTML = `
+                    <div>
+                        <h4 class="font-bold">${ps.name} (${ps.phone})</h4>
+                        <p class="text-xs text-indigo-600 font-bold">ยอดโอนชำระรอตรวจสอบ: ${ps.installment} ฿ (ไรเดอร์รอรับคอมฯ ${(ps.installment * 0.07).toFixed(1)} ฿)</p>
+                    </div>
+                    <button onclick="openViewSlipModal(${ps.id})" class="bg-blue-600 text-white text-xs px-3 py-2 rounded font-bold">ตรวจสอบสลิป</button>
+                `;
+                slipListContainer.appendChild(div);
+            });
+
+            const userBody = document.getElementById('admin-user-list');
+            userBody.innerHTML = '';
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b";
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <span class="font-bold block">${u.name}</span>
+                        <span class="text-xs text-gray-500">📞 ${u.phone || '-'} | ที่อยู่: ${u.address || '-'}</span>
+                    </td>
+                    <td class="p-3"><span class="uppercase text-xs font-bold p-1 bg-gray-100 rounded">${u.role}</span></td>
+                    <td class="p-3">
+                        <span class="text-xs font-bold text-indigo-600 block">${u.bankName || '-'}</span>
+                        <span class="text-xs text-gray-500">เลขที่: ${u.bankAcc || '-'}</span>
+                    </td>
+                    <td class="p-3">
+                        ${u.status === 'active' ? '<span class="text-emerald-600 font-bold">ปกติ (Active)</span>' : '<span class="text-red-600 font-bold">ถูกระงับ (Suspended)</span>'}
+                        ${!u.isApproved ? '<br><span class="text-amber-500 text-xs">รออนุมัติ</span>' : ''}
+                    </td>
+                    <td class="p-3">
+                        <div class="flex gap-1 flex-wrap">
+                            ${isMaster ? (u.status === 'active' ? `<button onclick="masterSuspendUser(${JSON.stringify(String(u.id))})" class="bg-red-600 text-white text-xs px-2 py-1 rounded font-bold">ระงับ</button>` : `<button onclick="masterUnblockUser(${JSON.stringify(String(u.id))})" class="bg-emerald-600 text-white text-xs px-2 py-1 rounded font-bold">ปลดระงับ</button>`) : ''}
+                            <button onclick="requestDeleteUser(${JSON.stringify(String(u.id))})" class="bg-gray-800 text-white text-xs px-2 py-1 rounded font-bold">ขอลบบัญชี</button>
+                        </div>
+                    </td>
+                `;
+                userBody.appendChild(tr);
+            });
+
+            const pendingUsers = users.filter(u => !u.isApproved || u.status === 'suspended');
+            document.getElementById('badge-pending-count').innerText = pendingUsers.length;
+            
+            const approveBody = document.getElementById('master-approve-list');
+            approveBody.innerHTML = pendingUsers.length === 0 ? '<tr><td colspan="5" class="p-4 text-center text-gray-400 text-xs">ไม่มีรายการที่ต้องอนุมัติ</td></tr>' : '';
+            
+            pendingUsers.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold">${u.name}</td>
+                    <td class="p-3">${u.username}</td>
+                    <td class="p-3"><span class="uppercase text-xs font-bold p-1 bg-gray-100 rounded">${u.role}</span></td>
+                    <td class="p-3">${!u.isApproved ? '<span class="text-amber-500 font-bold">รอเปิดใช้งาน</span>' : '<span class="text-red-600 font-bold">ถูกระงับ</span>'}</td>
+                    <td class="p-3 flex gap-2">
+                        ${!u.isApproved ? `<button onclick="masterApproveUser(${JSON.stringify(String(u.id))})" class="bg-emerald-600 text-white text-xs px-2 py-1 rounded font-bold">อนุมัติสร้างบัญชี</button>` : ''}
+                        ${u.status === 'suspended' ? `<button onclick="masterUnblockUser(${JSON.stringify(String(u.id))})" class="bg-indigo-600 text-white text-xs px-2 py-1 rounded font-bold">ปลดระงับบัญชี</button>` : ''}
+                    </td>
+                `;
+                approveBody.appendChild(tr);
+            });
+
+            const remitBox = document.getElementById('admin-remit-list');
+            remitBox.innerHTML = remittances.length === 0 ? '<p class="text-gray-500 text-sm">ไม่มีรายการโอนเงินสดค้างอยู่</p>' : '';
+            remittances.forEach(rm => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 rounded-xl shadow flex justify-between items-center";
+                div.innerHTML = `
+                    <div>
+                        <h4 class="font-bold">${rm.riderName}</h4>
+                        <p class="text-sm text-amber-600 font-bold">ส่งยอดเงินสดคืน: ${rm.amount} ฿ (${rm.timestamp})</p>
+                    </div>
+                    <button onclick="approveRemittance(${rm.id})" class="bg-emerald-600 text-white text-xs px-3 py-2 rounded font-bold">อนุมัติยอดเงินเข้าบริษัท</button>
+                `;
+                remitBox.appendChild(div);
+            });
+            renderPayrollUI();
+            renderDeleteRequestsUI();
+            renderLogPreview();
+            lucide.createIcons();
+        }
+
+        function renderDeleteRequestsUI(){
+            const b=document.getElementById('master-delete-list'); if(!b)return;
+            const pending=(deleteRequests||[]).filter(x=>String(x.status).toUpperCase()==='PENDING');
+            b.innerHTML=pending.length?pending.map(x=>`<tr class="border-b"><td class="p-3 font-bold">${x.targetName||'-'}</td><td class="p-3">${x.targetType||'-'}</td><td class="p-3">${x.requestedByName||'-'}</td><td class="p-3">${x.requestedAt||'-'}</td><td class="p-3">${isMaster?`<button onclick="approveDeleteRequest(${JSON.stringify(String(x.requestId))})" class="bg-red-600 text-white px-2 py-1 rounded mr-1">อนุมัติลบ</button><button onclick="rejectDeleteRequest(${JSON.stringify(String(x.requestId))})" class="bg-gray-600 text-white px-2 py-1 rounded">ไม่อนุมัติ</button>`:'<span class="text-gray-400">รอ Master</span>'}</td></tr>`).join(''):'<tr><td colspan="5" class="p-4 text-center text-gray-400">ไม่มีคำขอลบค้าง</td></tr>';
+        }
+
+        function renderPayrollUI(){
+            const sel=document.getElementById('pay-user'); if(!sel)return;
+            const admins=(users||[]).filter(u=>['admin','rider'].includes(String(u.role).toLowerCase()) && String(u.status).toLowerCase()!=='deleted');
+            sel.innerHTML=admins.map(u=>`<option value="${String(u.id)}">${u.name} (${String(u.role).toUpperCase()})</option>`).join('');
+            const now=new Date();
+            const m=document.getElementById('pay-month'), y=document.getElementById('pay-year');
+            if(m&&!m.value)m.value=now.getMonth()+1; if(y&&!y.value)y.value=now.getFullYear();
+            const u=admins.find(x=>String(x.id)===String(sel.value));
+            if(u&&document.getElementById('pay-base'))document.getElementById('pay-base').value=Number(u.salary||0);
+            const rows=(payroll||[]).slice().reverse(); const body=document.getElementById('payroll-list');
+            if(body)body.innerHTML=rows.map(p=>`<tr class="border-b"><td class="p-3 font-bold">${p.name||'-'}</td><td class="p-3">${p.periodMonth||'-'}/${p.periodYear||'-'}</td><td class="p-3">${Number(p.baseSalary||0).toLocaleString()} ฿</td><td class="p-3">${Number(p.commissionAmount||0).toLocaleString()} ฿</td><td class="p-3 font-bold">${Number(p.totalAmount||0).toLocaleString()} ฿</td><td class="p-3">${p.status||'-'}</td><td class="p-3">${isMaster&&String(p.status).toLowerCase()!=='paid'?`<button onclick="markPayrollPaidUI(${JSON.stringify(String(p.payrollId))})" class="bg-emerald-600 text-white px-2 py-1 rounded">ติ๊กว่าจ่ายแล้ว</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="p-4 text-center text-gray-400">ยังไม่มีรายการ</td></tr>';
+            updatePayrollPreview();
+        }
+        function updatePayrollPreview(){
+            const sel=document.getElementById('pay-user'); if(!sel)return; const u=users.find(x=>String(x.id)===String(sel.value));
+            const m=Number(document.getElementById('pay-month')?.value||new Date().getMonth()+1), y=Number(document.getElementById('pay-year')?.value||new Date().getFullYear());
+            const com=(commissionLedger||[]).filter(c=>String(c.riderId)===String(u?.id) && String(c.status||'').toLowerCase()!=='cancelled').filter(c=>{const d=new Date(c.date||c.createdAt);return d.getMonth()+1===m&&d.getFullYear()===y;}).reduce((a,c)=>a+Number(c.commissionAmount||0),0);
+            const base=Number(document.getElementById('pay-base')?.value||u?.salary||0); const total=base+com;
+            if(document.getElementById('pay-commission'))document.getElementById('pay-commission').textContent=com.toLocaleString('th-TH',{minimumFractionDigits:2})+' ฿';
+            if(document.getElementById('pay-total'))document.getElementById('pay-total').textContent=total.toLocaleString('th-TH',{minimumFractionDigits:2})+' ฿';
+        }
+        async function createPayrollFromUI(){
+            if(!isMaster){showToast('เฉพาะ Master เท่านั้น',false);return;} const u=users.find(x=>String(x.id)===String(document.getElementById('pay-user')?.value)); if(!u)return;
+            updatePayrollPreview(); const m=Number(document.getElementById('pay-month').value),y=Number(document.getElementById('pay-year').value),base=Number(document.getElementById('pay-base').value||0);
+            const com=(commissionLedger||[]).filter(c=>String(c.riderId)===String(u.id)).filter(c=>{const d=new Date(c.date||c.createdAt);return d.getMonth()+1===m&&d.getFullYear()===y;}).reduce((a,c)=>a+Number(c.commissionAmount||0),0);
+            try{const r=await gasPost('createPayroll',{token:authToken,fields:{userId:u.id,periodMonth:m,periodYear:y,baseSalary:u.role==='admin'?base:0,commissionAmount:com}});if(r.status!=='success')throw new Error(r.message||'บันทึกไม่สำเร็จ');await refreshFromGoogleSheets(false);showToast('บันทึกเงินเดือนสำเร็จ',true);}catch(e){addClientLog('ERROR','createPayroll',e.message);showToast('บันทึกเงินเดือนไม่สำเร็จ: '+e.message,false);}
+        }
+        async function markPayrollPaidUI(payrollId){
+            try{const method=prompt('ช่องทางการจ่าย เช่น โอนธนาคาร / เงินสด:','โอนธนาคาร')||'manual';const ref=prompt('เลขอ้างอิง/หมายเหตุ:','')||'';const r=await gasPost('markPayrollPaid',{token:authToken,payrollId,paymentMethod:method,reference:ref});if(r.status!=='success')throw new Error(r.message||'บันทึกไม่สำเร็จ');await refreshFromGoogleSheets(false);showToast('บันทึกสถานะจ่ายแล้ว',true);}catch(e){addClientLog('ERROR','markPayrollPaid',e.message);showToast('บันทึกการจ่ายไม่สำเร็จ: '+e.message,false);}
+        }
+
+        async function addNewLoanCustomer() {
+            const name = document.getElementById('loan-cust-name').value.trim();
+            const phone = document.getElementById('loan-cust-phone').value.trim();
+            const amount = parseFloat(document.getElementById('loan-cust-amount').value);
+            const installment = parseFloat(document.getElementById('loan-cust-installment').value);
+            const term = parseInt(document.getElementById('loan-cust-term').value);
+
+            if (!(name && phone && amount && installment && term)) {
+                showToast('กรุณากรอกข้อมูลสินเชื่อและเบอร์โทรให้ครบถ้วน', false);
+                return;
+            }
+            if (amount > companyInvestmentCapital) {
+                showToast('คำเตือน: วงเงินที่ขอสินเชื่อสูงกว่าเงินลงทุนที่มีอยู่ Admin ควรพิจารณาตรวจสอบความเสี่ยงก่อนอนุมัติ', false);
+            }
+
+            const uid = `UID-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            const startDate = new Date().toLocaleDateString('th-TH');
+            const startTimestamp = new Date().toISOString();
+            try {
+                const result = await gasPost('createCustomer', {
+                    token: authToken,
+                    fields: {
+                        uid: uid,
+                        fullname: name,
+                        phone: phone,
+                        loanAmount: amount,
+                        remainingBalance: amount,
+                        status: 'pending',
+                        startDate: startDate,
+                        startTimestamp: startTimestamp,
+                        riderId: '',
+                        installment: installment,
+                        term: term,
+                        payStatus: 'pending',
+                        remark: ''
+                    }
+                });
+                if (result.status !== 'success') throw new Error(result.message || 'เพิ่มข้อมูลไม่สำเร็จ');
+                await refreshFromGoogleSheets(false);
+                showToast('เพิ่มข้อมูลลูกค้าขอสินเชื่อเรียบร้อย', true);
+                ['loan-cust-name','loan-cust-phone','loan-cust-amount','loan-cust-installment','loan-cust-term'].forEach(id => document.getElementById(id).value = '');
+                renderAdmin();
+            } catch (err) {
+                console.error(err);
+                showToast('เพิ่มข้อมูลลูกค้าไม่สำเร็จ', false);
+            }
+        }
+
+        async function writeOffDebt(custId) {
+            if (!confirm('ยืนยันตัดหนี้สูญสำหรับลูกค้ารายนี้? ยอดหนี้จะถูกปิดเป็น 0 และบันทึกเป็นหนี้สูญ')) return;
+            const c = customers.find(item => item.id === custId);
+            if (!c) return;
+            c.remainingAmount = 0;
+            c.payStatus = 'success';
+            try {
+                await syncCustomer(c);
+                await refreshFromGoogleSheets(false);
+                showToast('บันทึกตัดหนี้สูญเรียบร้อย', true);
+                renderAdmin();
+            } catch (err) { showToast('บันทึกตัดหนี้สูญไม่สำเร็จ', false); }
+        }
+
+        async function restoreDebt(custId) {
+            if (!confirm('ส่งลูกค้ารายนี้กลับไปยังสถานะปกติเพื่อให้ไรเดอร์เก็บเงินอีกครั้ง?')) return;
+            const c = customers.find(item => item.id === custId);
+            if (!c) return;
+            c.payStatus = 'pending';
+            c.remark = '';
+            try {
+                await syncCustomer(c);
+                await refreshFromGoogleSheets(false);
+                showToast('ส่งกลับรายการเก็บเงินปกติเรียบร้อย', true);
+                renderAdmin();
+            } catch (err) { showToast('บันทึกสถานะไม่สำเร็จ', false); }
+        }
+
+        function openViewSlipModal(custId) {
+            activeAdminSlipCustId = custId;
+            const c = customers.find(item => item.id === custId);
+            document.getElementById('view-slip-cust-name').innerText = `ลูกค้า: ${c.name} | ยอดโอน: ${c.installment} บาท`;
+            document.getElementById('admin-slip-img-preview').src = c.slipImage;
+            document.getElementById('modal-view-slip').classList.remove('hidden');
+        }
+
+        async function approveCustomerSlip() {
+            const c = customers.find(item => item.id === activeAdminSlipCustId);
+            if (!c) return;
+            c.payStatus = 'success';
+            c.remainingAmount = Math.max(0, c.remainingAmount - c.installment);
+            const commission = c.installment * 0.07;
+            const rider = users.find(u => u.id === c.riderId);
+            if (rider) { rider.qrHold = (rider.qrHold || 0) + c.installment; rider.incomeToday = (rider.incomeToday || 0) + commission; rider.incomeMonth = (rider.incomeMonth || 0) + commission; }
+            try {
+                await syncCustomer(c);
+                if (rider) await syncUser(rider);
+                if (c.pendingTxId) await gasPost('updateTransaction', { token: authToken, txId: c.pendingTxId, fields: { status: 'SUCCESS', remark: 'แอดมินอนุมัติสลิป', date: new Date().toISOString() } });
+                c.pendingTxId = null;
+                await syncCustomer(c);
+                closeModal('modal-view-slip');
+                await refreshFromGoogleSheets(false);
+                showToast('อนุมัติสลิปสำเร็จ! ยอดเงินเข้าบริษัทและคอมมิชชั่น 7% บวกเพิ่มให้ไรเดอร์เรียบร้อย', true);
+                renderAdmin();
+            } catch (err) { console.error(err); showToast('บันทึกการอนุมัติสลิปไม่สำเร็จ', false); }
+        }
+
+        async function approveLoan(id, status) {
+            const c = customers.find(item => item.id === id);
+            if (!c) return;
+            c.status = status;
+            try {
+                await syncCustomer(c);
+                await refreshFromGoogleSheets(false);
+                showToast(`อัปเดตสถานะสินเชื่อเป็น ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'} แล้ว`, true);
+                renderAdmin();
+            } catch (err) { showToast('อัปเดตสถานะสินเชื่อไม่สำเร็จ', false); }
+        }
+
+        async function assignRider(custId, riderId) {
+            const c = customers.find(item => item.id === custId);
+            if (!c) return;
+            c.riderId = riderId ? parseInt(riderId) : null;
+            try {
+                await syncCustomer(c);
+                await refreshFromGoogleSheets(false);
+                showToast('มอบหมายงานให้ Rider สำเร็จ', true);
+                renderAdmin();
+            } catch (err) { showToast('บันทึกการมอบหมาย Rider ไม่สำเร็จ', false); }
+        }
+
+        function openEditLoanModal(id) {
+            const c = customers.find(item => item.id === id);
+            document.getElementById('edit-loan-id').value = c.id;
+            document.getElementById('edit-loan-name').value = c.name;
+            document.getElementById('edit-loan-amount').value = c.remainingAmount;
+            document.getElementById('edit-loan-installment').value = c.installment;
+            document.getElementById('edit-loan-term').value = c.term;
+            document.getElementById('modal-edit-loan').classList.remove('hidden');
+        }
+
+        async function saveEditLoan() {
+            const id = parseInt(document.getElementById('edit-loan-id').value);
+            const c = customers.find(item => item.id === id);
+            if (!c) return;
+            c.remainingAmount = parseFloat(document.getElementById('edit-loan-amount').value);
+            c.installment = parseFloat(document.getElementById('edit-loan-installment').value);
+            c.term = parseInt(document.getElementById('edit-loan-term').value);
+            try {
+                await syncCustomer(c);
+                await refreshFromGoogleSheets(false);
+                closeModal('modal-edit-loan');
+                showToast('แก้ไขยอดหนี้สำเร็จ', true);
+                renderAdmin();
+            } catch (err) { showToast('แก้ไขยอดหนี้ไม่สำเร็จ', false); }
+        }
+
+        async function createUser() {
+            const fullname = document.getElementById('new-user-fullname').value.trim();
+            const phone = document.getElementById('new-user-phone').value.trim();
+            const role = document.getElementById('new-user-role').value;
+            const username = document.getElementById('new-user-username').value.trim();
+            const password = document.getElementById('new-user-password').value.trim();
+            const bankname = document.getElementById('new-user-bankname').value.trim();
+            const bankacc = document.getElementById('new-user-bankacc').value.trim();
+            const address = document.getElementById('new-user-address').value.trim();
+            const salary = Number(document.getElementById('new-user-salary').value || 0);
+
+            if (!(fullname && phone && username && password && bankname && bankacc && address)) {
+                showToast('กรุณากรอกข้อมูลส่วนตัว, ที่อยู่ และข้อมูลธนาคารให้ครบถ้วนทุกช่อง', false);
+                return;
+            }
+            const id = Date.now();
+            try {
+                const result = await gasPost('createUser', {
+                    token: authToken,
+                    fields: {
+                        id: 'USR-' + Date.now(),
+                        name: fullname,
+                        phone: phone,
+                        role: role,
+                        username: username,
+                        password: password,
+                        bankname: bankname,
+                        bankacc: bankacc,
+                        address: address,
+                        salary: role === 'admin' ? salary : 0,
+                        isApproved: true,
+                        status: 'active'
+                    }
+                });
+                if (result.status !== 'success') throw new Error(result.message || 'สร้างบัญชีไม่สำเร็จ');
+                await refreshFromGoogleSheets(false);
+                ['new-user-fullname','new-user-phone','new-user-username','new-user-password','new-user-bankname','new-user-bankacc','new-user-address','new-user-salary'].forEach(id => document.getElementById(id).value = '');
+                showToast('สร้างบัญชีพนักงานเรียบร้อย (รอ Master อนุมัติการใช้งาน)', true);
+                renderAdmin();
+            } catch (err) {
+                console.error(err);
+                showToast('สร้างบัญชีพนักงานไม่สำเร็จ', false);
+            }
+        }
+
+        async function requestDeleteUser(id){
+            if(!authToken)return;
+            const u=users.find(x=>String(x.id)===String(id)); if(!u)return;
+            if(!confirm(`ยืนยันส่งคำขอลบบัญชี ${u.name} ให้ Master ตรวจสอบ?`))return;
+            try{
+                const r=await gasPost('requestDelete',{token:authToken,targetId:String(id),targetType:u.role});
+                if(r.status!=='success')throw new Error(r.message||'ส่งคำขอไม่สำเร็จ');
+                addClientLog('INFO','requestDelete','ส่งคำขอลบบัญชีแล้ว',{targetId:id,targetName:u.name});
+                await refreshFromGoogleSheets(false); showToast('ส่งคำขอลบให้ Master แล้ว',true); renderAdmin();
+            }catch(e){addClientLog('ERROR','requestDelete',e.message);showToast('ส่งคำขอลบไม่สำเร็จ: '+e.message,false);}
+        }
+
+        async function approveDeleteRequest(requestId){
+            if(!isMaster)return;
+            try{const r=await gasPost('approveDelete',{token:authToken,requestId}); if(r.status!=='success')throw new Error(r.message||'อนุมัติไม่สำเร็จ'); addClientLog('INFO','approveDelete','Master อนุมัติการลบบัญชีแล้ว',{requestId}); await refreshFromGoogleSheets(false); renderAdmin();}catch(e){addClientLog('ERROR','approveDelete',e.message);showToast('อนุมัติลบไม่สำเร็จ: '+e.message,false);}
+        }
+        async function rejectDeleteRequest(requestId){
+            if(!isMaster)return;
+            const reason=prompt('เหตุผลที่ไม่อนุมัติ (ถ้ามี):','');
+            try{const r=await gasPost('rejectDelete',{token:authToken,requestId,reason:reason||''}); if(r.status!=='success')throw new Error(r.message||'ปฏิเสธไม่สำเร็จ'); addClientLog('INFO','rejectDelete','Master ปฏิเสธคำขอลบแล้ว',{requestId}); await refreshFromGoogleSheets(false); renderAdmin();}catch(e){addClientLog('ERROR','rejectDelete',e.message);showToast('ปฏิเสธคำขอลบไม่สำเร็จ: '+e.message,false);}
+        }
+
+        async function masterApproveUser(id) {
+            if (!isMaster) { showToast('เฉพาะ Master เท่านั้น', false); return; }
+            const u = users.find(item => item.id === id);
+            if (!u) return;
+            u.isApproved = true;
+            try {
+                await syncUser(u);
+                await refreshFromGoogleSheets(false);
+                showToast(`อนุมัติเปิดใช้งานบัญชี ${u.name} เรียบร้อยแล้ว`, true);
+                renderAdmin();
+            } catch (err) { showToast('บันทึกการอนุมัติบัญชีไม่สำเร็จ', false); }
+        }
+
+        async function masterSuspendUser(id) {
+            if (!isMaster) { showToast('เฉพาะ Master เท่านั้นที่มีสิทธิ์ระงับบัญชีพนักงาน!', false); return; }
+            const u = users.find(item => item.id === id);
+            if (!u) return;
+            u.status = 'suspended';
+            u.isOnline = false;
+            try {
+                await syncUser(u);
+                await refreshFromGoogleSheets(false);
+                showToast(`ระงับบัญชี ${u.name} (${u.role.toUpperCase()}) สำเร็จ`, true);
+                renderAdmin();
+            } catch (err) { showToast('บันทึกการระงับบัญชีไม่สำเร็จ', false); }
+        }
+
+        async function masterUnblockUser(id) {
+            if (!isMaster) { showToast('เฉพาะ Master เท่านั้น', false); return; }
+            const u = users.find(item => item.id === id);
+            if (!u) return;
+            u.status = 'active';
+            try {
+                await syncUser(u);
+                await refreshFromGoogleSheets(false);
+                showToast(`ปลดระงับบัญชี ${u.name} เรียบร้อยแล้ว`, true);
+                renderAdmin();
+            } catch (err) { showToast('บันทึกการปลดระงับไม่สำเร็จ', false); }
+        }
+
+        async function approveRemittance(rmId) {
+            const rm = remittances.find(r => r.id === rmId);
+            if (!rm) return;
+            const rider = users.find(u => u.id === rm.riderId);
+            if (!rider) return;
+            rider.cashHold = 0;
+            remittances = remittances.filter(r => r.id !== rmId);
+            try {
+                await syncUser(rider);
+                await gasPost('updateTransaction', { token: authToken, txId: rm.txId || '', fields: { status: 'SUCCESS', remark: 'อนุมัติยอดเงินสดเข้าบริษัท', date: new Date().toISOString() } });
+                await gasPost('removeRemittance', { token: authToken, id: rm.id });
+                await refreshFromGoogleSheets(false);
+                showToast('อนุมัติยอดเงินสดเข้าบริษัทเรียบร้อย', true);
+                renderAdmin();
+            } catch (err) { showToast('บันทึกการอนุมัติยอดเงินสดไม่สำเร็จ', false); }
+        }
+
+        async function adminCloseDay() {
+            try {
+                for (const r of users.filter(u => u.role === 'rider')) {
+                    if ((r.cashHold || 0) > 0) {
+                        r.status = 'suspended';
+                        r.isOnline = false;
+                    }
+                    r.incomeYesterday = r.incomeToday || 0;
+                    r.incomeToday = 0;
+                    await syncUser(r);
+                }
+                await refreshFromGoogleSheets(false);
+                showToast('ตัดรอบวันสำเร็จ! (Cut-off Midnight) ระงับบัญชี Rider ที่ค้างส่งเงินสดอัตโนมัติ', true);
+                renderAdmin();
+            } catch (err) { showToast('ตัดรอบวันไม่สำเร็จ', false); }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
+
+        function showAdminTab(tab) {
+            document.getElementById('admin-tab-dash').classList.add('hidden');
+            document.getElementById('admin-tab-loans').classList.add('hidden');
+            document.getElementById('admin-tab-uncollectible').classList.add('hidden');
+            document.getElementById('admin-tab-users').classList.add('hidden');
+            document.getElementById('admin-tab-approve').classList.add('hidden');
+            document.getElementById('admin-tab-slips').classList.add('hidden');
+            document.getElementById('admin-tab-remit').classList.add('hidden');
+            document.getElementById('admin-tab-payroll').classList.add('hidden');
+            document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
+            if (window.innerWidth < 768) toggleSidebar();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+    </script>
+
+    <div id="fdg-log-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[100] p-4 flex items-center justify-center">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+        <div class="p-4 border-b flex items-center justify-between"><div><b>SYSTEM LOG</b><div class="text-xs text-gray-500">FDG v1.7.1 — คัดลอกส่งให้ผู้พัฒนาได้ทันที</div></div><div class="flex gap-2"><button onclick="copyLogs()" class="bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold">📋 คัดลอก LOG</button><button onclick="closeLogModal()" class="bg-gray-200 px-3 py-2 rounded-lg">ปิด</button></div></div>
+        <textarea id="fdg-log-copy-area" class="flex-1 min-h-[55vh] p-4 font-mono text-xs outline-none" readonly></textarea>
+      </div>
+    </div>
+    <div id="fdg-system-status" class="fixed bottom-3 left-3 z-[90] bg-slate-900 text-white rounded-xl shadow-lg px-3 py-2 text-xs flex items-center gap-3"><b>FDG v1.7.1</b><span id="fdg-log-status">LOG พร้อมใช้งาน</span><button onclick="openLogModal();loadServerLogs()" class="text-cyan-300 font-bold">LOG</button></div>
+
+<button id="fdg-install-btn" onclick="fdgInstallApp()" class="hidden fixed bottom-16 right-3 z-[90] bg-emerald-600 text-white px-4 py-2 rounded-xl shadow-lg font-bold text-xs">📲 ติดตั้งลงมือถือ</button>
 
 <script>
-/* FDG Customer Live Sync v1.7.2 */
-const FDG_CUSTOMER_GAS="https://script.google.com/macros/s/AKfycbzoEm4AoO1GlB_0V5SK7TfIeOnZCvq4EU7zmT4iW1ljyk4sgYu4rDPWykDacvMVW1zjIA/exec";
-let fdgCustomerBusy=false;
-function fdgCustomerLoader(show,text){let b=document.getElementById('btnSubmitApp');if(b){b.disabled=show;b.innerText=show?(text||'กำลังส่งข้อมูล...'):'ยืนยันส่งข้อมูลสมัครสินเชื่อ';}}
-async function fdgCustomerPost(action,fields){const r=await fetch(FDG_CUSTOMER_GAS,{method:'POST',body:JSON.stringify({action,fields,clientVersion:'1.7.2-fast-sync-public-customer'}),cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(j.status!=='success')throw new Error(j.message||'Server ไม่สำเร็จ');return j;}
-async function fdgCustomerGet(uid){const r=await fetch(FDG_CUSTOMER_GAS+'?action=getCustomerStatus&uid='+encodeURIComponent(uid)+'&_='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}
-function fdgCustomerFields(){return {fullname:document.getElementById('inpName').value.trim(),phone:document.getElementById('inpPhone').value.replace(/\D/g,''),idcard:document.getElementById('inpNationalID').value.replace(/\D/g,''),homeAddr:document.getElementById('inpHomeAddr').value, district:document.getElementById('homeDistrict').value, subdistrict:document.getElementById('homeSubDistrict').value, shopName:document.getElementById('inpShopName').value, workDistrict:document.getElementById('workDistrict').value, workSubDistrict:document.getElementById('workSubDistrict').value, gps:document.getElementById('inpGps').value, bankName:document.getElementById('inpBank').value, bankAcc:document.getElementById('inpBankAcc').value, loanAmount:Number(document.getElementById('selectAmount')?.value||0), term:Number(document.getElementById('selectDays')?.value||0), installment:Number(document.getElementById('calcDisplayAmount')?.innerText.replace(/[^0-9.]/g,'')||0), status:'PENDING'};}
-async function submitApplication(){if(fdgCustomerBusy)return;const f=fdgCustomerFields();if(!f.fullname||f.phone.length!==10||f.idcard.length!==13){alert('กรุณาตรวจสอบชื่อ เลขบัตรประชาชน และเบอร์โทรศัพท์');return;}fdgCustomerBusy=true;fdgCustomerLoader(true,'กำลังบันทึกข้อมูล 0%');try{fdgCustomerLoader(true,'กำลังตรวจสอบข้อมูล 35%');const r=await fdgCustomerPost('publicCreateCustomer',f);fdgCustomerLoader(true,'บันทึกลง Google Sheets 80%');userProfile.uid=r.uid;userProfile.loanStatus='PENDING';document.getElementById('profName').innerText=f.fullname;document.getElementById('profPhone').innerText=document.getElementById('inpPhone').value;document.getElementById('profID').innerText=document.getElementById('inpNationalID').value;document.getElementById('profBank').innerText=f.bankName;document.getElementById('profBankAcc').innerText=f.bankAcc;document.getElementById('profUid').innerText='UID: '+r.uid;localStorage.setItem('fdg_customer_uid',r.uid);fdgCustomerLoader(true,'ตรวจสอบข้อมูลจาก Server 95%');const check=await fdgCustomerGet(r.uid);if(check.status!=='success')throw new Error(check.message||'ตรวจสอบใบสมัครไม่สำเร็จ');fdgCustomerLoader(true,'100%');fdgCustomerBusy=false;fdgCustomerLoader(false);alert('ส่งใบสมัครสำเร็จ UID: '+r.uid);switchTab('page-status');await fdgCustomerRefreshStatus();}catch(e){fdgCustomerBusy=false;fdgCustomerLoader(false);alert('ส่งข้อมูลไม่สำเร็จ: '+e.message);}}
-async function fdgCustomerRefreshStatus(){const uid=localStorage.getItem('fdg_customer_uid')||userProfile.uid;if(!uid||String(uid).startsWith('PY-'))return;try{const r=await fdgCustomerGet(uid);if(r.status!=='success')return;const c=r.customer||{};userProfile.uid=c.uid||uid;userProfile.loanStatus=String(c.status||'PENDING').toUpperCase();const approved=document.getElementById('statusApprovedBox'),pending=document.getElementById('statusPendingBox'),rejected=document.getElementById('statusRejectedBox');if(approved)approved.classList.toggle('d-none',userProfile.loanStatus!=='APPROVED'&&userProfile.loanStatus!=='ACTIVE');if(pending)pending.classList.toggle('d-none',userProfile.loanStatus!=='PENDING');if(rejected)rejected.classList.toggle('d-none',userProfile.loanStatus!=='REJECTED');}catch(e){console.warn('Customer status sync',e);}}
-function checkLoanRights(){const uid=localStorage.getItem('fdg_customer_uid');if(uid)userProfile.uid=uid;document.getElementById('profUid').innerText='UID: '+userProfile.uid;fdgCustomerRefreshStatus();}
-setInterval(fdgCustomerRefreshStatus,15000);
+(function(){
+ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('SW registration failed',e));}
+ let deferredPrompt=null;
+ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;let b=document.getElementById('fdg-install-btn');if(b)b.classList.remove('hidden');});
+ window.fdgInstallApp=async function(){if(!deferredPrompt){showToast('เบราว์เซอร์นี้ยังไม่แสดงตัวเลือกติดตั้ง ให้ใช้เมนู เพิ่มไปยังหน้าจอหลัก',false);return;}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;};
+ window.addEventListener('appinstalled',()=>{const b=document.getElementById('fdg-install-btn');if(b)b.classList.add('hidden');showToast('ติดตั้งเว็บแอปเรียบร้อย',true);});
+})();
 </script>
+
 </body>
 </html>
