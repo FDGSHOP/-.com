@@ -20,7 +20,7 @@
         @keyframes stroke { 100% { stroke-dashoffset: 0; } }
         @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
     </style>
-<meta name="fdg-build" content="v1.2.0-live-sync">
+<meta name="fdg-build" content="v1.7.1-fast-sync-lock">
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#0f172a">
     <meta name="mobile-web-app-capable" content="yes">
@@ -41,6 +41,20 @@
                 <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
             </svg>
             <span class="text-xl font-bold text-emerald-500">โหลดระบบสำเร็จ!</span>
+        </div>
+    </div>
+
+    <!-- GLOBAL ACTION SYNC / DUPLICATE-CLICK LOCK -->
+    <div id="fdg-action-loader" class="hidden fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-[2px] flex items-center justify-center p-4" aria-live="polite" aria-busy="false">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-7 text-center">
+            <div class="w-16 h-16 mx-auto border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            <div id="fdg-action-percent" class="text-3xl font-extrabold text-slate-800 mt-5">0%</div>
+            <div id="fdg-action-title" class="font-bold text-slate-800 mt-2">กำลังดำเนินการ...</div>
+            <div id="fdg-action-detail" class="text-xs text-slate-500 mt-1">กรุณารอ ระบบกำลังบันทึกและซิงก์ข้อมูล</div>
+            <div class="mt-5 w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                <div id="fdg-action-progress" class="h-full bg-indigo-600 rounded-full transition-[width] duration-150" style="width:0%"></div>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-3">ห้ามกดซ้ำ ระบบจะปลดล็อกอัตโนมัติเมื่อเสร็จสิ้น</div>
         </div>
     </div>
 
@@ -79,7 +93,7 @@
             </button>
             
             <h2 id="login-title" class="text-2xl font-bold text-center mt-4 mb-2">เข้าสู่ระบบ</h2>
-            <p class="text-xs text-gray-400 text-center mb-6" id="login-subtitle">กรอกข้อมูลผู้ใช้งานเพื่อยืนยันตัวตน · FDG v1.6.0</p>
+            <p class="text-xs text-gray-400 text-center mb-6" id="login-subtitle">กรอกข้อมูลผู้ใช้งานเพื่อยืนยันตัวตน · FDG v1.7.1</p>
 
             <div class="space-y-4">
                 <div>
@@ -724,15 +738,79 @@
         let activeAdminSlipCustId = null;
 
         // Google Apps Script Endpoint URL
-        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzoEm4AoO1GlB_0V5SK7TfIeOnZCvq4EU7zmT4iW1ljyk4sgYu4rDPWykDacvMVW1zjIA/exec";
+        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwdjWwDTkPqJxnFEha90No8SPIUXNmIp6bqNG8SuWoa5YwtMypItLLtVc1oQsIaiCm_4Q/exec";
 
         let authToken = '';
         let backendLastUpdated = '';
-        const FDG_VERSION = '1.6.0';
+        const FDG_VERSION = '1.7.1-fast-sync-lock';
         let systemLogs = [];
         let payroll = [];
         let deleteRequests = [];
         let commissionLedger = [];
+
+        // Global action loader: one lock for every network-changing/user API action.
+        let fdgActionBusy = false;
+        let fdgActionTimer = null;
+        let fdgActionEndTimer = null;
+        let fdgActionProgress = 0;
+        let fdgActionLabel = 'กำลังดำเนินการ...';
+
+        function fdgActionStart(label='กำลังดำเนินการ...') {
+            if (fdgActionEndTimer) { clearTimeout(fdgActionEndTimer); fdgActionEndTimer = null; }
+            fdgActionLabel = label;
+            fdgActionBusy = true;
+            fdgActionProgress = 0;
+            const box=document.getElementById('fdg-action-loader');
+            if (!box) return;
+            box.classList.remove('hidden');
+            box.setAttribute('aria-busy','true');
+            document.getElementById('fdg-action-title').innerText=label;
+            document.getElementById('fdg-action-percent').innerText='0%';
+            document.getElementById('fdg-action-progress').style.width='0%';
+            if (fdgActionTimer) clearInterval(fdgActionTimer);
+            fdgActionTimer=setInterval(()=>{
+                if (!fdgActionBusy) return;
+                // No fake 100%: while the request is still running, stop at 92%.
+                if (fdgActionProgress < 92) {
+                    const step = fdgActionProgress < 60 ? 3 : 1;
+                    fdgActionProgress=Math.min(92,fdgActionProgress+step);
+                    document.getElementById('fdg-action-percent').innerText=fdgActionProgress+'%';
+                    document.getElementById('fdg-action-progress').style.width=fdgActionProgress+'%';
+                }
+            },120);
+        }
+
+        function fdgActionTouch(label) {
+            if (!fdgActionBusy) fdgActionStart(label);
+            else {
+                if (label) document.getElementById('fdg-action-title').innerText=label;
+                if (fdgActionEndTimer) { clearTimeout(fdgActionEndTimer); fdgActionEndTimer=null; }
+            }
+        }
+
+        function fdgActionFinish(success=true, message='') {
+            if (!fdgActionBusy) return;
+            if (fdgActionTimer) { clearInterval(fdgActionTimer); fdgActionTimer=null; }
+            fdgActionProgress=100;
+            const pct=document.getElementById('fdg-action-percent');
+            const fill=document.getElementById('fdg-action-progress');
+            const title=document.getElementById('fdg-action-title');
+            if (pct) pct.innerText='100%';
+            if (fill) { fill.style.width='100%'; fill.classList.toggle('bg-red-500',!success); fill.classList.toggle('bg-indigo-600',success); }
+            if (title) title.innerText=message || (success?'ดำเนินการสำเร็จ':'ดำเนินการไม่สำเร็จ');
+            fdgActionEndTimer=setTimeout(()=>{
+                fdgActionBusy=false;
+                const box=document.getElementById('fdg-action-loader');
+                if (box) { box.classList.add('hidden'); box.setAttribute('aria-busy','false'); }
+                if (fill) { fill.classList.remove('bg-red-500'); fill.classList.add('bg-indigo-600'); }
+                fdgActionEndTimer=null;
+            },350);
+        }
+
+        function fdgActionReject() {
+            showToast('กำลังดำเนินการอยู่ กรุณารอให้โหลดถึง 100% ก่อนกดซ้ำ', false);
+            return true;
+        }
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
@@ -811,28 +889,48 @@
                 isMaster = !!result.isMaster;
                 showToast(isMaster ? 'เข้าสู่ระบบ Master สำเร็จ' : `ยินดีต้อนรับ ${currentUser.name}`, true);
                 openDashboard(isMaster ? 'admin' : currentUser.role);
+                startSyncTimers();
             } catch (err) {
                 console.error(err);
                 showToast('ไม่สามารถเชื่อมต่อ Google Apps Script ได้', false);
             }
         }
 
-        async function gasGet(action) {
+        async function gasGet(action, options = {}) {
             if (!authToken) throw new Error('ยังไม่ได้เข้าสู่ระบบ');
+            const silent=!!options.silent;
+            if (!silent && fdgActionBusy && options.rejectIfBusy) { fdgActionReject(); throw new Error('BUSY'); }
+            if (!silent) fdgActionStart(options.label || 'กำลังโหลดข้อมูล...');
             const url = `${GAS_ENDPOINT}?action=${encodeURIComponent(action)}&token=${encodeURIComponent(authToken)}&_=${Date.now()}`;
-            const response = await fetch(url, { method: 'GET', cache: 'no-store' });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return await response.json();
+            try {
+                const response = await fetch(url, { method: 'GET', cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data=await response.json();
+                if (!silent) fdgActionFinish(data?.status !== 'error', data?.status === 'error' ? (data.message||'ดำเนินการไม่สำเร็จ') : 'ดำเนินการสำเร็จ');
+                return data;
+            } catch(e) {
+                if (!silent) fdgActionFinish(false, e.message||'เชื่อมต่อไม่สำเร็จ');
+                throw e;
+            }
         }
 
-        async function gasPost(action, payload = {}) {
-            const response = await fetch(GAS_ENDPOINT, {
-                method: 'POST',
-                body: JSON.stringify(Object.assign({ action, clientVersion: FDG_VERSION }, payload)),
-                cache: 'no-store'
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return await response.json();
+        async function gasPost(action, payload = {}, options = {}) {
+            const silent=!!options.silent;
+            if (!silent) fdgActionStart(options.label || 'กำลังบันทึกข้อมูล...');
+            try {
+                const response = await fetch(GAS_ENDPOINT, {
+                    method: 'POST',
+                    body: JSON.stringify(Object.assign({ action, clientVersion: FDG_VERSION }, payload)),
+                    cache: 'no-store'
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data=await response.json();
+                if (!silent) fdgActionFinish(data?.status !== 'error', data?.status === 'error' ? (data.message||'ดำเนินการไม่สำเร็จ') : 'บันทึกสำเร็จ');
+                return data;
+            } catch(e) {
+                if (!silent) fdgActionFinish(false, e.message||'เชื่อมต่อไม่สำเร็จ');
+                throw e;
+            }
         }
 
         function setLatestUpdate(stamp) {
@@ -883,14 +981,15 @@
             try{await navigator.clipboard.writeText(area.value);showToast('คัดลอก LOG ทั้งหมดแล้ว',true);}catch(e){area.select();document.execCommand('copy');showToast('คัดลอก LOG แล้ว',true);}
         }
 
-        async function refreshFromGoogleSheets(showMessage = true) {
+        async function refreshFromGoogleSheets(showMessage = true, internal = false) {
             if (!authToken) {
                 if (showMessage) showToast('กรุณาเข้าสู่ระบบก่อน Refresh ข้อมูล', false);
                 return false;
             }
             try {
+                fdgActionTouch('กำลังซิงก์ข้อมูลจาก Google Sheets...');
                 if (showMessage) showToast('กำลัง Refresh ข้อมูลจาก Google Sheets...', true);
-                const data = await gasGet('getAllData');
+                const data = await gasGet('getAllData', { silent: true });
                 if (!data || data.status !== 'success') throw new Error(data && data.message ? data.message : 'โหลดข้อมูลไม่สำเร็จ');
                 users = (Array.isArray(data.users) ? data.users : []).map(u => Object.assign({
                     id:null,name:'',phone:'',address:'',bankName:'',bankAcc:'',
@@ -920,15 +1019,74 @@
                 if (currentUser && !isMaster) {
                     currentUser = users.find(u => String(u.id) === String(currentUser.id)) || currentUser;
                 }
-                if (document.getElementById('admin-app') && !document.getElementById('admin-app').classList.contains('hidden')) renderAdmin();
+                if (document.getElementById('admin-app') && !document.getElementById('admin-app').classList.contains('hidden')) {
+                    renderAdmin();
+                    await refreshRiderPresence();
+                }
                 if (document.getElementById('rider-app') && !document.getElementById('rider-app').classList.contains('hidden')) renderRider();
                 if (showMessage) showToast('Refresh ข้อมูลจาก Google Sheets สำเร็จ', true);
+                fdgActionFinish(true, 'ซิงก์ข้อมูลสำเร็จ');
                 return true;
             } catch (err) {
                 console.error(err);
                 if (showMessage) showToast('Refresh ไม่สำเร็จ: ' + (err.message || 'ไม่สามารถดึงข้อมูลจาก Google Sheets ได้'), false);
                 addClientLog('ERROR','refresh','Refresh failed',{error:err.message});
+                fdgActionFinish(false, 'ซิงก์ข้อมูลไม่สำเร็จ');
                 return false;
+            }
+        }
+
+        let presenceTimer = null;
+        let heartbeatTimer = null;
+        let presenceBusy = false;
+        let heartbeatBusy = false;
+
+        async function refreshRiderPresence() {
+            if (!authToken || presenceBusy) return false;
+            presenceBusy = true;
+            try {
+                const data = await gasGet('presence', {silent:true});
+                if (!data || data.status !== 'success') throw new Error(data?.message || 'Presence failed');
+                const map = {};
+                (data.presence || []).forEach(p => { map[String(p.id)] = p; });
+                users = users.map(u => {
+                    const p = map[String(u.id)];
+                    return p ? Object.assign({}, u, {isOnline: !!p.isOnline, lastSeen: p.lastSeen || u.lastSeen || ''}) : u;
+                });
+                if (document.getElementById('admin-app') && !document.getElementById('admin-app').classList.contains('hidden')) renderAdmin();
+                return true;
+            } catch (e) {
+                addClientLog('ERROR','presence','โหลดสถานะ Rider ไม่สำเร็จ',{error:e.message});
+                return false;
+            } finally { presenceBusy = false; }
+        }
+
+        function stopSyncTimers() {
+            if (presenceTimer) clearInterval(presenceTimer);
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+            presenceTimer = null; heartbeatTimer = null;
+        }
+
+        function startSyncTimers() {
+            stopSyncTimers();
+            if (!authToken) return;
+            if (isMaster || currentUser?.role === 'admin') {
+                refreshRiderPresence();
+                presenceTimer = setInterval(refreshRiderPresence, 5000);
+            }
+            if (currentUser?.role === 'rider' && currentUser?.isOnline) {
+                const beat = async () => {
+                    if (!authToken || heartbeatBusy || !currentUser?.isOnline) return;
+                    heartbeatBusy = true;
+                    try {
+                        const r = await gasPost('heartbeat', {token: authToken}, {silent:true});
+                        if (r.status === 'success') currentUser.lastSeen = r.lastSeen;
+                    } catch(e) {
+                        addClientLog('WARN','heartbeat','ส่งสถานะออนไลน์ไม่สำเร็จ',{error:e.message});
+                    } finally { heartbeatBusy = false; }
+                };
+                beat();
+                heartbeatTimer = setInterval(beat, 15000);
             }
         }
 
@@ -1005,6 +1163,7 @@
         }
 
         function logout() {
+            stopSyncTimers();
             authToken = '';
             backendLastUpdated = '';
             currentUser = null;
@@ -1152,6 +1311,7 @@
             try {
                 await gasPost('setRiderState', { token: authToken, id: String(currentUser._sheetId || currentUser.id), state: { isOnline: currentUser.isOnline, cashHold: currentUser.cashHold || 0, qrHold: currentUser.qrHold || 0, incomeYesterday: currentUser.incomeYesterday || 0, incomeToday: currentUser.incomeToday || 0, incomeMonth: currentUser.incomeMonth || 0 } });
                 showToast(currentUser.isOnline ? 'เริ่มปฏิบัติงานแล้ว' : 'ปิดกะการทำงานเรียบร้อย', true);
+                startSyncTimers();
             } catch (err) {
                 currentUser.isOnline = !currentUser.isOnline;
                 showToast('บันทึกสถานะกะงานไม่สำเร็จ', false);
@@ -1421,10 +1581,10 @@
                 return;
             }
             try {
-                const result = await gasPost('setCompanyCapital', { token: authToken, value: val });
+                const result = await gasPost('setCompanyCapital', { token: authToken, amount: val });
                 if (result.status !== 'success') throw new Error(result.message || 'บันทึกไม่สำเร็จ');
-                companyInvestmentCapital = val;
-                setLatestUpdate(result.lastUpdated);
+                companyInvestmentCapital = Number(result.amount ?? val);
+                setLatestUpdate(result.lastUpdated || new Date().toISOString());
                 document.getElementById('input-master-investment').value = '';
                 showToast(`อัปเดตวงเงินลงทุนบริษัทเป็น ${val.toLocaleString()} ฿ เรียบร้อย`, true);
                 renderAdmin();
@@ -1473,7 +1633,7 @@
                 tr.className = "border-b";
                 tr.innerHTML = `
                     <td class="p-3 font-bold">${r.name}</td>
-                    <td class="p-3">${r.isOnline ? '<span class="text-emerald-600 font-bold">Online</span>' : '<span class="text-gray-400">Offline</span>'}</td>
+                    <td class="p-3">${r.isOnline ? '<span class="text-emerald-600 font-bold">Online</span>' : '<span class="text-gray-400">Offline</span>'}${r.lastSeen ? `<div class="text-[10px] text-gray-400">${new Date(r.lastSeen).toLocaleTimeString('th-TH')}</div>` : ''}</td>
                     <td class="p-3">${r.qrHold || 0} ฿</td>
                     <td class="p-3 text-amber-600 font-bold">${r.cashHold || 0} ฿</td>
                     <td class="p-3 text-indigo-600 font-bold">${((r.qrHold + r.cashHold) * 0.07).toFixed(1)} ฿</td>
@@ -2021,11 +2181,11 @@
 
     <div id="fdg-log-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[100] p-4 flex items-center justify-center">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
-        <div class="p-4 border-b flex items-center justify-between"><div><b>SYSTEM LOG</b><div class="text-xs text-gray-500">FDG v1.6.0 — คัดลอกส่งให้ผู้พัฒนาได้ทันที</div></div><div class="flex gap-2"><button onclick="copyLogs()" class="bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold">📋 คัดลอก LOG</button><button onclick="closeLogModal()" class="bg-gray-200 px-3 py-2 rounded-lg">ปิด</button></div></div>
+        <div class="p-4 border-b flex items-center justify-between"><div><b>SYSTEM LOG</b><div class="text-xs text-gray-500">FDG v1.7.1 — คัดลอกส่งให้ผู้พัฒนาได้ทันที</div></div><div class="flex gap-2"><button onclick="copyLogs()" class="bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold">📋 คัดลอก LOG</button><button onclick="closeLogModal()" class="bg-gray-200 px-3 py-2 rounded-lg">ปิด</button></div></div>
         <textarea id="fdg-log-copy-area" class="flex-1 min-h-[55vh] p-4 font-mono text-xs outline-none" readonly></textarea>
       </div>
     </div>
-    <div id="fdg-system-status" class="fixed bottom-3 left-3 z-[90] bg-slate-900 text-white rounded-xl shadow-lg px-3 py-2 text-xs flex items-center gap-3"><b>FDG v1.6.0</b><span id="fdg-log-status">LOG พร้อมใช้งาน</span><button onclick="openLogModal();loadServerLogs()" class="text-cyan-300 font-bold">LOG</button></div>
+    <div id="fdg-system-status" class="fixed bottom-3 left-3 z-[90] bg-slate-900 text-white rounded-xl shadow-lg px-3 py-2 text-xs flex items-center gap-3"><b>FDG v1.7.1</b><span id="fdg-log-status">LOG พร้อมใช้งาน</span><button onclick="openLogModal();loadServerLogs()" class="text-cyan-300 font-bold">LOG</button></div>
 
 <button id="fdg-install-btn" onclick="fdgInstallApp()" class="hidden fixed bottom-16 right-3 z-[90] bg-emerald-600 text-white px-4 py-2 rounded-xl shadow-lg font-bold text-xs">📲 ติดตั้งลงมือถือ</button>
 
