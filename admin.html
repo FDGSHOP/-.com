@@ -738,7 +738,7 @@
         let activeAdminSlipCustId = null;
 
         // Google Apps Script Endpoint URL
-        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwdjWwDTkPqJxnFEha90No8SPIUXNmIp6bqNG8SuWoa5YwtMypItLLtVc1oQsIaiCm_4Q/exec";
+        const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzoEm4AoO1GlB_0V5SK7TfIeOnZCvq4EU7zmT4iW1ljyk4sgYu4rDPWykDacvMVW1zjIA/exec";
 
         let authToken = '';
         let backendLastUpdated = '';
@@ -871,7 +871,7 @@
             }
 
             try {
-                addClientLog('INFO','login','กำลังตรวจสอบบัญชี',{targetRole:targetLoginRole});
+                addClientLog('INFO','login_attempt','กำลังส่งคำขอตรวจสอบบัญชีไปยัง Server',{targetRole:targetLoginRole});
                 showToast('กำลังตรวจสอบบัญชี...', true);
                 const result = await gasPost('login', { role: targetLoginRole, username: userInp, password: passInp });
                 if (!result || result.status !== 'success') {
@@ -881,7 +881,7 @@
                 }
 
                 authToken = result.token;
-                addClientLog('INFO','login','Login สำเร็จ',{isMaster:!!result.isMaster,role:result.user?.role});
+                addClientLog('INFO','login_success','Server ยืนยันการเข้าสู่ระบบแล้ว',{isMaster:!!result.isMaster,role:result.user?.role});
                 isMaster = !!result.isMaster;
                 currentUser = result.user;
                 await refreshFromGoogleSheets(false);
@@ -963,7 +963,7 @@
 
         async function loadServerLogs() {
             try {
-                const r=await gasPost('getLogs',{token:authToken,limit:200});
+                const r=await gasGet('getLogs',{silent:true});
                 if(r.status==='success') { systemLogs=r.logs||[]; renderLogPreview(); }
             } catch(e) { addClientLog('ERROR','getLogs','โหลด LOG จาก Server ไม่สำเร็จ',{error:e.message}); }
         }
