@@ -1768,8 +1768,7 @@ async function handleLogin(){
     if(!data.session)throw new Error("Session not found");
     liveStaffSession=data.session;
 
-    const {data:profile,error:pErr}=await adminSb.from("users").select("*").eq("id",data.session.user.id).single();
-    if(pErr)throw pErr;
+    const profile=await fdgLoadMyStaffProfile();
     if(!liveRoleAllowed(profile,targetLoginRole)){
       await adminSb.auth.signOut();
       throw new Error("บัญชีนี้ไม่มีสิทธิ์เข้า Admin/Master");
@@ -2396,6 +2395,17 @@ function phase2d2InitShell(){
 }
 setTimeout(phase2d2InitShell,50);
 
+
+/* ---------- PHASE 2D-2 LOGIN PROFILE FIX ---------- */
+async function fdgLoadMyStaffProfile(){
+  const {data,error}=await adminSb.rpc("fdg_my_staff_profile");
+  if(error) throw error;
+  if(!data){
+    throw new Error("ไม่พบโปรไฟล์พนักงานใน public.users ที่เชื่อมกับบัญชี Auth นี้");
+  }
+  return data;
+}
+
 /* ---------- LOGIN / SESSION ---------- */
 function openLogin(role){
   targetLoginRole=role;
@@ -2418,8 +2428,7 @@ async function handleLogin(){
     if(error)throw error;
     if(!data.session)throw new Error("Session not found");
 
-    const {data:profile,error:pErr}=await adminSb.from("users").select("*").eq("id",data.session.user.id).single();
-    if(pErr)throw pErr;
+    const profile=await fdgLoadMyStaffProfile();
     if(!liveRoleAllowed(profile,targetLoginRole)){
       await adminSb.auth.signOut();
       throw new Error(targetLoginRole==="rider"
@@ -2464,8 +2473,8 @@ async function bootAdminSession(){
   try{
     const {data}=await adminSb.auth.getSession();
     if(!data.session)return;
-    const {data:profile,error}=await adminSb.from("users").select("*").eq("id",data.session.user.id).single();
-    if(error||!profile||!["admin","master","rider"].includes(String(profile.role)))return;
+    const profile=await fdgLoadMyStaffProfile();
+    if(!profile||!["admin","master","rider"].includes(String(profile.role)))return;
     if(String(profile.status)!=="active")return;
 
     liveStaffSession=data.session;
