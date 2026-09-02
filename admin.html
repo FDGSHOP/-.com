@@ -85,7 +85,7 @@
                 <div class="relative">
                     <label class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
                     <div class="relative mt-1">
-                        <input type="password" id="login-password" placeholder="กรอกรหัสผ่าน (หากใช้ Master Key ไม่ต้องใส่)" class="w-full p-3 border rounded-lg outline-none pr-10 focus:ring-2 focus:ring-indigo-500">
+                        <input type="password" id="login-password" placeholder="กรอกรหัสผ่าน" class="w-full p-3 border rounded-lg outline-none pr-10 focus:ring-2 focus:ring-indigo-500">
                         <button type="button" onclick="togglePassword('login-password', 'eye-login')" class="absolute right-3 top-3 text-gray-400">
                             <i data-lucide="eye" id="eye-login" class="w-5 h-5"></i>
                         </button>
@@ -2274,6 +2274,794 @@ liveSetBusy=function(on,msg="กำลังโหลดข้อมูล..."){
     const banner=document.getElementById("liveBackendBanner");
     if(banner){
       banner.innerHTML='<span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> LIVE SUPABASE — Phase 2D-1</span><span class="block font-normal text-emerald-700 mt-1">อนุมัติ → รอโอนเงิน → ยืนยันโอน → เริ่มวันสัญญาจากเวลาปล่อยเงินจริง</span>';
+    }
+  }
+};
+</script>
+
+
+<script>
+/* ============================================================
+   PHASE 2D-2 FRONTEND PATCH — RIDER LIVE / CASH LOCK
+   Supabase Auth + Start/End Work + Cash Collection + Full Remittance
+   No mock money mutation. EasySlip final verification is the next phase.
+   ============================================================ */
+
+let liveRiderDashboard=null;
+let liveRiderCollections=[];
+let liveRiderCustomers=[];
+let liveRiderLoans=[];
+let liveRiderInstallments=[];
+let liveRiderRemittances=[];
+let liveRiderCommissions=[];
+let liveRiderAreaAccess=[];
+let liveRiderAreaRows=[];
+let liveRiderRefreshTimer=null;
+
+let liveAdminWorkSessions=[];
+let liveAdminCommissions=[];
+let liveAdminRiderStates=[];
+let liveAdminRiderRemittances=[];
+let liveAdminCollections=[];
+
+function phase2d2BangkokDate(d=new Date()){
+  try{
+    return new Intl.DateTimeFormat("en-CA",{
+      timeZone:"Asia/Bangkok",year:"numeric",month:"2-digit",day:"2-digit"
+    }).format(d);
+  }catch(e){
+    return d.toISOString().slice(0,10);
+  }
+}
+function phase2d2MonthPrefix(){
+  return phase2d2BangkokDate().slice(0,7);
+}
+function phase2d2FmtDate(v){
+  if(!v)return "-";
+  try{
+    const s=String(v);
+    const d=s.length===10?new Date(s+"T00:00:00+07:00"):new Date(s);
+    return d.toLocaleDateString("th-TH",{timeZone:"Asia/Bangkok",day:"numeric",month:"short",year:"numeric"});
+  }catch(e){return String(v);}
+}
+function phase2d2StateText(s){
+  const st=String(s||"OFFLINE");
+  if(st==="WORKING")return ["กำลังทำงาน","text-emerald-600"];
+  if(st==="CASH_LOCKED")return ["CASH LOCK — ต้องคืนเงินบริษัท","text-red-600"];
+  if(st==="SETTLEMENT_PENDING")return ["รอตรวจสอบเงินคืนบริษัท","text-amber-600"];
+  if(st==="CLOSED")return ["ปิดงานวันนี้แล้ว","text-slate-500"];
+  return ["ยังไม่เริ่มงาน","text-red-500"];
+}
+function phase2d2Outstanding(){
+  const lock=liveRiderDashboard?.cash_lock||{};
+  if(lock.cash_locked)return Number(lock.remaining_company_money||0);
+  return Number(liveRiderDashboard?.today_remaining_company_money||0);
+}
+function phase2d2SettlementWorkSessionId(){
+  const lock=liveRiderDashboard?.cash_lock||{};
+  return lock.cash_locked ? lock.work_session_id : liveRiderDashboard?.today_work_session_id;
+}
+function phase2d2PendingRemittance(){
+  const ws=phase2d2SettlementWorkSessionId();
+  return liveRiderRemittances.find(r=>
+    String(r.work_session_id||"")===String(ws||"") &&
+    ["pending","verifying"].includes(String(r.status||""))
+  )||null;
+}
+function phase2d2IsSettlementOnly(){
+  const state=String(liveRiderDashboard?.state||"OFFLINE");
+  return state==="CASH_LOCKED" || state==="SETTLEMENT_PENDING" || !!phase2d2PendingRemittance();
+}
+function phase2d2CurrentCustomer(id){
+  return liveRiderCustomers.find(c=>String(c.id)===String(id))||null;
+}
+function phase2d2CurrentLoan(id){
+  return liveRiderLoans.find(l=>String(l.id)===String(id))||null;
+}
+function phase2d2CurrentInstallment(id){
+  return liveRiderInstallments.find(x=>String(x.id)===String(id))||null;
+}
+
+function phase2d2InitShell(){
+  const riderApp=document.getElementById("rider-app");
+  if(!riderApp)return;
+
+  if(!document.getElementById("rider-settlement-mode")){
+    const box=document.createElement("div");
+    box.id="rider-settlement-mode";
+    box.className="hidden p-4 max-w-lg mx-auto";
+    const header=riderApp.querySelector(":scope > header");
+    if(header) header.insertAdjacentElement("afterend",box);
+    else riderApp.appendChild(box);
+  }
+
+  const title=document.querySelector("#rider-app header span.text-\\[10px\\]");
+  if(title)title.textContent="พนักงานเก็บเงิน • LIVE SUPABASE • คอมฯ 7%";
+
+  const transferBtn=document.getElementById("btn-pay-transfer");
+  if(transferBtn)transferBtn.classList.add("hidden");
+  const slipBox=document.getElementById("slip-box");
+  if(slipBox)slipBox.classList.add("hidden");
+
+  // The Rider collection page is CASH-only. Customer SCAN is handled on customer frontend.
+  document.querySelectorAll('#modal-collect button[onclick*="handleFloatingInterest"], #modal-collect button[onclick*="toggleCloseAccountOptions"]').forEach(b=>{
+    const parent=b.closest(".space-y-3");
+    if(parent)parent.classList.add("hidden"); else b.classList.add("hidden");
+  });
+  const failToggle=document.getElementById("toggle-fail-switch");
+  if(failToggle){
+    const parent=failToggle.closest(".space-y-3");
+    if(parent)parent.classList.add("hidden");
+  }
+}
+setTimeout(phase2d2InitShell,50);
+
+/* ---------- LOGIN / SESSION ---------- */
+function openLogin(role){
+  targetLoginRole=role;
+  document.getElementById("portal-screen").classList.add("hidden");
+  document.getElementById("login-screen").classList.remove("hidden");
+  document.getElementById("login-title").innerText=role==="admin"?"เข้าสู่ระบบ (Admin / Master)":"เข้าสู่ระบบ Rider";
+  document.getElementById("login-subtitle").innerText=role==="admin"
+    ?"กรอก Email และ Password ของ Admin / Master"
+    :"กรอก Email และ Password ของ Rider";
+}
+
+async function handleLogin(){
+  const email=document.getElementById("login-username").value.trim().toLowerCase();
+  const password=document.getElementById("login-password").value;
+  if(!email||!password){showToast("กรุณากรอก Email และ Password",false);return;}
+
+  try{
+    showToast("กำลังเข้าสู่ระบบ Supabase...",true);
+    const {data,error}=await adminSb.auth.signInWithPassword({email,password});
+    if(error)throw error;
+    if(!data.session)throw new Error("Session not found");
+
+    const {data:profile,error:pErr}=await adminSb.from("users").select("*").eq("id",data.session.user.id).single();
+    if(pErr)throw pErr;
+    if(!liveRoleAllowed(profile,targetLoginRole)){
+      await adminSb.auth.signOut();
+      throw new Error(targetLoginRole==="rider"
+        ?"บัญชีนี้ไม่มีสิทธิ์เข้า Rider"
+        :"บัญชีนี้ไม่มีสิทธิ์เข้า Admin/Master");
+    }
+    if(String(profile.status)!=="active"){
+      await adminSb.auth.signOut();
+      throw new Error("บัญชีนี้ไม่ได้อยู่ในสถานะ active");
+    }
+
+    liveStaffSession=data.session;
+    currentUser={
+      id:profile.id,
+      name:profile.display_name||profile.username||email,
+      username:profile.username,
+      phone:profile.phone||"",
+      role:String(profile.role),
+      status:String(profile.status),
+      commission_rate:Number(profile.commission_rate||0.07)
+    };
+    isMaster=currentUser.role==="master";
+
+    const portalRole=currentUser.role==="rider"?"rider":"admin";
+    openDashboard(portalRole);
+
+    if(portalRole==="rider"){
+      await loadLiveRiderData();
+      phase2d2StartRiderRefresh();
+      showToast(`ยินดีต้อนรับ ${currentUser.name}`,true);
+    }else{
+      await loadLiveAdminData();
+      showToast(isMaster?"เข้าสู่ระบบ Master สำเร็จ":"เข้าสู่ระบบ Admin สำเร็จ",true);
+    }
+  }catch(err){
+    console.error(err);
+    showToast(err?.message||"เข้าสู่ระบบไม่สำเร็จ",false);
+  }
+}
+
+async function bootAdminSession(){
+  try{
+    const {data}=await adminSb.auth.getSession();
+    if(!data.session)return;
+    const {data:profile,error}=await adminSb.from("users").select("*").eq("id",data.session.user.id).single();
+    if(error||!profile||!["admin","master","rider"].includes(String(profile.role)))return;
+    if(String(profile.status)!=="active")return;
+
+    liveStaffSession=data.session;
+    currentUser={
+      id:profile.id,
+      name:profile.display_name||profile.username||data.session.user.email,
+      username:profile.username,
+      phone:profile.phone||"",
+      role:String(profile.role),
+      status:String(profile.status),
+      commission_rate:Number(profile.commission_rate||0.07)
+    };
+    isMaster=currentUser.role==="master";
+    document.getElementById("preloader")?.classList.add("hidden");
+    document.getElementById("portal-screen")?.classList.add("hidden");
+
+    if(currentUser.role==="rider"){
+      openDashboard("rider");
+      await loadLiveRiderData();
+      phase2d2StartRiderRefresh();
+    }else{
+      openDashboard("admin");
+      await loadLiveAdminData();
+    }
+  }catch(e){console.warn("Session restore failed",e);}
+}
+
+async function logout(){
+  if(liveRiderRefreshTimer){clearInterval(liveRiderRefreshTimer);liveRiderRefreshTimer=null;}
+  try{await adminSb.auth.signOut();}catch(e){}
+  liveStaffSession=null;
+  currentUser=null;
+  isMaster=false;
+  liveRiderDashboard=null;
+  liveRiderCollections=[];
+  document.getElementById("admin-app").classList.add("hidden");
+  document.getElementById("rider-app").classList.add("hidden");
+  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("portal-screen").classList.remove("hidden");
+  showToast("ออกจากระบบเรียบร้อยแล้ว",true);
+}
+
+/* ---------- RIDER DATA ---------- */
+async function phase2d2FetchByIds(table,fields,ids){
+  const clean=[...new Set((ids||[]).filter(Boolean).map(String))];
+  if(!clean.length)return [];
+  const {data,error}=await adminSb.from(table).select(fields).in("id",clean);
+  if(error){console.warn(table,error);return [];}
+  return data||[];
+}
+
+async function loadLiveRiderData(opts={}){
+  if(!currentUser||currentUser.role!=="rider")return;
+  try{
+    const [stateRes,colRes,remRes,comRes,areaAccessRes]=await Promise.all([
+      adminSb.rpc("fdg_rider_dashboard_state"),
+      adminSb.from("collections").select("*").eq("rider_id",currentUser.id).order("due_date",{ascending:true,nullsFirst:false}),
+      adminSb.from("rider_remittances").select("*").eq("rider_id",currentUser.id).order("created_at",{ascending:false}),
+      adminSb.from("commissions").select("*").eq("rider_id",currentUser.id).gte("work_date",phase2d2MonthPrefix()+"-01").order("work_date",{ascending:false}),
+      adminSb.from("rider_area_access").select("*").eq("rider_id",currentUser.id).eq("status","approved")
+    ]);
+
+    if(stateRes.error)throw stateRes.error;
+    if(colRes.error)throw colRes.error;
+
+    liveRiderDashboard=stateRes.data||{};
+    liveRiderCollections=colRes.data||[];
+    liveRiderRemittances=remRes.error?[]:(remRes.data||[]);
+    liveRiderCommissions=comRes.error?[]:(comRes.data||[]);
+    liveRiderAreaAccess=areaAccessRes.error?[]:(areaAccessRes.data||[]);
+
+    const custIds=liveRiderCollections.map(x=>x.customer_id);
+    const loanIds=liveRiderCollections.map(x=>x.loan_id);
+    const instIds=liveRiderCollections.map(x=>x.installment_id);
+    const areaIds=liveRiderAreaAccess.map(x=>x.area_id);
+
+    [liveRiderCustomers,liveRiderLoans,liveRiderInstallments,liveRiderAreaRows]=await Promise.all([
+      phase2d2FetchByIds("customers","id,customer_code,full_name,phone,home_address,home_district,home_subdistrict,work_address,shop_name,gps_lat,gps_lng,service_area_id",custIds),
+      phase2d2FetchByIds("loans","id,loan_code,customer_id,remaining_balance,payment_channel,status",loanIds),
+      phase2d2FetchByIds("loan_installments","id,loan_id,installment_no,due_date,amount_due,amount_paid,status",instIds),
+      phase2d2FetchByIds("service_areas","id,display_name,district,subdistrict",areaIds)
+    ]);
+
+    renderRider();
+  }catch(err){
+    console.error("Rider LIVE load failed",err);
+    if(!opts.silent)showToast(err?.message||"โหลดข้อมูล Rider ไม่สำเร็จ",false);
+  }
+}
+
+function phase2d2StartRiderRefresh(){
+  if(liveRiderRefreshTimer)clearInterval(liveRiderRefreshTimer);
+  liveRiderRefreshTimer=setInterval(()=>{
+    if(currentUser?.role==="rider")loadLiveRiderData({silent:true});
+  },30000);
+}
+
+/* ---------- RIDER RENDER ---------- */
+function phase2d2RenderSettlementMode(){
+  phase2d2InitShell();
+  const box=document.getElementById("rider-settlement-mode");
+  const main=document.querySelector("#rider-app > div.p-4.max-w-lg");
+  const sidebar=document.getElementById("rider-sidebar");
+  const menuBtn=document.querySelector("#rider-app > header button[onclick*='toggleRiderSidebar']");
+  const settlementOnly=phase2d2IsSettlementOnly();
+
+  if(!settlementOnly){
+    box?.classList.add("hidden");
+    main?.classList.remove("hidden");
+    sidebar?.classList.remove("hidden");
+    menuBtn?.classList.remove("hidden");
+    return false;
+  }
+
+  main?.classList.add("hidden");
+  sidebar?.classList.add("hidden");
+  menuBtn?.classList.add("hidden");
+  box?.classList.remove("hidden");
+
+  const lock=liveRiderDashboard?.cash_lock||{};
+  const pending=phase2d2PendingRemittance();
+  const amount=phase2d2Outstanding();
+  const isLocked=!!lock.cash_locked;
+  const date=isLocked?lock.work_date:phase2d2BangkokDate();
+  const collected=isLocked?Number(lock.total_collected||0):Number(liveRiderDashboard?.today_total_collected||0);
+  const returned=isLocked?Number(lock.total_returned||0):Number(liveRiderDashboard?.today_total_returned||0);
+
+  box.innerHTML=`
+    <div class="bg-white rounded-2xl shadow-xl border overflow-hidden">
+      <div class="${isLocked?"bg-red-600":"bg-amber-500"} text-white p-5">
+        <div class="text-sm font-bold">${isLocked?"🔒 CASH LOCK":"⏳ SETTLEMENT PENDING"}</div>
+        <div class="text-xl font-extrabold mt-1">${isLocked?"มียอดเงินบริษัทคงค้างจากวันก่อน":"กำลังรอตรวจสอบการคืนเงินบริษัท"}</div>
+      </div>
+      <div class="p-5 space-y-4">
+        <div class="text-xs text-gray-500">ระหว่างสถานะนี้ Rider จะไม่สามารถเริ่มงานใหม่ รับงานใหม่ หรือดูข้อมูลลูกค้าภายในระบบได้</div>
+        <div class="grid grid-cols-2 gap-3 text-center">
+          <div class="bg-slate-50 rounded-xl p-3"><div class="text-[11px] text-gray-500">รอบวันที่</div><div class="font-bold">${liveEsc(phase2d2FmtDate(date))}</div></div>
+          <div class="bg-slate-50 rounded-xl p-3"><div class="text-[11px] text-gray-500">เก็บเงินสดทั้งหมด</div><div class="font-bold">${liveMoney(collected)}</div></div>
+          <div class="bg-emerald-50 rounded-xl p-3"><div class="text-[11px] text-emerald-700">นำส่งแล้ว</div><div class="font-bold text-emerald-700">${liveMoney(returned)}</div></div>
+          <div class="bg-red-50 rounded-xl p-3"><div class="text-[11px] text-red-700">ต้องนำส่งเต็มจำนวน</div><div class="font-extrabold text-red-700 text-lg">${liveMoney(amount)}</div></div>
+        </div>
+        ${pending?`
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm">
+            <b class="text-amber-800">ส่งสลิปแล้ว • รอ EasySlip ตรวจสอบ</b>
+            <div class="text-xs text-amber-700 mt-1">${liveEsc(pending.remittance_code||"")} • ${liveMoney(pending.amount)}</div>
+            <div class="text-[11px] text-gray-500 mt-2">ยอดเงินสดจะยังไม่เป็น 0 จนกว่าการตรวจสอบจะผ่าน</div>
+          </div>
+        `:`
+          <button onclick="openRemitModal()" class="w-full bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl font-extrabold shadow">
+            ชำระคืนบริษัท ${liveMoney(amount)}
+          </button>
+        `}
+        <button onclick="openHistoryModal()" class="w-full border border-slate-300 text-slate-700 p-2.5 rounded-xl font-bold text-sm">ดูประวัติการนำส่งเงิน</button>
+      </div>
+    </div>`;
+  return true;
+}
+
+function renderRider(){
+  if(!currentUser||currentUser.role!=="rider")return;
+  phase2d2InitShell();
+
+  document.getElementById("rider-profile-name").innerText=currentUser.name||"Rider";
+
+  const state=String(liveRiderDashboard?.state||"OFFLINE");
+  const [stateText,stateClass]=phase2d2StateText(state);
+  const stateEl=document.getElementById("rider-shift-status");
+  if(stateEl){
+    stateEl.innerText=stateText;
+    stateEl.className=`font-bold text-sm ${stateClass}`;
+  }
+
+  if(phase2d2RenderSettlementMode()){
+    lucide.createIcons();
+    return;
+  }
+
+  const today=phase2d2BangkokDate();
+  const yesterdayDate=new Date(Date.now()-86400000);
+  const yesterday=phase2d2BangkokDate(yesterdayDate);
+  const comToday=Number(liveRiderDashboard?.commission_today||0);
+  const comMonth=Number(liveRiderDashboard?.commission_month||0);
+  const comYesterday=liveRiderCommissions
+    .filter(x=>String(x.work_date)===yesterday)
+    .reduce((s,x)=>s+Number(x.commission_amount||0),0);
+
+  const remaining=Number(liveRiderDashboard?.today_remaining_company_money||0);
+  currentUser.cashHold=remaining;
+  currentUser.incomeToday=comToday;
+  currentUser.incomeMonth=comMonth;
+  currentUser.incomeYesterday=comYesterday;
+  currentUser.isOnline=state==="WORKING";
+
+  const pendingDue=liveRiderCollections.filter(c=>{
+    if(String(c.status)!=="pending")return false;
+    return !c.due_date || String(c.due_date)<=today;
+  });
+  const target=pendingDue.reduce((s,c)=>s+Number(c.amount||0),0);
+
+  const setText=(id,val)=>{const e=document.getElementById(id);if(e)e.innerText=val;};
+  setText("rider-income-month",liveMoney(comMonth));
+  setText("rider-income-yesterday",liveMoney(comYesterday));
+  setText("rider-income-today",liveMoney(comToday));
+  setText("rider-qr-sum","ชำระตรงบริษัท: —");
+  setText("rider-cash-sum",liveMoney(remaining));
+  setText("rider-com-sum",liveMoney(comMonth));
+  setText("rider-target-today",liveMoney(target));
+  setText("rider-collected-today",liveMoney(comToday));
+  setText("rider-cash-holding-box",liveMoney(remaining));
+
+  const btn=document.getElementById("btn-toggle-shift");
+  if(btn){
+    if(state==="WORKING"){
+      btn.innerText="กดเลิกงาน";
+      btn.className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow";
+    }else if(state==="CLOSED"){
+      btn.innerText="ปิดงานวันนี้แล้ว";
+      btn.disabled=true;
+      btn.className="bg-gray-300 text-gray-600 px-4 py-2 rounded-lg font-bold text-sm";
+    }else{
+      btn.innerText="กดเริ่มงาน";
+      btn.disabled=false;
+      btn.className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow";
+    }
+  }
+
+  renderLiveRiderTaskList();
+  lucide.createIcons();
+}
+
+function switchRiderTab(tab){
+  currentRiderTab=tab;
+  const map={
+    pending:["ยังไม่เก็บ","รายการงานที่ยังไม่ได้เก็บเงิน"],
+    completed:["เก็บแล้ว","รายการงานที่เก็บเงินแล้ว"],
+    issue:["ติดปัญหา","รายการที่ยกเลิก / มีปัญหา"],
+    waiting:["รอตรวจสอบ","รายการที่กำลังรอตรวจสอบ"]
+  };
+  ["pending","completed","issue","waiting"].forEach(x=>{
+    const b=document.getElementById("tab-btn-"+x);
+    if(!b)return;
+    b.className=x===tab
+      ?"py-2 text-[11px] font-bold rounded-lg transition bg-emerald-600 text-white text-center"
+      :"py-2 text-[11px] font-bold rounded-lg transition text-gray-600 text-center";
+  });
+  document.getElementById("rider-list-title").innerText=map[tab]?.[1]||"รายการงาน";
+  document.getElementById("rider-current-page-indicator").innerText="กำลังแสดง: "+(map[tab]?.[0]||tab);
+  renderLiveRiderTaskList();
+}
+
+function renderLiveRiderTaskList(){
+  const box=document.getElementById("rider-task-list");
+  if(!box)return;
+  const state=String(liveRiderDashboard?.state||"OFFLINE");
+  let rows=liveRiderCollections.slice();
+
+  if(currentRiderTab==="pending")rows=rows.filter(x=>String(x.status)==="pending");
+  else if(currentRiderTab==="completed")rows=rows.filter(x=>["collected","verified","returned"].includes(String(x.status)));
+  else if(currentRiderTab==="issue")rows=rows.filter(x=>["cancelled","failed"].includes(String(x.status)));
+  else rows=[];
+
+  if(!rows.length){
+    box.innerHTML='<p class="text-xs text-gray-400 text-center py-6 bg-white rounded-xl border">ไม่มีรายการงานในหมวดหมู่นี้</p>';
+    return;
+  }
+
+  box.innerHTML=rows.map(col=>{
+    const cust=phase2d2CurrentCustomer(col.customer_id);
+    const loan=phase2d2CurrentLoan(col.loan_id);
+    const inst=phase2d2CurrentInstallment(col.installment_id);
+    const canCollect=state==="WORKING" && String(col.status)==="pending";
+    const addr=[
+      cust?.home_address,
+      cust?.home_subdistrict?`ต.${cust.home_subdistrict}`:"",
+      cust?.home_district?`อ.${cust.home_district}`:""
+    ].filter(Boolean).join(" ");
+    return `
+      <div class="bg-white p-4 rounded-xl shadow border space-y-3">
+        <div class="flex justify-between gap-3">
+          <div>
+            <div class="font-bold text-slate-800">${liveEsc(cust?.full_name||"ลูกค้า")}</div>
+            <div class="text-[11px] text-gray-400">${liveEsc(cust?.customer_code||"")}</div>
+            ${cust?.phone?`<a href="tel:${liveEsc(cust.phone)}" class="text-xs text-indigo-600 font-bold">📞 ${liveEsc(cust.phone)}</a>`:""}
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] text-gray-500">ยอดเก็บ</div>
+            <div class="font-extrabold text-indigo-700">${liveMoney(col.amount)}</div>
+          </div>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-2.5 text-xs space-y-1">
+          <div><b>ประเภท:</b> ${liveEsc(col.payment_type||"FULL")}</div>
+          <div><b>ครบกำหนด:</b> ${liveEsc(phase2d2FmtDate(col.due_date||inst?.due_date))}</div>
+          <div><b>ยอดหนี้คงเหลือ:</b> ${liveMoney(loan?.remaining_balance||0)}</div>
+          <div><b>พื้นที่:</b> ${liveEsc(addr||"-")}</div>
+        </div>
+        ${String(col.status)==="pending"?`
+          <button onclick="openCollectModal('${col.id}')" ${canCollect?"":"disabled"}
+            class="w-full bg-emerald-600 text-white rounded-lg p-2.5 font-bold text-xs disabled:opacity-40">
+            ${canCollect?"รับเงินสด "+liveMoney(col.amount):"ต้องเริ่มงานก่อนจึงจะเก็บเงินได้"}
+          </button>
+        `:`<div class="text-xs font-bold text-emerald-700 text-center">✓ ${liveEsc(String(col.status))}</div>`}
+      </div>`;
+  }).join("");
+}
+
+/* ---------- START / END WORK ---------- */
+async function toggleShift(){
+  if(!currentUser||currentUser.role!=="rider")return;
+  const state=String(liveRiderDashboard?.state||"OFFLINE");
+  try{
+    if(state==="WORKING"){
+      const {data,error}=await adminSb.rpc("fdg_rider_end_work");
+      if(error)throw error;
+      showToast("ปิดงานวันนี้เรียบร้อย",true);
+    }else{
+      const {data,error}=await adminSb.rpc("fdg_rider_start_work");
+      if(error)throw error;
+      if(data?.status==="cash_locked"){
+        showToast("มียอดเงินบริษัทคงค้าง ต้องชำระคืนให้ครบก่อนเริ่มงานวันใหม่",false);
+      }else{
+        showToast("เริ่มปฏิบัติงานแล้ว",true);
+      }
+    }
+    await loadLiveRiderData();
+  }catch(err){
+    console.error(err);
+    const msg=String(err?.message||"");
+    if(msg.includes("CASH_REMITTANCE_REQUIRED"))showToast("ยังมียอดเงินสดค้างส่งบริษัท ต้องคืนเต็มจำนวนก่อนเลิกงาน",false);
+    else if(msg.includes("PENDING_COLLECTIONS_REMAIN"))showToast("ยังมีงานเก็บเงินค้างอยู่ จึงยังเลิกงานไม่ได้",false);
+    else showToast(msg||"เปลี่ยนสถานะงานไม่สำเร็จ",false);
+  }
+}
+
+/* ---------- CASH COLLECTION ---------- */
+function openCollectModal(id){
+  const col=liveRiderCollections.find(x=>String(x.id)===String(id));
+  if(!col)return;
+  if(String(liveRiderDashboard?.state)!=="WORKING"){
+    showToast("กรุณากดเริ่มงานก่อนรับเงินสด",false);return;
+  }
+  activeTaskId=String(id);
+  selectedPayMethod="เงินสด";
+  const cust=phase2d2CurrentCustomer(col.customer_id);
+  const loan=phase2d2CurrentLoan(col.loan_id);
+
+  document.getElementById("m-cust-name").innerText=cust?.full_name||"-";
+  document.getElementById("m-cust-amount-text").innerText=
+    `${liveMoney(col.amount)} • คอมฯ ${liveMoney(Number(col.amount||0)*Number(currentUser.commission_rate||0.07))}`;
+  document.getElementById("m-balance-preview").innerText=
+    `ยอดหนี้ก่อนรับชำระ ${liveMoney(loan?.remaining_balance||0)} • ระบบบันทึกเป็น CASH เท่านั้น`;
+
+  const call=document.getElementById("m-call-container");
+  call.innerHTML=cust?.phone
+    ?`<a href="tel:${liveEsc(cust.phone)}" class="block text-center bg-indigo-50 text-indigo-700 rounded-lg p-2 text-xs font-bold">📞 โทร ${liveEsc(cust.phone)}</a>`
+    :"";
+
+  document.getElementById("btn-pay-transfer")?.classList.add("hidden");
+  const cashBtn=document.getElementById("btn-pay-cash");
+  if(cashBtn){
+    cashBtn.classList.remove("hidden");
+    cashBtn.className="p-3 border-2 border-emerald-500 bg-emerald-50 text-emerald-800 rounded-lg font-bold text-center text-xs";
+  }
+  document.getElementById("slip-box")?.classList.add("hidden");
+  const submit=document.getElementById("btn-submit-collect");
+  submit.innerText=`ยืนยันรับเงินสด ${liveMoney(col.amount)}`;
+
+  document.getElementById("modal-collect").classList.remove("hidden");
+  lucide.createIcons();
+}
+
+async function submitCollect(){
+  const col=liveRiderCollections.find(x=>String(x.id)===String(activeTaskId));
+  if(!col)return;
+  if(String(liveRiderDashboard?.state)!=="WORKING"){
+    showToast("สถานะปัจจุบันไม่อนุญาตให้รับเงินสด",false);return;
+  }
+  if(!confirm(`ยืนยันรับเงินสดจากลูกค้า ${liveMoney(col.amount)} ?\n\nเงินจำนวนนี้จะถูกนับเป็นเงินบริษัทที่ Rider ต้องนำส่งเต็มจำนวน`))return;
+
+  try{
+    const {data,error}=await adminSb.rpc("fdg_rider_collect_cash",{
+      p_collection_id:col.id,
+      p_amount:Number(col.amount)
+    });
+    if(error)throw error;
+    closeModal("modal-collect");
+    showToast(`รับเงินสดสำเร็จ • คอมฯ ${liveMoney(data?.commission_amount||0)}`,true);
+    await loadLiveRiderData();
+  }catch(err){
+    console.error(err);
+    showToast(err?.message||"บันทึกรับเงินสดไม่สำเร็จ",false);
+  }
+}
+function handleFloatingInterest(){showToast("ระบบ LIVE ใช้ประเภทการชำระที่กำหนดในงานเก็บเงินเท่านั้น",false);}
+function submitCloseAccount(){showToast("ระบบ LIVE ปิดการตัดยอดแบบจำลองแล้ว",false);}
+
+/* ---------- FULL REMITTANCE ---------- */
+function openRemitModal(){
+  const amount=phase2d2Outstanding();
+  if(amount<=0){showToast("ไม่มียอดเงินสดค้างนำส่ง",false);return;}
+  const pending=phase2d2PendingRemittance();
+  if(pending){
+    showToast("มีรายการนำส่งเงินที่กำลังรอตรวจสอบอยู่แล้ว",false);
+    openHistoryModal();
+    return;
+  }
+
+  document.getElementById("remit-cash-amount").innerText=liveMoney(amount);
+  document.getElementById("qr-code-img").src=`https://promptpay.io/0658351446/${amount.toFixed(2)}.png`;
+  const input=document.getElementById("remit-slip");
+  if(input)input.value="";
+  document.getElementById("remit-slip-label").innerText="คลิกถ่ายรูป / อัปโหลดสลิปคืนบริษัท";
+  document.getElementById("modal-remit").classList.remove("hidden");
+}
+
+function handleRemitSlip(input){
+  const file=input.files?.[0];
+  if(!file)return;
+  if(!file.type.startsWith("image/")){
+    input.value="";showToast("กรุณาใช้ไฟล์รูปภาพสลิป",false);return;
+  }
+  if(file.size>5*1024*1024){
+    input.value="";showToast("ไฟล์สลิปต้องไม่เกิน 5 MB",false);return;
+  }
+  document.getElementById("remit-slip-label").innerText=`✓ ${file.name}`;
+}
+
+async function startRemitLoadingProcess(){
+  const amount=phase2d2Outstanding();
+  const file=document.getElementById("remit-slip")?.files?.[0];
+  if(amount<=0){showToast("ไม่มียอดค้างนำส่ง",false);return;}
+  if(!file){showToast("กรุณาแนบสลิปการโอนเงินคืนบริษัท",false);return;}
+  if(phase2d2PendingRemittance()){showToast("มีรายการที่กำลังรอตรวจสอบอยู่แล้ว",false);return;}
+
+  closeModal("modal-remit");
+  const modal=document.getElementById("modal-loading-progress");
+  const prog=document.getElementById("progress-container");
+  const success=document.getElementById("success-checkmark-container");
+  const fill=document.getElementById("progress-bar-fill");
+  const pct=document.getElementById("progress-percent-text");
+  modal.classList.remove("hidden");
+  prog.classList.remove("hidden");
+  success.classList.add("hidden");
+
+  const setProgress=n=>{fill.style.width=n+"%";pct.innerText=n+"%";};
+  setProgress(10);
+
+  try{
+    const ext=(file.name.split(".").pop()||"jpg").replace(/[^a-zA-Z0-9]/g,"").toLowerCase()||"jpg";
+    const path=`${currentUser.id}/${phase2d2BangkokDate()}/rider-remittance-${Date.now()}.${ext}`;
+    setProgress(35);
+
+    const {error:upErr}=await adminSb.storage.from("payment-evidence").upload(path,file,{
+      cacheControl:"3600",upsert:false,contentType:file.type||"image/jpeg"
+    });
+    if(upErr)throw upErr;
+    setProgress(70);
+
+    const {data,error}=await adminSb.rpc("fdg_create_rider_remittance",{
+      p_amount:amount,
+      p_evidence_path:path
+    });
+    if(error)throw error;
+    setProgress(100);
+
+    prog.classList.add("hidden");
+    success.classList.remove("hidden");
+    const title=success.querySelector("span");
+    const desc=success.querySelector("p");
+    if(title)title.innerText="ส่งสลิปแล้ว • รอตรวจสอบ";
+    if(desc)desc.innerText="ยอดเงินสดยังไม่ถูกตัดเป็น 0 จนกว่า EasySlip จะตรวจสอบผ่าน";
+
+    await loadLiveRiderData({silent:true});
+    setTimeout(()=>modal.classList.add("hidden"),1500);
+    showToast(`ส่งสลิปคืนบริษัท ${liveMoney(data?.amount||amount)} แล้ว`,true);
+  }catch(err){
+    console.error(err);
+    modal.classList.add("hidden");
+    showToast(err?.message||"ส่งยอดคืนบริษัทไม่สำเร็จ",false);
+  }
+}
+
+function openHistoryModal(){
+  const container=document.getElementById("rider-history-list");
+  container.innerHTML="";
+  if(!liveRiderRemittances.length){
+    container.innerHTML='<p class="text-xs text-gray-400 text-center py-4">ยังไม่มีประวัติการส่งยอดเงินสด</p>';
+  }else{
+    container.innerHTML=liveRiderRemittances.map(r=>{
+      const st=String(r.status||"pending");
+      const badge=st==="verified"
+        ?'<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-1 rounded">VERIFIED</span>'
+        :st==="failed"
+          ?'<span class="bg-red-100 text-red-700 font-bold px-2 py-1 rounded">FAILED</span>'
+          :'<span class="bg-amber-100 text-amber-800 font-bold px-2 py-1 rounded">รอตรวจสอบ</span>';
+      return `<div class="bg-gray-50 p-3 rounded-lg border flex justify-between items-center gap-3 text-xs">
+        <div>
+          <p class="font-bold text-slate-800">${liveEsc(r.remittance_code||"รายการนำส่ง")}</p>
+          <p class="text-emerald-700 font-bold">${liveMoney(r.amount)}</p>
+          <span class="text-gray-400">${r.created_at?new Date(r.created_at).toLocaleString("th-TH"):""}</span>
+        </div>${badge}
+      </div>`;
+    }).join("");
+  }
+  document.getElementById("modal-history").classList.remove("hidden");
+}
+
+/* ---------- ADMIN RIDER MONITOR ---------- */
+async function loadLiveRiderMonitorData(){
+  if(!currentUser||!["admin","master"].includes(currentUser.role))return;
+  try{
+    const monthStart=phase2d2MonthPrefix()+"-01";
+    const [ws,com,states,rem,cols]=await Promise.all([
+      adminSb.from("work_sessions").select("*").order("work_date",{ascending:false}),
+      adminSb.from("commissions").select("*").gte("work_date",monthStart),
+      adminSb.from("rider_daily_states").select("*").order("work_date",{ascending:false}),
+      adminSb.from("rider_remittances").select("*").order("created_at",{ascending:false}),
+      adminSb.from("collections").select("*").order("due_date",{ascending:true,nullsFirst:false})
+    ]);
+    liveAdminWorkSessions=ws.error?[]:(ws.data||[]);
+    liveAdminCommissions=com.error?[]:(com.data||[]);
+    liveAdminRiderStates=states.error?[]:(states.data||[]);
+    liveAdminRiderRemittances=rem.error?[]:(rem.data||[]);
+    liveAdminCollections=cols.error?[]:(cols.data||[]);
+    renderLiveRiderMonitor();
+  }catch(e){console.warn("Admin Rider monitor",e);}
+}
+
+function renderLiveRiderMonitor(){
+  const body=document.getElementById("admin-rider-monitor");
+  if(!body)return;
+  const today=phase2d2BangkokDate();
+
+  if(!liveRiders.length){
+    body.innerHTML='<tr><td colspan="6" class="p-4 text-center text-gray-400 text-xs">ยังไม่มีบัญชี Rider</td></tr>';
+    return;
+  }
+
+  let collectedToday=0,returnedToday=0,totalOutstanding=0;
+  liveAdminWorkSessions.forEach(w=>{
+    if(String(w.work_date)===today){
+      collectedToday+=Number(w.total_collected||0);
+      returnedToday+=Number(w.total_returned||0);
+    }
+    totalOutstanding+=Number(w.remaining_company_money||0);
+  });
+
+  const actual=document.getElementById("dash-actual-total");
+  if(actual)actual.innerText=liveMoney(collectedToday);
+  const qr=document.getElementById("dash-qr-total");
+  if(qr)qr.innerText="นำส่งบริษัท: "+liveMoney(returnedToday);
+  const cash=document.getElementById("dash-cash-total");
+  if(cash)cash.innerText="คงค้าง Rider: "+liveMoney(totalOutstanding);
+
+  body.innerHTML=liveRiders.map(r=>{
+    const sessions=liveAdminWorkSessions.filter(w=>String(w.rider_id)===String(r.id));
+    const priorDebt=sessions.filter(w=>String(w.work_date)<today && Number(w.remaining_company_money||0)>0);
+    const outstanding=sessions.reduce((s,w)=>s+Number(w.remaining_company_money||0),0);
+    const todayWs=sessions.find(w=>String(w.work_date)===today);
+    const todayState=liveAdminRiderStates.find(s=>String(s.rider_id)===String(r.id)&&String(s.work_date)===today);
+    const state=priorDebt.length?"CASH_LOCKED":String(todayState?.state||"OFFLINE");
+    const commission=liveAdminCommissions
+      .filter(c=>String(c.rider_id)===String(r.id))
+      .reduce((s,c)=>s+Number(c.commission_amount||0),0);
+    const [label,cls]=phase2d2StateText(state);
+    return `<tr class="border-b">
+      <td class="p-3"><b>${liveEsc(r.display_name||r.username)}</b><div class="text-[10px] text-gray-400">${liveEsc(r.phone||"")}</div></td>
+      <td class="p-3"><span class="${cls} font-bold">${liveEsc(label)}</span></td>
+      <td class="p-3 text-emerald-700 font-bold">${liveMoney(todayWs?.total_returned||0)}</td>
+      <td class="p-3 ${outstanding>0?"text-red-600":"text-emerald-600"} font-extrabold">${liveMoney(outstanding)}</td>
+      <td class="p-3 text-indigo-600 font-bold">${liveMoney(commission)}</td>
+      <td class="p-3">${outstanding>0?'<span class="text-red-600 font-bold">ต้องเคลียร์ยอด</span>':'<span class="text-emerald-600 font-bold">ปกติ</span>'}</td>
+    </tr>`;
+  }).join("");
+}
+
+const phase2d2BaseLoadLiveAdminData=loadLiveAdminData;
+loadLiveAdminData=async function(){
+  await phase2d2BaseLoadLiveAdminData();
+  await loadLiveRiderMonitorData();
+};
+
+/* Re-apply monitor after any legacy/live admin render. */
+const phase2d2BaseRenderLiveAdmin=renderLiveAdmin;
+renderLiveAdmin=function(){
+  phase2d2BaseRenderLiveAdmin();
+  if(liveAdminWorkSessions.length||liveRiders.length)renderLiveRiderMonitor();
+};
+
+/* Current phase banner. */
+const phase2d2PrevLiveSetBusy=liveSetBusy;
+liveSetBusy=function(on,msg="กำลังโหลดข้อมูล..."){
+  phase2d2PrevLiveSetBusy(on,msg);
+  if(!on){
+    const banner=document.getElementById("liveBackendBanner");
+    if(banner){
+      banner.innerHTML='<span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> LIVE SUPABASE — Phase 2D-2 Rider</span><span class="block font-normal text-emerald-700 mt-1">Rider Login • Start/End Work • CASH • Commission 7% • Full Remittance • CASH LOCK</span>';
     }
   }
 };
