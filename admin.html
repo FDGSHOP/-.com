@@ -2892,13 +2892,37 @@ function openRemitModal(){
 function handleRemitSlip(input){
   const file=input.files?.[0];
   if(!file)return;
-  if(!file.type.startsWith("image/")){
-    input.value="";showToast("กรุณาใช้ไฟล์รูปภาพสลิป",false);return;
+  const allowed=["image/jpeg","image/png","image/gif","image/webp"];
+  if(!allowed.includes(file.type)){
+    input.value="";showToast("รองรับสลิป JPEG, PNG, GIF หรือ WebP เท่านั้น",false);return;
   }
-  if(file.size>5*1024*1024){
-    input.value="";showToast("ไฟล์สลิปต้องไม่เกิน 5 MB",false);return;
+  if(file.size>4*1024*1024){
+    input.value="";showToast("ไฟล์สลิปต้องไม่เกิน 4 MB",false);return;
   }
   document.getElementById("remit-slip-label").innerText=`✓ ${file.name}`;
+}
+
+
+async function phase2eVerifyRiderRemittance(remittanceId,{quiet=false}={}){
+  if(!remittanceId)return null;
+  try{
+    if(!quiet)showToast("กำลังตรวจสลิปกับ EasySlip...",true);
+    const {data,error}=await adminSb.functions.invoke("verify-slip",{
+      body:{type:"RIDER_REMITTANCE",id:remittanceId}
+    });
+    if(error)throw error;
+    if(data?.status!=="verified"){
+      throw new Error(data?.message||"EasySlip ไม่อนุมัติสลิป");
+    }
+    await loadLiveRiderData({silent:true});
+    showToast(`✓ EasySlip VERIFIED • คืนบริษัท ${liveMoney(data?.amount||0)} เรียบร้อย`,true);
+    return data;
+  }catch(err){
+    console.error("EasySlip verify",err);
+    await loadLiveRiderData({silent:true});
+    if(!quiet)showToast(err?.context?.body?.message||err?.message||"ตรวจ EasySlip ไม่ผ่าน",false);
+    return null;
+  }
 }
 
 async function startRemitLoadingProcess(){
@@ -2937,18 +2961,28 @@ async function startRemitLoadingProcess(){
       p_evidence_path:path
     });
     if(error)throw error;
-    setProgress(100);
+    setProgress(82);
 
-    prog.classList.add("hidden");
-    success.classList.remove("hidden");
     const title=success.querySelector("span");
     const desc=success.querySelector("p");
-    if(title)title.innerText="ส่งสลิปแล้ว • รอตรวจสอบ";
-    if(desc)desc.innerText="ยอดเงินสดยังไม่ถูกตัดเป็น 0 จนกว่า EasySlip จะตรวจสอบผ่าน";
+    if(title)title.innerText="กำลังตรวจ EasySlip...";
+    if(desc)desc.innerText="ระบบกำลังตรวจยอด บัญชีผู้รับ และสลิปซ้ำ";
+
+    const verified=await phase2eVerifyRiderRemittance(data?.remittance_id,{quiet:true});
+    setProgress(100);
+    prog.classList.add("hidden");
+    success.classList.remove("hidden");
+
+    if(verified?.status==="verified"){
+      if(title)title.innerText="ตรวจสลิปผ่าน • คืนเงินบริษัทแล้ว";
+      if(desc)desc.innerText="ยอดเงินสดคงค้างถูกตัดเป็น 0 เรียบร้อย";
+    }else{
+      if(title)title.innerText="EasySlip ไม่ผ่าน / ต้องตรวจสอบ";
+      if(desc)desc.innerText="ยอดเงินสดยังคงค้างอยู่ กรุณาดูประวัติและส่งสลิปใหม่";
+    }
 
     await loadLiveRiderData({silent:true});
-    setTimeout(()=>modal.classList.add("hidden"),1500);
-    showToast(`ส่งสลิปคืนบริษัท ${liveMoney(data?.amount||amount)} แล้ว`,true);
+    setTimeout(()=>modal.classList.add("hidden"),1800);
   }catch(err){
     console.error(err);
     modal.classList.add("hidden");
@@ -2974,7 +3008,11 @@ function openHistoryModal(){
           <p class="font-bold text-slate-800">${liveEsc(r.remittance_code||"รายการนำส่ง")}</p>
           <p class="text-emerald-700 font-bold">${liveMoney(r.amount)}</p>
           <span class="text-gray-400">${r.created_at?new Date(r.created_at).toLocaleString("th-TH"):""}</span>
-        </div>${badge}
+        </div>
+        <div class="flex items-center gap-2">
+          ${badge}
+          ${st!=="verified" && r.evidence_path ? `<button onclick="phase2eVerifyRiderRemittance('${r.id}')" class="bg-indigo-600 text-white px-2 py-1 rounded font-bold">ตรวจ EasySlip</button>` : ""}
+        </div>
       </div>`;
     }).join("");
   }
