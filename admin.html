@@ -50,6 +50,7 @@
     <!-- 1. PORTAL LANDING -->
     <div id="portal-screen" class="hidden min-h-screen flex flex-col justify-center items-center p-4">
         <div class="text-center mb-8">
+            <img src="./fdg-logo-192.png" alt="เงินกู้เพื่อคนพะเยา" class="w-24 h-24 rounded-full object-cover mx-auto mb-4 shadow border-4 border-white">
             <h1 class="text-3xl font-bold text-slate-800">ระบบบริหารจัดการไรเดอร์ & ยอดชำระ</h1>
             <p class="text-gray-500 text-sm mt-1">กรุณาเลือกระบบที่ต้องการเข้าใช้งาน</p>
         </div>
@@ -75,7 +76,8 @@
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> ย้อนกลับ
             </button>
             
-            <h2 id="login-title" class="text-2xl font-bold text-center mt-4 mb-2">เข้าสู่ระบบ</h2>
+            <img src="./fdg-logo-192.png" alt="เงินกู้เพื่อคนพะเยา" class="w-20 h-20 rounded-full object-cover mx-auto mt-5 mb-2 shadow border">
+            <h2 id="login-title" class="text-2xl font-bold text-center mt-2 mb-2">เข้าสู่ระบบ</h2>
             <p class="text-xs text-gray-400 text-center mb-6" id="login-subtitle">กรอกข้อมูลผู้ใช้งานเพื่อยืนยันตัวตน</p>
 
             <div class="space-y-4">
@@ -101,7 +103,10 @@
     <div id="rider-app" class="hidden min-h-screen bg-gray-50 pb-12 relative">
         <div id="rider-sidebar" class="fixed inset-y-0 left-0 z-40 w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col">
             <div class="p-4 bg-emerald-600 text-white flex justify-between items-center">
-                <span class="font-bold text-lg">แดชบอร์ด & คอมมิชชั่นไรเดอร์ (7%)</span>
+                <div class="flex items-center gap-2">
+                    <img src="./fdg-logo-192.png" alt="โลโก้" class="w-10 h-10 rounded-full object-cover bg-white border-2 border-white">
+                    <span class="font-bold text-lg">แดชบอร์ด & คอมมิชชั่นไรเดอร์ (7%)</span>
+                </div>
                 <button onclick="toggleRiderSidebar()" class="text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="p-4 flex-1 overflow-y-auto space-y-4">
@@ -139,9 +144,12 @@
 
         <header class="bg-emerald-600 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
             <div class="flex items-center gap-3">
-                <button onclick="toggleRiderSidebar()" class="text-white p-1 hover:bg-emerald-700 rounded"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                <button onclick="toggleRiderSidebar()" aria-label="เปิดเมนูรายได้" class="text-white p-2 hover:bg-emerald-700 rounded-lg border border-emerald-500/60">
+                    <i data-lucide="menu" class="w-7 h-7"></i>
+                </button>
                 <div class="flex items-center gap-2">
-                    <i data-lucide="bike" class="w-6 h-6"></i>
+                    <img src="./fdg-logo-192.png" alt="โลโก้" class="w-10 h-10 rounded-full object-cover bg-white border-2 border-white shadow">
+                    <i data-lucide="bike" class="w-5 h-5"></i>
                     <div>
                         <span class="font-bold text-base block leading-tight" id="rider-profile-name">Rider Name</span>
                         <span class="text-[10px] text-emerald-200">พนักงานเก็บเงิน (คอมฯ 7%)</span>
@@ -206,7 +214,10 @@
     <div id="admin-app" class="hidden min-h-screen flex flex-col md:flex-row">
         <aside id="sidebar" class="bg-slate-900 text-white w-full md:w-64 fixed md:relative z-30 transition-all duration-300 transform -translate-x-full md:translate-x-0 h-screen flex flex-col">
             <div class="p-4 font-bold text-xl border-b border-slate-800 flex justify-between items-center">
-                <span id="admin-sidebar-role" class="text-indigo-400">ADMIN SYSTEM</span>
+                <div class="flex items-center gap-2">
+                    <img src="./fdg-logo-192.png" alt="โลโก้" class="w-11 h-11 rounded-full object-cover bg-white border-2 border-slate-700">
+                    <span id="admin-sidebar-role" class="text-indigo-400">ADMIN SYSTEM</span>
+                </div>
                 <button onclick="toggleSidebar()" class="md:hidden text-gray-400"><i data-lucide="x"></i></button>
             </div>
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -232,7 +243,7 @@
         <div class="flex-1 flex flex-col min-h-screen">
             <header class="bg-slate-800 text-white p-4 flex justify-between items-center md:hidden sticky top-0 z-20">
                 <button onclick="toggleSidebar()" class="text-white"><i data-lucide="menu" class="w-7 h-7"></i></button>
-                <span class="font-bold">ADMIN MANAGEMENT</span>
+                <span class="font-bold flex items-center gap-2"><img src="./fdg-logo-192.png" alt="โลโก้" class="w-8 h-8 rounded-full object-cover bg-white"> ADMIN MANAGEMENT</span>
                 <div></div>
             </header>
 
@@ -2937,8 +2948,9 @@ function phase2d2RenderSettlementMode(){
   }
 
   main?.classList.add("hidden");
-  sidebar?.classList.add("hidden");
-  menuBtn?.classList.add("hidden");
+  // CASH LOCK ซ่อนข้อมูลลูกค้า แต่ยังเปิดเมนูรายได้/คอมมิชชั่นของ Rider ได้
+  sidebar?.classList.remove("hidden");
+  menuBtn?.classList.remove("hidden");
   box?.classList.remove("hidden");
 
   const lock=liveRiderDashboard?.cash_lock||{};
