@@ -2810,9 +2810,9 @@ async function loadLiveAccount(route=true){
 
   if(route){
     const appStatus=liveApplication?.status||null;
-    if(liveLoan?.status==="active"){
+    if(liveLoan?.status==="active" && String(liveLoan.disbursement_status||"pending")==="paid"){
       switchTab("page-dashboard");
-    }else if(appStatus){
+    }else if(appStatus || liveLoan){
       switchTab("page-status");
     }else{
       switchTab("page-select");
@@ -3007,6 +3007,9 @@ function openQrModal(){
   if(!liveLoan || liveLoan.status!=="active"){
     liveToast("ยังไม่มีสินเชื่อ Active สำหรับชำระ",false);return;
   }
+  if(String(liveLoan.disbursement_status||"pending")!=="paid"){
+    liveToast("สินเชื่อได้รับอนุมัติแล้ว แต่ยังอยู่ระหว่างโอนเงินให้คุณ จึงยังไม่เริ่มรอบชำระ",false);return;
+  }
   if((liveLoan.payment_channel||"SCAN")==="CASH"){
     liveToast("สัญญานี้ใช้ช่องทางเงินสดกับ Rider จึงไม่สร้าง QR",false);return;
   }
@@ -3098,6 +3101,133 @@ window.addEventListener("load",()=>setTimeout(bootLiveCustomerApp,120));
       <div class="extra-small text-muted mt-1">กรุณาอย่าปิดหน้าเว็บระหว่างบันทึกข้อมูล</div>
     </div>
   </div>
+
+
+<script>
+/* ============================================================
+   PHASE 2D-1 CUSTOMER PATCH
+   Registration hours + waiting for disbursement + payment guard
+   ============================================================ */
+
+async function phase2d1RegistrationOpen(){
+  try{
+    const {data,error}=await liveSb.rpc("fdg_registration_is_open");
+    if(error)throw error;
+    return data===true;
+  }catch(err){
+    console.warn("Registration hours check failed:",err);
+    // DB trigger remains the final authority. Do not falsely block if the UI check is unavailable.
+    return true;
+  }
+}
+
+startRealRegistration=async function(){
+  if(liveSession){
+    liveToast("คุณเข้าสู่ระบบอยู่แล้ว กรุณาออกจากระบบก่อนสมัครบัญชีใหม่",false);
+    return;
+  }
+  const open=await phase2d1RegistrationOpen();
+  if(!open){
+    alert("ปิดรับสมัครประจำวันแล้ว\n\nเปิดรับสมัครใหม่อีกครั้งเวลา 00:00 น. (เวลาไทย)\nช่วง 18:00–23:59 น. เป็นช่วงสรุปรอบประจำวัน");
+    return;
+  }
+  document.getElementById("memberBottomNav").style.display="none";
+  switchTab("page-select");
+};
+
+const _phase2d1SubmitApplication=submitApplication;
+submitApplication=async function(){
+  const open=await phase2d1RegistrationOpen();
+  if(!open){
+    liveToast("ปิดรับสมัครแล้ว เปิดอีกครั้งเวลา 00:00 น. (เวลาไทย)",false);
+    alert("ไม่สามารถส่งใบสมัครใหม่ระหว่างเวลา 18:00–23:59 น.\nกรุณาสมัครใหม่ตั้งแต่เวลา 00:00 น.");
+    return;
+  }
+  try{
+    return await _phase2d1SubmitApplication();
+  }catch(err){
+    if(String(err?.message||"").includes("REGISTRATION_CLOSED_UNTIL_MIDNIGHT")){
+      liveToast("ปิดรับสมัครแล้ว เปิดอีกครั้งเวลา 00:00 น.",false);
+      return;
+    }
+    throw err;
+  }
+};
+
+function updateApplicationStatusUI(){
+  const pending=document.getElementById("statusPendingBox");
+  const approved=document.getElementById("statusApprovedBox");
+  const rejected=document.getElementById("statusRejectedBox");
+  if(!pending || !approved || !rejected)return;
+
+  pending.classList.add("d-none");
+  approved.classList.add("d-none");
+  rejected.classList.add("d-none");
+
+  const appStatus=String(liveApplication?.status||"");
+  const hasLoan=!!liveLoan;
+  const disbursed=hasLoan && String(liveLoan.disbursement_status||"pending")==="paid";
+
+  if(hasLoan && !disbursed){
+    approved.innerHTML=`
+      <i class="bi bi-bank text-primary display-1"></i>
+      <h4 class="fw-bold text-success mt-2">อนุมัติสินเชื่อแล้ว</h4>
+      <div class="alert alert-warning text-start small mt-3 mb-3">
+        <strong>สถานะ: กำลังดำเนินการโอนเงิน</strong><br>
+        วงเงินอนุมัติ: <strong>${money(liveLoan.amount)}</strong><br>
+        ระบบจะเริ่มนับรอบสัญญาหลังเจ้าหน้าที่กดยืนยันว่าโอนเงินเข้าบัญชีของคุณแล้ว
+      </div>
+      <p class="small text-muted">โดยปกติจะดำเนินการภายในประมาณ 30 นาทีหลังได้รับอนุมัติ</p>
+      <button class="btn btn-outline-primary rounded-pill" onclick="refreshLiveAccount()">
+        <i class="bi bi-arrow-clockwise me-1"></i>รีเฟรชสถานะการโอน
+      </button>`;
+    approved.classList.remove("d-none");
+  }else if(hasLoan && disbursed){
+    approved.innerHTML=`
+      <i class="bi bi-check-circle-fill text-success display-1"></i>
+      <h4 class="fw-bold text-success mt-2">โอนเงินสินเชื่อเรียบร้อยแล้ว</h4>
+      <p class="small text-muted mb-3">สัญญาเริ่มทำงานแล้ว สามารถดูยอดและวันครบกำหนดได้ที่หน้าหลัก</p>
+      <button class="btn-main" onclick="switchTab('page-dashboard')">ไปหน้าหลัก</button>`;
+    approved.classList.remove("d-none");
+  }else if(appStatus==="approved"){
+    approved.classList.remove("d-none");
+  }else if(["rejected","cancelled"].includes(appStatus)){
+    rejected.classList.remove("d-none");
+  }else{
+    pending.classList.remove("d-none");
+  }
+}
+
+const _phase2d1SwitchTab=switchTab;
+switchTab=function(pageId){
+  const waitingDisbursement=
+    !!liveSession &&
+    !!liveLoan &&
+    String(liveLoan.status)==="active" &&
+    String(liveLoan.disbursement_status||"pending")!=="paid";
+
+  if(waitingDisbursement && (pageId==="page-dashboard" || pageId==="page-payment")){
+    pageId="page-status";
+  }
+  return _phase2d1SwitchTab(pageId);
+};
+
+/* Ensure the page reflects waiting state even when data refreshes in-place. */
+const _phase2d1UpdateLoanDashboard=updateLoanDashboard;
+updateLoanDashboard=function(){
+  _phase2d1UpdateLoanDashboard();
+  const waiting=
+    !!liveLoan &&
+    String(liveLoan.status)==="active" &&
+    String(liveLoan.disbursement_status||"pending")!=="paid";
+
+  const badge=document.getElementById("dashLoanStatusBadge");
+  if(waiting && badge){
+    badge.textContent="รอโอนเงิน";
+    badge.className="badge bg-warning text-dark";
+  }
+};
+</script>
 
 </body>
 </html>
