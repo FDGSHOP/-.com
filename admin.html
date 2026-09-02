@@ -2155,4 +2155,128 @@ window.addEventListener("load",()=>setTimeout(bootAdminSession,900));
 
 </body>
 </html>
+
+<script>
+/* ============================================================
+   PHASE 2D-1 FRONTEND PATCH
+   Approved -> Waiting for transfer -> Confirm disbursement -> schedule starts
+   ============================================================ */
+
+function phase2d1DisbursementBadge(loan){
+  if(!loan)return "";
+  const ds=String(loan.disbursement_status||"pending");
+  if(ds==="paid"){
+    return '<span class="block mt-1 text-[10px] font-bold text-emerald-700">💸 โอนเงินแล้ว • เริ่มสัญญาแล้ว</span>';
+  }
+  if(ds==="failed"){
+    return '<span class="block mt-1 text-[10px] font-bold text-red-600">⚠️ การโอนมีปัญหา</span>';
+  }
+  return '<span class="block mt-1 text-[10px] font-bold text-amber-600">⏳ อนุมัติแล้ว • รอโอนเงินให้ลูกค้า</span>';
+}
+
+async function markLiveLoanDisbursed(loanId){
+  const loan=liveLoans.find(l=>l.id===loanId);
+  if(!loan)return;
+
+  if(String(loan.disbursement_status)==="paid"){
+    showToast("สินเชื่อนี้ถูกยืนยันการโอนเงินแล้ว",true);
+    return;
+  }
+
+  const c=liveCustomers.find(x=>x.id===loan.customer_id);
+  const customerName=c?.full_name||"-";
+  const ref=prompt(
+    `ยืนยันว่าได้โอนเงินสินเชื่อให้ลูกค้าแล้ว\n\nลูกค้า: ${customerName}\nยอดโอน: ${liveMoney(loan.amount)}\n\nกรอกเลขอ้างอิงการโอน (ถ้ามี)`,
+    ""
+  );
+  if(ref===null)return;
+
+  if(!confirm(
+    `ยืนยันการปล่อยเงินจริงหรือไม่?\n\nลูกค้า: ${customerName}\nยอด: ${liveMoney(loan.amount)}\n\nเมื่อยืนยัน ระบบจะบันทึกเวลาปัจจุบันเป็นเวลาได้รับเงิน และเริ่มสร้างวันครบกำหนดชำระจากวันนี้`
+  ))return;
+
+  liveSetBusy(true,"กำลังยืนยันการโอนเงินและเริ่มสัญญา...");
+  try{
+    const {data,error}=await adminSb.rpc("fdg_mark_loan_disbursed",{
+      p_loan_id:loanId,
+      p_reference:String(ref||"")
+    });
+    if(error)throw error;
+
+    const firstDue=data?.first_due_date ? ` • งวดแรก ${data.first_due_date}` : "";
+    showToast(`ยืนยันโอนเงินสำเร็จ${firstDue}`,true);
+    await loadLiveAdminData();
+  }catch(err){
+    console.error(err);
+    showToast(err?.message||"ยืนยันการโอนเงินไม่สำเร็จ",false);
+  }finally{
+    liveSetBusy(false);
+  }
+}
+
+/* Override only the LIVE loan table from Phase 2C-4. */
+function renderLiveLoanTable(){
+  const body=document.getElementById("admin-loan-list");
+  if(!body)return;
+  body.innerHTML="";
+  if(!customers.length){
+    body.innerHTML='<tr><td colspan="7" class="p-5 text-center text-gray-400">ยังไม่มีคำขอสินเชื่อ</td></tr>';
+    return;
+  }
+
+  customers.forEach(c=>{
+    const app=liveApplications.find(a=>a.id===c.applicationId)||null;
+    const loan=liveLoans.find(l=>l.application_id===c.applicationId)||null;
+    const canApprove=["pending","reviewing","master_pending"].includes(c.status);
+    const adminBlocked=c.status==="master_pending"&&!isMaster;
+    const approveLabel=(c.status==="master_pending"&&isMaster)?"Master อนุมัติ":"พิจารณา";
+    const isApproved=String(c.status)==="approved" && !!loan;
+    const waitingTransfer=isApproved && String(loan.disbursement_status||"pending")!=="paid";
+
+    const row=document.createElement("tr");
+    row.className="border-b hover:bg-gray-50";
+    row.innerHTML=`
+      <td class="p-3">
+        <span class="font-bold block">${liveEsc(c.name)}</span>
+        <span class="text-xs text-gray-500">${liveEsc(c.quid)} • 📞 ${liveEsc(c.phone)}</span>
+      </td>
+      <td class="p-3">
+        <span class="font-bold text-slate-700">${liveMoney(c.requestedAmount)}</span>
+        ${loan?`<span class="text-[10px] text-indigo-600 font-bold block">อนุมัติจริง ${liveMoney(loan.amount)}</span>`:""}
+        <span class="text-[10px] text-gray-400 block">${liveEsc(c.paymentChannel)}</span>
+      </td>
+      <td class="p-3 text-indigo-600 font-bold">${c.installment?liveMoney(c.installment):"รออนุมัติ"}</td>
+      <td class="p-3">${c.term||"-"} วัน<br><span class="text-[10px] text-gray-400">ทุก ${c.frequency} วัน</span></td>
+      <td class="p-3">
+        ${liveStatusBadge(c.status)}
+        ${phase2d1DisbursementBadge(loan)}
+      </td>
+      <td class="p-3 text-xs text-gray-400">${c.paymentChannel==="CASH"?"กำหนด Rider หลังปล่อยเงินจริง":"SCAN โดยลูกค้า"}</td>
+      <td class="p-3">
+        <div class="flex gap-1 flex-wrap">
+          <button onclick="viewLiveApplication('${c.applicationId}')" class="bg-slate-700 text-white text-xs px-2 py-1 rounded font-bold">รายละเอียด</button>
+          ${canApprove&&!adminBlocked?`<button onclick="openLiveApproval('${c.applicationId}')" class="bg-emerald-600 text-white text-xs px-2 py-1 rounded font-bold">${approveLabel}</button>`:""}
+          ${canApprove?`<button onclick="rejectLiveApplication('${c.applicationId}')" class="bg-red-600 text-white text-xs px-2 py-1 rounded font-bold">ปฏิเสธ</button>`:""}
+          ${adminBlocked?'<span class="text-[10px] text-amber-600 font-bold px-2 py-1">รอ Master</span>':""}
+          ${waitingTransfer?`<button onclick="markLiveLoanDisbursed('${loan.id}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded font-bold shadow">💸 ยืนยันโอนเงินแล้ว</button>`:""}
+          ${isApproved && String(loan.disbursement_status)==="paid"?'<span class="text-[10px] text-emerald-700 font-bold px-2 py-1">✓ ปล่อยเงินจริงแล้ว</span>':""}
+        </div>
+      </td>`;
+    body.appendChild(row);
+  });
+}
+
+/* Refresh banner copy for the current phase. */
+const _phase2d1OldLiveSetBusy=liveSetBusy;
+liveSetBusy=function(on,msg="กำลังโหลดข้อมูล..."){
+  _phase2d1OldLiveSetBusy(on,msg);
+  if(!on){
+    const banner=document.getElementById("liveBackendBanner");
+    if(banner){
+      banner.innerHTML='<span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> LIVE SUPABASE — Phase 2D-1</span><span class="block font-normal text-emerald-700 mt-1">อนุมัติ → รอโอนเงิน → ยืนยันโอน → เริ่มวันสัญญาจากเวลาปล่อยเงินจริง</span>';
+    }
+  }
+};
+</script>
+
 </body></html>
