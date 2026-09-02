@@ -2907,7 +2907,7 @@ async function phase2eVerifyRiderRemittance(remittanceId,{quiet=false}={}){
   if(!remittanceId)return null;
   try{
     if(!quiet)showToast("กำลังตรวจสลิปกับ EasySlip...",true);
-    const {data,error}=await adminSb.functions.invoke("verify-slip",{
+    const {data,error}=await adminSb.functions.invoke("dynamic-api",{
       body:{type:"RIDER_REMITTANCE",id:remittanceId}
     });
     if(error)throw error;
