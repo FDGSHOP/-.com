@@ -2691,9 +2691,9 @@ function renderRider(){
       btn.innerText="กดเลิกงาน";
       btn.className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow";
     }else if(state==="CLOSED"){
-      btn.innerText="ปิดงานวันนี้แล้ว";
-      btn.disabled=true;
-      btn.className="bg-gray-300 text-gray-600 px-4 py-2 rounded-lg font-bold text-sm";
+      btn.innerText="เริ่มงานอีกครั้ง";
+      btn.disabled=false;
+      btn.className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow";
     }else{
       btn.innerText="กดเริ่มงาน";
       btn.disabled=false;
