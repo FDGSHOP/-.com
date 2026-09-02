@@ -6,7 +6,7 @@
   <title>สินเชื่อเพื่อคนพะเยา</title>
   
   <!-- PWA Metadata -->
-  <link rel="manifest" href="phayao-clean-manifest.json">
+  <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#1e5bb8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -40,7 +40,7 @@
 
 
     /* =========================================================
-       FDG MONNY - MERGED CUSTOMER UI PREVIEW
+       CUSTOMER MEMBER UI
        Responsive + Member + Ranking + QUID + Point Redemption
        ========================================================= */
     html { -webkit-text-size-adjust: 100%; }
@@ -744,14 +744,14 @@
       </div>
     </div>
 
-    <!-- PAGE 5: ตารางส่งเงินรายวัน & Fox Server Time Check -->
+    <!-- PAGE 5: ตารางส่งเงินรายวัน & Server Time -->
     <div id="page-payment" class="page-section">
       <div class="card-box">
         <h6 class="fw-bold mb-2"><i class="bi bi-receipt text-primary me-1"></i>ชำระค่างวดประจำวัน</h6>
         
         <!-- แจ้งเตือนเวลา Server -->
         <div id="serverTimeBanner" class="p-2 bg-light border rounded mb-3 text-center extra-small">
-          <i class="bi bi-clock-history"></i> เวลา Server กลาง (Fox Check): <strong id="clockDisplay">กำลังโหลด...</strong>
+          <i class="bi bi-clock-history"></i> เวลาอ้างอิงระบบ: <strong id="clockDisplay">กำลังโหลด...</strong>
         </div>
 
         <div class="p-3 bg-primary bg-opacity-10 rounded text-center mb-3">
@@ -896,8 +896,8 @@
       <div class="card-box ad-admin-preview">
         <div class="d-flex justify-content-between align-items-center gap-3">
           <div>
-            <div class="small fw-bold"><i class="bi bi-badge-ad-fill text-primary me-1"></i>ตัวอย่างระบบประชาสัมพันธ์</div>
-            <div class="extra-small text-muted">ในระบบจริงเมนูนี้จะแสดงเฉพาะ Master / Admin</div>
+            <div class="small fw-bold"><i class="bi bi-badge-ad-fill text-primary me-1"></i>ประชาสัมพันธ์</div>
+            <div class="extra-small text-muted"></div>
           </div>
           <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold text-nowrap" onclick="openAdManager()">
             จัดการโฆษณา
@@ -906,7 +906,7 @@
       </div>
 
       <div class="card-box border-warning">
-        <div class="extra-small text-muted mb-2">เฉพาะไฟล์ตัวอย่าง UI</div>
+        <div class="extra-small text-muted mb-2"></div>
         <button class="btn btn-sm btn-outline-danger w-100 rounded-pill fw-bold" onclick="resetDemoMember()"><i class="bi bi-arrow-counterclockwise me-1"></i>รีเซ็ตเพื่อดูขั้นตอนสมัครตั้งแต่ต้น</button>
       </div>
     </div>
@@ -1297,7 +1297,7 @@
     };
 
     // -------------------------------------------------------------
-    // 1. Fox Server Time Check (ป้องกันการปรับเวลาในเครื่อง)
+    // 1. Server Time (ป้องกันการปรับเวลาในเครื่อง)
     // -------------------------------------------------------------
     async function startFoxServerClock() {
       await fetchServerTime();
@@ -1454,17 +1454,20 @@
           const ctxObj = canvasObj.getContext('2d');
           ctxObj.drawImage(img, 0, 0, canvasObj.width, canvasObj.height);
 
-          // Watermark
-          const text = "ใช้สำหรับขอสินเชื่อเพื่อคนพะเยาเท่านั้น";
-          const fontSize = Math.floor(canvasObj.width / 22);
-          ctxObj.save();
-          ctxObj.translate(canvasObj.width / 2, canvasObj.height / 2);
-          ctxObj.rotate(-Math.PI / 6);
-          ctxObj.font = `bold ${fontSize}px sans-serif`;
-          ctxObj.fillStyle = "rgba(220, 38, 38, 0.45)";
-          ctxObj.textAlign = "center";
-          ctxObj.fillText(text, 0, 0);
-          ctxObj.restore();
+          // Identity documents get a watermark. Bank payment slips stay untouched
+          // so EasySlip can read the original banking data reliably.
+          if (String(id) !== "Slip") {
+            const text = "ใช้สำหรับขอสินเชื่อเพื่อคนพะเยาเท่านั้น";
+            const fontSize = Math.floor(canvasObj.width / 22);
+            ctxObj.save();
+            ctxObj.translate(canvasObj.width / 2, canvasObj.height / 2);
+            ctxObj.rotate(-Math.PI / 6);
+            ctxObj.font = `bold ${fontSize}px sans-serif`;
+            ctxObj.fillStyle = "rgba(220, 38, 38, 0.45)";
+            ctxObj.textAlign = "center";
+            ctxObj.fillText(text, 0, 0);
+            ctxObj.restore();
+          }
 
           const compressedUrl = canvasObj.toDataURL('image/jpeg', 0.7);
 
@@ -1805,7 +1808,7 @@
   <script>
     /* =========================================================
        FDG MONNY MERGED PREVIEW LOGIC
-       UI demo only - Supabase/EasySlip will replace mock state.
+       Live customer state helpers.
        ========================================================= */
     const FDG_DEMO = {
       pointsPerBaht: 10,
@@ -1816,7 +1819,7 @@
       qid: localStorage.getItem('fdg_demo_qid') || 'CUS-A7K92',
       paymentChannel: localStorage.getItem('fdg_demo_pay_channel') || 'SCAN'
     };
-    const FDG_RANKS = [
+    let FDG_RANKS = [
       {name:'MEMBER',min:0,icon:'👤'},
       {name:'BRONZE',min:500,icon:'🥉'},
       {name:'SILVER',min:1000,icon:'🥈'},
@@ -1968,7 +1971,7 @@
     // LIVE mode: old localStorage preview initializer disabled.
 
     if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-      window.addEventListener('load',()=>navigator.serviceWorker.register('./phayao-clean-sw.js').catch(()=>{}));
+      window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
     }
   </script>
 
@@ -3227,6 +3230,385 @@ updateLoanDashboard=function(){
     badge.className="badge bg-warning text-dark";
   }
 };
+</script>
+
+
+<!-- FINAL CORE: centered customer notice -->
+<div class="modal fade" id="fdgNoticeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-body p-4 text-center">
+        <div id="fdgNoticeIcon" class="display-5 mb-2">ℹ️</div>
+        <h5 id="fdgNoticeTitle" class="fw-bold mb-2">แจ้งเตือน</h5>
+        <div id="fdgNoticeMessage" class="small text-muted" style="white-space:pre-line"></div>
+        <button type="button" class="btn btn-primary rounded-pill px-4 mt-3" data-bs-dismiss="modal">รับทราบ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   FINAL CORE CUSTOMER OVERRIDES
+   - centered notices
+   - direct PWA install when browser permits
+   - DB-enforced registration hours with visible client status
+   - live Customer SCAN payment + Ranking redemption + EasySlip
+   - Ranking guide + real point ledger
+   ============================================================ */
+let finalPublicConfig=null;
+let finalOpenPayment=null;
+let finalPointLedger=[];
+let finalReferrals=[];
+
+function finalNotice(message,ok=true,title=""){
+  const modalEl=document.getElementById("fdgNoticeModal");
+  if(!modalEl){ alert(message); return; }
+  document.getElementById("fdgNoticeIcon").textContent=ok?"✅":"⚠️";
+  document.getElementById("fdgNoticeTitle").textContent=title||(ok?"สำเร็จ":"แจ้งเตือน");
+  document.getElementById("fdgNoticeMessage").textContent=String(message||"");
+  bootstrap.Modal.getOrCreateInstance(modalEl).show();
+}
+liveToast=finalNotice;
+
+async function finalLoadPublicConfig(){
+  try{
+    const {data,error}=await liveSb.rpc("fdg_public_app_config");
+    if(error)throw error;
+    finalPublicConfig=data||{};
+    const rs=finalPublicConfig.reward_settings||{};
+    FDG_DEMO.pointsPerBaht=Number(rs.points_per_baht||10);
+    FDG_DEMO.minimumCashPayment=Number(rs.min_real_payment??1);
+    if(Array.isArray(finalPublicConfig.rank_tiers)&&finalPublicConfig.rank_tiers.length){
+      const icons={MEMBER:"👤",BRONZE:"🥉",SILVER:"🥈",GOLD:"🥇",PLATINUM:"💠",DIAMOND:"💎"};
+      FDG_RANKS=finalPublicConfig.rank_tiers.map(r=>({
+        name:String(r.code),
+        min:Number(r.min_points||0),
+        icon:icons[String(r.code)]||"⭐",
+        maxLoan:Number(r.max_loan_amount||0),
+        maxTerm:Number(r.max_term_days||0),
+        discount:Number(r.interest_discount_pp||0)
+      }));
+    }
+    finalRenderRankGuide();
+    return finalPublicConfig;
+  }catch(e){
+    console.warn("Public config",e);
+    return finalPublicConfig||{};
+  }
+}
+
+async function finalRegistrationOpen(){
+  const cfg=await finalLoadPublicConfig();
+  return cfg?.registration_open!==false;
+}
+
+const finalBaseStartRegistration=window.startRealRegistration;
+window.startRealRegistration=async function(){
+  if(!(await finalRegistrationOpen())){
+    finalNotice(
+      "ขณะนี้ปิดรับสมัครสมาชิกใหม่\nเปิดรับสมัครอีกครั้งเวลา 00:00 น.\nช่วง 18:00–23:59 เป็นช่วงสรุปรอบและตรวจสอบข้อมูลของบริษัท",
+      false,
+      "ปิดรับสมัครชั่วคราว"
+    );
+    return;
+  }
+  return finalBaseStartRegistration();
+};
+
+const finalBaseSubmitApplication=window.submitApplication;
+window.submitApplication=async function(){
+  if(!(await finalRegistrationOpen())){
+    finalNotice("ปิดรับสมัครแล้ว กรุณาสมัครใหม่หลังเวลา 00:00 น.",false,"ไม่สามารถส่งใบสมัครได้");
+    return;
+  }
+  return finalBaseSubmitApplication();
+};
+
+/* PWA: a site cannot force-install without the browser install prompt.
+   When available, one press immediately opens the native install dialog. */
+let finalInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  finalInstallPrompt=e;
+  const b=document.getElementById("btnPwaInstall");
+  if(b)b.style.display="inline-block";
+});
+window.installPWA=async function(){
+  if(finalInstallPrompt){
+    finalInstallPrompt.prompt();
+    const choice=await finalInstallPrompt.userChoice;
+    if(choice?.outcome==="accepted"){
+      document.getElementById("btnPwaInstall")?.classList.add("d-none");
+    }
+    finalInstallPrompt=null;
+    return;
+  }
+  if(window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone){
+    finalNotice("เว็บแอปนี้ติดตั้งอยู่บนเครื่องแล้ว");
+    return;
+  }
+  finalNotice(
+    "เบราว์เซอร์ยังไม่เปิดคำสั่งติดตั้งอัตโนมัติ\nAndroid/Chrome: เมนู ⋮ → ติดตั้งแอป\nSafari iPhone: แชร์ → เพิ่มไปยังหน้าจอโฮม",
+    false,
+    "ติดตั้งเว็บแอป"
+  );
+};
+
+function finalHideNonCustomerBlocks(){
+  document.querySelectorAll(".ad-admin-preview").forEach(x=>x.classList.add("d-none"));
+  document.querySelectorAll("#page-profile .card-box").forEach(card=>{
+    const t=(card.textContent||"").trim();
+    if(t.includes("รีเซ็ตเพื่อดูขั้นตอนสมัคร") || t.includes("เฉพาะไฟล์ตัวอย่าง")) card.classList.add("d-none");
+  });
+  document.getElementById("rowFine")?.classList.add("d-none");
+  document.getElementById("fineReasonText")?.classList.add("d-none");
+}
+
+function finalRenderRankGuide(){
+  const profile=document.getElementById("page-profile");
+  if(!profile || document.getElementById("finalRankGuide"))return;
+  const card=document.createElement("div");
+  card.id="finalRankGuide";
+  card.className="card-box";
+  profile.insertBefore(card,profile.children[1]||null);
+
+  const rs=finalPublicConfig?.reward_settings||{};
+  const ppb=Number(rs.points_per_baht||10);
+  const minPay=Number(rs.min_real_payment??1);
+  const refPoints=Number(rs.referral_success_points||50);
+  const tiers=(finalPublicConfig?.rank_tiers||FDG_RANKS||[]);
+
+  card.innerHTML=`
+    <h6 class="fw-bold mb-2"><i class="bi bi-journal-star text-warning me-1"></i>สารบัญ Ranking & คะแนน</h6>
+    <div class="small mb-2">
+      <div class="d-flex justify-content-between border-bottom py-2"><span>ชำระเต็มงวดตรงเวลา</span><b class="text-success">รับคะแนนตามกติกาบริษัท</b></div>
+      <div class="d-flex justify-content-between border-bottom py-2"><span>แนะนำเพื่อนสำเร็จ</span><b class="text-success">+${refPoints.toLocaleString()} คะแนน</b></div>
+      <div class="d-flex justify-content-between border-bottom py-2"><span>ใช้เป็นส่วนลด</span><b>${ppb} คะแนน = 1 บาท</b></div>
+      <div class="d-flex justify-content-between py-2"><span>ยอดเงินจริงขั้นต่ำ</span><b>${money(minPay)}</b></div>
+    </div>
+    <div class="alert alert-warning extra-small mb-3">
+      <b>ข้อควรระวัง:</b> เมื่อยืนยันใช้คะแนนและ EasySlip ตรวจผ่าน คะแนนจะถูกหักจริง
+      ซึ่งอาจทำให้ Ranking ลดลง และสิทธิ์วงเงิน/ระยะเวลา/ส่วนลดดอกเบี้ยในอนาคตเปลี่ยนตาม Ranking ใหม่
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm extra-small align-middle mb-0">
+        <thead><tr><th>Rank</th><th>คะแนนขั้นต่ำ</th><th>วงเงินสูงสุด</th><th>ระยะเวลา</th><th>ลดดอกเบี้ย</th></tr></thead>
+        <tbody>${tiers.map(r=>`
+          <tr>
+            <td><b>${r.display_name||r.name||r.code}</b></td>
+            <td>${Number(r.min_points??r.min??0).toLocaleString()}</td>
+            <td>${Number((r.max_loan_amount ?? r.maxLoan ?? 0))>0?money(r.max_loan_amount ?? r.maxLoan ?? 0):"ตามการพิจารณา"}</td>
+            <td>${Number((r.max_term_days ?? r.maxTerm ?? 0))>0?(r.max_term_days ?? r.maxTerm ?? 0)+" วัน":"-"}</td>
+            <td>${Number((r.interest_discount_pp ?? r.discount ?? 0)).toLocaleString()} จุด%</td>
+          </tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <div class="mt-3">
+      <div class="fw-bold small mb-1">ประวัติคะแนนจริง</div>
+      <div id="finalPointLedger" class="extra-small text-muted">กำลังโหลด...</div>
+    </div>`;
+}
+
+function finalRenderPointLedger(){
+  finalRenderRankGuide();
+  const box=document.getElementById("finalPointLedger");
+  if(!box)return;
+  if(!finalPointLedger.length){
+    box.innerHTML='<div class="py-2">ยังไม่มีรายการคะแนน</div>';
+    return;
+  }
+  box.innerHTML=finalPointLedger.slice(0,30).map(x=>`
+    <div class="d-flex justify-content-between gap-2 border-bottom py-2">
+      <div><b>${String(x.note||x.source_type||"คะแนน")}</b><div class="text-muted">${new Date(x.created_at).toLocaleString("th-TH")}</div></div>
+      <div class="text-end"><b class="${Number(x.delta)>0?"text-success":"text-danger"}">${Number(x.delta)>0?"+":""}${Number(x.delta).toLocaleString()}</b><div>คงเหลือ ${Number(x.balance_after||0).toLocaleString()}</div></div>
+    </div>`).join("");
+}
+
+async function finalLoadCustomerExtras(){
+  if(!liveCustomer)return;
+  const [pt,rf]=await Promise.all([
+    liveSb.from("rank_point_transactions").select("*").eq("customer_id",liveCustomer.id).order("created_at",{ascending:false}).limit(50),
+    liveSb.from("referrals").select("id,status,created_at,qualified_at,rewarded_at").eq("referrer_customer_id",liveCustomer.id).order("created_at",{ascending:false}).limit(100)
+  ]);
+  finalPointLedger=pt.error?[]:(pt.data||[]);
+  finalReferrals=rf.error?[]:(rf.data||[]);
+  finalRenderPointLedger();
+
+  const boxes=document.querySelectorAll("#page-referral .performance-box strong");
+  if(boxes.length>=3){
+    const total=finalReferrals.length;
+    const qualified=finalReferrals.filter(x=>["qualified","rewarded"].includes(String(x.status))).length;
+    const rewardPoints=qualified*Number(finalPublicConfig?.reward_settings?.referral_success_points||50);
+    boxes[0].textContent=total.toLocaleString();
+    boxes[1].textContent=qualified.toLocaleString();
+    boxes[2].textContent="+"+rewardPoints.toLocaleString();
+  }
+}
+
+const finalBaseLoadAccount=window.loadLiveAccount;
+window.loadLiveAccount=async function(route=true){
+  await finalLoadPublicConfig();
+  const r=await finalBaseLoadAccount(route);
+  await finalLoadCustomerExtras();
+  finalHideNonCustomerBlocks();
+  return r;
+};
+
+function finalSelectedPaymentType(){
+  return document.getElementById("payInterest")?.checked ? "INTEREST_ONLY" : "FULL";
+}
+function finalRequestedPoints(){
+  const ppb=Number(finalPublicConfig?.reward_settings?.points_per_baht||10);
+  let n=Math.max(0,Number(document.getElementById("redeemPointsInput")?.value||0));
+  n=Math.floor(n/ppb)*ppb;
+  return n;
+}
+function finalPromptPayId(){
+  return String(finalPublicConfig?.company_promptpay_id||"0658351446").replace(/\s/g,"");
+}
+
+window.openQrModal=async function(){
+  if(!liveSession){showAuthPage();return;}
+  if(!liveLoan || String(liveLoan.status)!=="active"){
+    finalNotice("ยังไม่มีสินเชื่อ Active สำหรับชำระ",false);return;
+  }
+  if(String(liveLoan.disbursement_status||"pending")!=="paid"){
+    finalNotice("ยังไม่เริ่มรอบชำระ เพราะบริษัทอยู่ระหว่างโอนเงินสินเชื่อให้คุณ",false);return;
+  }
+  if(String(liveLoan.payment_channel||"SCAN")==="CASH"){
+    finalNotice("สัญญานี้ใช้ช่องทาง CASH กรุณาชำระกับ Rider ที่ได้รับมอบหมาย",false);return;
+  }
+
+  const next=liveInstallments.find(i=>["pending","partial","late"].includes(String(i.status)));
+  if(!next){finalNotice("ไม่พบงวดที่ต้องชำระ",false);return;}
+
+  const btn=document.getElementById("btnCreateQr");
+  if(btn)btn.disabled=true;
+  setLiveLoading(true,"กำลังสร้างรายการชำระเงินจริง...");
+  try{
+    const existing=livePayments.find(p=>
+      String(p.installment_id)===String(next.id) &&
+      String(p.payment_source)==="CUSTOMER_SCAN" &&
+      ["pending","verifying"].includes(String(p.status))
+    );
+
+    let data;
+    if(existing){
+      data={
+        payment_id:existing.id,
+        payment_code:existing.payment_code,
+        installment_id:existing.installment_id,
+        gross_due:Number(existing.gross_due||0),
+        points_used:Number(existing.points_used||0),
+        discount_amount:Number(existing.discount_amount||0),
+        real_payment_amount:Number(existing.cash_amount||0),
+        evidence_path:existing.evidence_path||null,
+        status:existing.status
+      };
+    }else{
+      const created=await liveSb.rpc("fdg_create_customer_scan_payment",{
+        p_loan_id:liveLoan.id,
+        p_installment_id:next.id,
+        p_payment_type:finalSelectedPaymentType(),
+        p_points_requested:finalRequestedPoints()
+      });
+      if(created.error)throw created.error;
+      data=created.data;
+    }
+    finalOpenPayment=data;
+
+    const amount=Number(data.real_payment_amount||0);
+    document.getElementById("imgPromptPayQr").src=`https://promptpay.io/${encodeURIComponent(finalPromptPayId())}/${amount.toFixed(2)}.png`;
+    document.getElementById("modalQrAmount").innerText=money(amount);
+    document.getElementById("modalOriginalAmount").innerText=`ยอดงวดก่อนส่วนลด: ${money(data.gross_due)}`;
+    document.getElementById("modalPointDiscount").innerText=`ส่วนลด Ranking: - ${money(data.discount_amount)} (${Number(data.points_used||0).toLocaleString()} คะแนน)`;
+    document.getElementById("modalPayTypeTitle").innerText=
+      finalSelectedPaymentType()==="INTEREST_ONLY"?"ชำระเฉพาะดอกเบี้ย (ไม่ตัดเงินต้น)":"ชำระเต็มงวด";
+    const accountText=document.querySelector("#qrModal .modal-body .extra-small.text-muted.mb-3");
+    if(accountText)accountText.innerHTML=`บัญชีรับเงิน PromptPay: <strong>${finalPromptPayId()}</strong>`;
+    new bootstrap.Modal(document.getElementById("qrModal")).show();
+  }catch(e){
+    console.error(e);
+    finalNotice(e?.message||"สร้างรายการชำระไม่สำเร็จ",false,"ไม่สามารถสร้าง QR");
+  }finally{
+    setLiveLoading(false);
+    if(btn)btn.disabled=false;
+  }
+};
+
+window.submitPaymentSlip=async function(){
+  if(!finalOpenPayment?.payment_id){
+    finalNotice("กรุณาปิดหน้าต่างและกดสร้าง QR ใหม่",false);return;
+  }
+  if(!fileStore["Slip"] && !finalOpenPayment.evidence_path){
+    finalNotice("กรุณาแนบภาพสลิปก่อนส่ง",false);return;
+  }
+
+  setLiveLoading(true,"กำลังส่งสลิปและตรวจ EasySlip...");
+  try{
+    if(fileStore["Slip"]){
+      const blob=dataUrlToBlob(fileStore["Slip"]);
+      if(blob.size>4*1024*1024)throw new Error("ไฟล์สลิปต้องไม่เกิน 4 MB");
+
+      const ext=blob.type==="image/png"?"png":blob.type==="image/webp"?"webp":"jpg";
+      const path=`${liveSession.user.id}/${new Date().toISOString().slice(0,10)}/customer-payment-${finalOpenPayment.payment_id}-${Date.now()}.${ext}`;
+
+      const {error:upErr}=await liveSb.storage.from("payment-evidence").upload(path,blob,{
+        upsert:false,contentType:blob.type||"image/jpeg",cacheControl:"3600"
+      });
+      if(upErr)throw upErr;
+
+      const {error:attachErr}=await liveSb.rpc("fdg_attach_customer_payment_evidence",{
+        p_payment_id:finalOpenPayment.payment_id,
+        p_evidence_path:path
+      });
+      if(attachErr)throw attachErr;
+      finalOpenPayment.evidence_path=path;
+    }
+
+    const {data,error}=await liveSb.functions.invoke("dynamic-api",{
+      body:{type:"CUSTOMER_PAYMENT",id:finalOpenPayment.payment_id}
+    });
+    if(error)throw error;
+    if(data?.status!=="verified")throw new Error(data?.message||"EasySlip ไม่อนุมัติสลิป");
+
+    bootstrap.Modal.getInstance(document.getElementById("qrModal"))?.hide();
+    try{ removeImage(new Event("click"),"Slip"); }catch(_){}
+    finalOpenPayment=null;
+    await loadLiveAccount(false);
+    finalNotice(
+      `EasySlip VERIFIED\nรับชำระ ${money(data.amount||0)} เรียบร้อย\nระบบอัปเดตยอดหนี้และ Ranking แล้ว`,
+      true,
+      "ชำระเงินสำเร็จ"
+    );
+    switchTab("page-dashboard");
+  }catch(e){
+    console.error("Customer EasySlip",e);
+    const msg=e?.context?.body?.message||e?.message||"ตรวจสลิปไม่ผ่าน";
+    finalOpenPayment=null;
+    await loadLiveAccount(false).catch(()=>{});
+    finalNotice(msg,false,"EasySlip ไม่ผ่าน");
+  }finally{
+    setLiveLoading(false);
+  }
+};
+
+const finalBaseRequestChannel=window.requestPaymentChannelChange;
+window.requestPaymentChannelChange=async function(){
+  return finalBaseRequestChannel();
+};
+
+window.addEventListener("load",async()=>{
+  finalHideNonCustomerBlocks();
+  await finalLoadPublicConfig();
+  finalRenderRankGuide();
+  // Update registration button state at opening time.
+  if(finalPublicConfig?.registration_open===false){
+    const startButtons=[...document.querySelectorAll("button")].filter(b=>(b.textContent||"").includes("สมัคร"));
+    startButtons.forEach(b=>b.title="เปิดรับสมัครอีกครั้งเวลา 00:00 น.");
+  }
+});
 </script>
 
 </body>
