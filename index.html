@@ -110,7 +110,7 @@
     .demo-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 7px; border-radius:999px; background:#fff3cd; color:#785d00; font-size:9px; font-weight:850; border:1px solid #eedc9f; }
 
     .member-only-nav { display:flex; }
-    #page-dashboard .card-box, #page-referral .card-box { overflow:hidden; }
+    #page-dashboard .card-box, #page-history .card-box { overflow:hidden; }
     #btnCreateQr:disabled { background:#9aa7b9; }
 
     @media (max-width:359px){
@@ -822,7 +822,7 @@
       </div>
     </div>
 
-    <!-- PAGE 6: โปรไฟล์ + UID + ประวัติชำระเงิน + ใบเสร็จ -->
+    <!-- PAGE 6: โปรไฟล์ + Ranking + แนะนำเพื่อน -->
     <div id="page-profile" class="page-section">
 
       <div class="rank-panel">
@@ -864,27 +864,27 @@
         </div>
       </div>
 
-      <!-- ตารางประวัติการชำระเงิน -->
+      <!-- แนะนำเพื่อนย้ายมาอยู่ในโปรไฟล์ตามโครงสร้างเดิม -->
       <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติการชำระเงิน & ใบเสร็จ</h6>
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered extra-small text-center align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>วันที่/เวลา</th>
-                <th>ประเภท</th>
-                <th>จำนวนเงิน</th>
-                <th>ใบเสร็จ</th>
-              </tr>
-            </thead>
-            <tbody id="payHistoryList">
-              <tr>
-                <td colspan="4" class="text-muted py-3">ยังไม่มีประวัติการชำระเงิน</td>
-              </tr>
-            </tbody>
-          </table>
+        <h6 class="fw-bold mb-3"><i class="bi bi-people-fill text-primary me-1"></i>แนะนำเพื่อน & Ranking</h6>
+        <div class="referral-box">
+          <div class="extra-small text-muted">QUID สำหรับแนะนำ</div>
+          <div class="referral-code" id="referralPageQid">CUS-A7K92</div>
+          <div class="extra-small text-muted mt-1">เพื่อนกรอก QUID นี้ในใบสมัคร ระบบจะเชื่อม Referral ให้โดยอัตโนมัติ</div>
+          <button class="btn btn-sm btn-outline-warning rounded-pill fw-bold mt-2" onclick="copyReferralQid()"><i class="bi bi-copy me-1"></i>คัดลอก QUID</button>
         </div>
-
+      </div>
+      <div class="card-box">
+        <div class="performance-grid">
+          <div class="performance-box"><strong>5</strong><span>กรอก QUID คุณ</span></div>
+          <div class="performance-box"><strong>3</strong><span>ผ่านเกณฑ์</span></div>
+          <div class="performance-box"><strong>+150</strong><span>คะแนนที่ได้รับ</span></div>
+        </div>
+        <div class="extra-small text-muted mt-2">Referral สำเร็จจะได้รับคะแนนตามกติกาที่ Master กำหนด</div>
+      </div>
+      <div class="card-box">
+        <h6 class="fw-bold mb-2"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติคะแนน</h6>
+        <div class="extra-small text-muted">รายการคะแนนจริงจะแสดงในสารบัญ Ranking ด้านบนของหน้าโปรไฟล์</div>
       </div>
 
       <div class="card-box">
@@ -912,30 +912,66 @@
       </div>
     </div>
 
-    <!-- PAGE 7: Referral -->
-    <div id="page-referral" class="page-section">
+    <!-- PAGE 7: ประวัติการชำระสินเชื่อ -->
+    <div id="page-history" class="page-section">
       <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-people-fill text-primary me-1"></i>แนะนำเพื่อน & Ranking</h6>
-        <div class="referral-box">
-          <div class="extra-small text-muted">QUID สำหรับแนะนำ</div>
-          <div class="referral-code" id="referralPageQid">CUS-A7K92</div>
-          <div class="extra-small text-muted mt-1">เพื่อนกรอก QUID นี้ในใบสมัคร ระบบจะเชื่อม Referral ให้โดยอัตโนมัติ</div>
-          <button class="btn btn-sm btn-outline-warning rounded-pill fw-bold mt-2" onclick="copyReferralQid()"><i class="bi bi-copy me-1"></i>คัดลอก QUID</button>
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+          <div>
+            <h6 class="fw-bold mb-1"><i class="bi bi-graph-up-arrow text-primary me-1"></i>ความคืบหน้าการชำระสินเชื่อ</h6>
+            <div class="extra-small text-muted">สรุปจากยอดสัญญาและยอดคงเหลือจริงในระบบ</div>
+          </div>
+          <div class="text-end">
+            <div class="h4 fw-bold text-primary m-0" id="historyPaidPct">0%</div>
+            <div class="extra-small text-muted">ชำระแล้ว</div>
+          </div>
+        </div>
+        <div class="progress mb-3" style="height:12px;border-radius:999px;">
+          <div id="historyPaidProgress" class="progress-bar bg-primary" role="progressbar" style="width:0%" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div class="row g-2">
+          <div class="col-4">
+            <div class="p-2 rounded-3 bg-light text-center h-100">
+              <div class="extra-small text-muted">ยอดสัญญารวม</div>
+              <div class="fw-bold" id="historyContractTotal">฿0.00</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="p-2 rounded-3 bg-success-subtle text-center h-100">
+              <div class="extra-small text-muted">ชำระแล้ว</div>
+              <div class="fw-bold text-success" id="historyPaidAmount">฿0.00</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="p-2 rounded-3 bg-warning-subtle text-center h-100">
+              <div class="extra-small text-muted">คงเหลือ</div>
+              <div class="fw-bold text-danger" id="historyRemainingAmount">฿0.00</div>
+            </div>
+          </div>
         </div>
       </div>
+
       <div class="card-box">
-        <div class="performance-grid">
-          <div class="performance-box"><strong>5</strong><span>กรอก QUID คุณ</span></div>
-          <div class="performance-box"><strong>3</strong><span>ผ่านเกณฑ์</span></div>
-          <div class="performance-box"><strong>+150</strong><span>คะแนนที่ได้รับ</span></div>
+        <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติการชำระสินเชื่อ</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered extra-small text-center align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>วันที่/เวลา</th>
+                <th>ประเภท</th>
+                <th>จำนวนเงิน</th>
+                <th style="width:54px;">ข้อมูล</th>
+              </tr>
+            </thead>
+            <tbody id="payHistoryList">
+              <tr>
+                <td colspan="4" class="text-muted py-3">ยังไม่มีประวัติการชำระเงิน</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div class="extra-small text-muted mt-2">ตัวอย่าง: Referral สำเร็จ +50 คะแนนต่อคน คะแนนจริงและรางวัล Master สามารถตั้งค่าได้</div>
-      </div>
-      <div class="card-box">
-        <h6 class="fw-bold mb-2"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติคะแนน</h6>
-        <div class="d-flex justify-content-between py-2 border-bottom"><div><div class="small fw-bold">Referral สำเร็จ</div><div class="extra-small text-muted">เพื่อนผ่านเงื่อนไขครั้งแรก</div></div><strong class="text-success">+50</strong></div>
-        <div class="d-flex justify-content-between py-2 border-bottom"><div><div class="small fw-bold">ชำระตรงเวลา</div><div class="extra-small text-muted">งวดต่อเนื่อง</div></div><strong class="text-success">+10</strong></div>
-        <div class="d-flex justify-content-between py-2"><div><div class="small fw-bold">ใช้เป็นส่วนลด</div><div class="extra-small text-muted">จะถูกหักหลัง EasySlip VERIFIED</div></div><strong class="text-danger">- ตามที่ใช้</strong></div>
+        <div class="extra-small text-muted mt-2">
+          กด <i class="bi bi-info-circle"></i> เพื่อดูใบเสร็จและสลิปที่แนบกับรายการนั้น
+        </div>
       </div>
     </div>
 
@@ -1018,6 +1054,14 @@
               </tr>
             </tbody>
           </table>
+
+          <div id="recSlipSection" class="d-none mb-3">
+            <div class="extra-small fw-bold text-start mb-1"><i class="bi bi-image me-1"></i>สลิปที่แนบกับรายการ</div>
+            <div class="border rounded-3 bg-light p-2 text-center">
+              <img id="recSlipImage" src="" alt="สลิปการชำระ" class="img-fluid rounded d-none" style="max-height:320px;">
+              <div id="recSlipUnavailable" class="extra-small text-muted py-2">ไม่พบรูปสลิปสำหรับรายการนี้</div>
+            </div>
+          </div>
 
           <div class="extra-small text-muted text-center border-top pt-2" id="recFineNote">
             * เอกสารนี้สร้างขึ้นโดยระบบอัตโนมัติ ชำระผ่านระบบ PromptPay 0658351446
@@ -1248,8 +1292,8 @@
     <div class="nav-item-btn" id="navPayment" onclick="switchTab('page-payment')">
       <i class="bi bi-receipt d-block fs-5"></i> ชำระเงิน
     </div>
-    <div class="nav-item-btn" id="navReferral" onclick="switchTab('page-referral')">
-      <i class="bi bi-people d-block fs-5"></i> แนะนำเพื่อน
+    <div class="nav-item-btn" id="navHistory" onclick="switchTab('page-history')">
+      <i class="bi bi-clock-history d-block fs-5"></i> ประวัติ
     </div>
     <div class="nav-item-btn" id="navProfile" onclick="switchTab('page-profile')">
       <i class="bi bi-person-circle d-block fs-5"></i> โปรไฟล์
@@ -1655,7 +1699,7 @@
             <td>${item.type}</td>
             <td class="fw-bold text-primary">฿ ${item.total}</td>
             <td>
-              <button class="btn btn-xs btn-outline-primary py-0 px-1 extra-small" onclick="showReceiptModal(${index})">ดูใบเสร็จ</button>
+              <button class="btn btn-sm btn-outline-primary rounded-circle py-0 px-1" style="width:30px;height:30px;" onclick="showReceiptModal(${index})" title="ดูใบเสร็จ" aria-label="ดูใบเสร็จ"><i class="bi bi-info-circle"></i></button>
             </td>
           </tr>
         `;
@@ -1664,6 +1708,9 @@
 
     function showReceiptModal(index) {
       const item = userProfile.history[index];
+      document.getElementById('recSlipSection')?.classList.add('d-none');
+      const recSlipImage=document.getElementById('recSlipImage');
+      if(recSlipImage){recSlipImage.src='';recSlipImage.classList.add('d-none');}
       document.getElementById('recUid').innerText = "QUID: " + ((typeof FDG_DEMO!=='undefined' && FDG_DEMO.qid) ? FDG_DEMO.qid : userProfile.uid);
       document.getElementById('recNo').innerText = item.rcNo;
       document.getElementById('recDate').innerText = item.date;
@@ -1855,6 +1902,12 @@
       const rem=document.getElementById('demoRemaining'); if(rem) rem.textContent='฿'+FDG_DEMO.remaining.toLocaleString(undefined,{maximumFractionDigits:2});
       const pct=Math.max(0,Math.min(100,Math.round(((FDG_DEMO.contractTotal-FDG_DEMO.remaining)/FDG_DEMO.contractTotal)*100)));
       const paid=document.getElementById('demoPaidPct'); if(paid) paid.textContent=pct+'%';
+      const demoPaidAmount=Math.max(0,FDG_DEMO.contractTotal-FDG_DEMO.remaining);
+      const hp=document.getElementById('historyPaidPct'); if(hp) hp.textContent=pct+'%';
+      const ht=document.getElementById('historyContractTotal'); if(ht) ht.textContent='฿'+Number(FDG_DEMO.contractTotal||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+      const ha=document.getElementById('historyPaidAmount'); if(ha) ha.textContent='฿'+demoPaidAmount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+      const hr=document.getElementById('historyRemainingAmount'); if(hr) hr.textContent='฿'+Number(FDG_DEMO.remaining||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+      const hb=document.getElementById('historyPaidProgress'); if(hb){hb.style.width=pct+'%';hb.setAttribute('aria-valuenow',String(pct));}
       updatePaymentChannelUI();
     }
 
@@ -1953,7 +2006,7 @@
     function switchTab(pageId){
       document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item-btn').forEach(n=>n.classList.remove('active'));
       const target=document.getElementById(pageId);if(target)target.classList.add('active');
-      const map={'page-dashboard':'navDashboard','page-payment':'navPayment','page-referral':'navReferral','page-profile':'navProfile'};if(map[pageId])document.getElementById(map[pageId])?.classList.add('active');
+      const map={'page-dashboard':'navDashboard','page-payment':'navPayment','page-history':'navHistory','page-profile':'navProfile'};if(map[pageId])document.getElementById(map[pageId])?.classList.add('active');
       window.scrollTo({top:0,behavior:'smooth'}); if(pageId==='page-payment')updatePaySummary();
     }
 
@@ -2936,7 +2989,17 @@ function updateLoanDashboard(){
   const paidPct=contractTotal>0
     ? Math.max(0,Math.min(100,((contractTotal-remaining)/contractTotal)*100))
     : 0;
+  const paidAmount=Math.max(0,contractTotal-remaining);
   setSafeText("demoPaidPct",paidPct.toFixed(0)+"%");
+  setSafeText("historyPaidPct",paidPct.toFixed(0)+"%");
+  setSafeText("historyContractTotal",money(contractTotal));
+  setSafeText("historyPaidAmount",money(paidAmount));
+  setSafeText("historyRemainingAmount",money(remaining));
+  const historyBar=document.getElementById("historyPaidProgress");
+  if(historyBar){
+    historyBar.style.width=paidPct.toFixed(2)+"%";
+    historyBar.setAttribute("aria-valuenow",paidPct.toFixed(0));
+  }
   setSafeText("effectiveInterestDisplay",liveLoan?percentFromDecimal(liveLoan.interest_rate):"-");
 
   const next=liveInstallments.find(i=>["pending","partial","late"].includes(i.status));
@@ -2974,15 +3037,88 @@ function renderRealPaymentHistory(){
   }
   body.innerHTML=livePayments.map(p=>{
     const dt=new Date(p.verified_at||p.created_at);
-    const type=p.payment_source==="RIDER_CASH"?"เงินสด Rider":p.payment_type==="INTEREST_ONLY"?"ดอกเบี้ย":"SCAN";
+    const type=p.payment_source==="RIDER_CASH"
+      ?"เงินสด Rider"
+      :p.payment_type==="INTEREST_ONLY"
+        ?"ดอกเบี้ย"
+        :"เต็มงวด";
     const amount=Number(p.amount_received||0)+Number(p.discount_amount||0);
     return `<tr>
       <td>${dt.toLocaleDateString("th-TH")}<br><span class="text-muted">${dt.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"})}</span></td>
       <td>${type}<br><span class="badge ${p.status==="verified"?"bg-success":"bg-secondary"}">${p.status}</span></td>
-      <td>${money(amount)}</td>
-      <td><span class="text-primary fw-bold">${p.payment_code||"-"}</span></td>
+      <td class="fw-bold text-primary">${money(amount)}</td>
+      <td>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-primary rounded-circle p-0"
+          style="width:30px;height:30px;"
+          onclick="showLivePaymentReceipt('${p.id}')"
+          title="ดูใบเสร็จและสลิป"
+          aria-label="ดูใบเสร็จและสลิป">
+          <i class="bi bi-info-circle"></i>
+        </button>
+      </td>
     </tr>`;
   }).join("");
+}
+
+async function showLivePaymentReceipt(paymentId){
+  const p=livePayments.find(x=>String(x.id)===String(paymentId));
+  if(!p)return;
+
+  const dt=new Date(p.verified_at||p.created_at);
+  const type=p.payment_source==="RIDER_CASH"
+    ?"ชำระเงินสดผ่าน Rider"
+    :p.payment_type==="INTEREST_ONLY"
+      ?"ชำระเฉพาะดอกเบี้ย (ดอกลอย)"
+      :"ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)";
+
+  const amountReceived=Number(p.amount_received||0);
+  const discount=Number(p.discount_amount||0);
+  const gross=Number(p.gross_due||0) || (amountReceived+discount);
+
+  setSafeText("recUid","QUID: "+(liveCustomer?.customer_code||"-"));
+  setSafeText("recNo",p.payment_code||String(p.id).slice(0,8).toUpperCase());
+  setSafeText("recDate",dt.toLocaleString("th-TH"));
+  setSafeText("recName",liveCustomer?.full_name||"-");
+  setSafeText("recType",type);
+  setSafeText("recItemTitle",type);
+  setSafeText("recBaseAmount",gross.toFixed(2));
+  setSafeText("recFineAmount","0.00");
+  setSafeText("recTotalAmount",gross.toFixed(2));
+  document.getElementById("recFineRow")?.style.setProperty("display","none");
+  setSafeText(
+    "recFineNote",
+    discount>0
+      ? `ชำระเงินจริง ${money(amountReceived)} • ใช้ Ranking เป็นส่วนลด ${money(discount)} • สถานะ ${String(p.status||"-").toUpperCase()}`
+      : `ชำระเงินจริง ${money(amountReceived)} • สถานะ ${String(p.status||"-").toUpperCase()}`
+  );
+
+  const section=document.getElementById("recSlipSection");
+  const img=document.getElementById("recSlipImage");
+  const unavailable=document.getElementById("recSlipUnavailable");
+  section?.classList.remove("d-none");
+  img?.classList.add("d-none");
+  if(img)img.src="";
+  unavailable?.classList.remove("d-none");
+  if(unavailable)unavailable.textContent="กำลังโหลดสลิป...";
+
+  if(p.evidence_path){
+    const {data,error}=await liveSb.storage
+      .from("payment-evidence")
+      .createSignedUrl(p.evidence_path,300);
+    if(!error && data?.signedUrl && img){
+      img.src=data.signedUrl;
+      img.classList.remove("d-none");
+      unavailable?.classList.add("d-none");
+    }else if(unavailable){
+      unavailable.textContent="ไม่สามารถเปิดรูปสลิปของรายการนี้ได้";
+    }
+  }else if(unavailable){
+    unavailable.textContent="รายการนี้ไม่มีรูปสลิปแนบ";
+  }
+
+  new bootstrap.Modal(document.getElementById("receiptModal")).show();
 }
 
 async function requestPaymentChannelChange(){
@@ -3050,7 +3186,7 @@ function submitPaymentSlip(){
 
 // Override switchTab to protect pages that require authentication.
 function switchTab(pageId){
-  const memberPages=["page-dashboard","page-payment","page-referral","page-profile","page-status"];
+  const memberPages=["page-dashboard","page-payment","page-history","page-profile","page-status"];
   if(memberPages.includes(pageId) && !liveSession){
     pageId="page-auth";
   }
@@ -3067,12 +3203,16 @@ function switchTab(pageId){
   const map={
     "page-dashboard":"navDashboard",
     "page-payment":"navPayment",
-    "page-referral":"navReferral",
+    "page-history":"navHistory",
     "page-profile":"navProfile"
   };
   if(map[pageId])document.getElementById(map[pageId])?.classList.add("active");
   window.scrollTo({top:0,behavior:"smooth"});
   if(pageId==="page-payment" && typeof updatePaySummary==="function")updatePaySummary();
+  if(pageId==="page-history"){
+    if(typeof updateLoanDashboard==="function")updateLoanDashboard();
+    if(typeof renderRealPaymentHistory==="function")renderRealPaymentHistory();
+  }
 }
 
 async function bootLiveCustomerApp(){
@@ -3460,7 +3600,7 @@ async function finalLoadCustomerExtras(){
   finalReferrals=rf.error?[]:(rf.data||[]);
   finalRenderPointLedger();
 
-  const boxes=document.querySelectorAll("#page-referral .performance-box strong");
+  const boxes=document.querySelectorAll("#page-profile .performance-box strong");
   if(boxes.length>=3){
     const total=finalReferrals.length;
     const qualified=finalReferrals.filter(x=>["qualified","rewarded"].includes(String(x.status))).length;
@@ -3528,6 +3668,10 @@ window.openQrModal=async function(){
     const data=created.data;
     finalOpenPayment=data;
 
+    if(data?.reused===true && String(data?.status)==="verifying"){
+      console.info("Reuse verifying payment:",data.payment_id);
+    }
+
     const amount=Number(data.real_payment_amount||0);
     const gross=Number(data.gross_due||0);
     const expectedGross=selectedPaymentType==="INTEREST_ONLY"
@@ -3565,6 +3709,39 @@ window.openQrModal=async function(){
   }
 };
 
+async function finalCallEasySlipAuto(paymentId){
+  if(!liveSession?.access_token)throw new Error("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+
+  // เรียก Edge Function ตรงจาก HTML แต่ EasySlip API KEY ยังคงอยู่ใน Supabase Secret
+  // จึงไม่เปิดเผย KEY ใน GitHub / Browser source
+  const res=await fetch(`${LIVE_SUPABASE_URL}/functions/v1/dynamic-api`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "apikey":LIVE_SUPABASE_PUBLISHABLE_KEY,
+      "Authorization":`Bearer ${liveSession.access_token}`
+    },
+    body:JSON.stringify({type:"CUSTOMER_PAYMENT",id:paymentId})
+  });
+
+  let data={};
+  try{data=await res.json();}catch(_){}
+
+  if(!res.ok || data?.status!=="verified"){
+    const err=new Error(
+      data?.message ||
+      (res.status===401?"Session ไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่":
+       res.status===429?"ระบบป้องกันการส่งสลิปซ้ำ กรุณารอสักครู่":
+       `EasySlip ตรวจสอบไม่สำเร็จ (HTTP ${res.status})`)
+    );
+    err.data=data;
+    err.httpStatus=res.status;
+    throw err;
+  }
+
+  return data;
+}
+
 window.submitPaymentSlip=async function(){
   if(!finalOpenPayment?.payment_id){
     finalNotice("กรุณาปิดหน้าต่างและกดสร้าง QR ใหม่",false);return;
@@ -3595,11 +3772,8 @@ window.submitPaymentSlip=async function(){
       finalOpenPayment.evidence_path=path;
     }
 
-    const {data,error}=await liveSb.functions.invoke("dynamic-api",{
-      body:{type:"CUSTOMER_PAYMENT",id:finalOpenPayment.payment_id}
-    });
-    if(error)throw error;
-    if(data?.status!=="verified")throw new Error(data?.message||"EasySlip ไม่อนุมัติสลิป");
+    // ตรวจ EasySlip อัตโนมัติทันที ไม่ส่งไปให้ Admin อนุมัติ
+    const data=await finalCallEasySlipAuto(finalOpenPayment.payment_id);
 
     bootstrap.Modal.getInstance(document.getElementById("qrModal"))?.hide();
     try{ removeImage(new Event("click"),"Slip"); }catch(_){}
@@ -3613,10 +3787,27 @@ window.submitPaymentSlip=async function(){
     switchTab("page-dashboard");
   }catch(e){
     console.error("Customer EasySlip",e);
-    const msg=e?.context?.body?.message||e?.message||"ตรวจสลิปไม่ผ่าน";
-    finalOpenPayment=null;
+    const msg=e?.data?.message||e?.message||"ตรวจสลิปไม่ผ่าน";
+
+    // โหลดสถานะจริงกลับมา แล้วค่อยตัด context เฉพาะเมื่อ backend ปิดรายการแล้ว
+    const paymentId=finalOpenPayment?.payment_id;
     await loadLiveAccount(false).catch(()=>{});
-    finalNotice(msg,false,"EasySlip ไม่ผ่าน");
+    const dbPayment=livePayments.find(p=>String(p.id)===String(paymentId));
+
+    if(dbPayment && ["pending","verifying"].includes(String(dbPayment.status))){
+      // ยัง retry รายการเดิมได้ ไม่ต้องให้ Admin ตรวจ
+      if(finalOpenPayment)finalOpenPayment.evidence_path=dbPayment.evidence_path||finalOpenPayment.evidence_path||null;
+    }else{
+      finalOpenPayment=null;
+    }
+
+    finalNotice(
+      msg + (dbPayment?.status==="verifying"
+        ?"\n\nระบบยังอยู่ระหว่างตรวจ EasySlip อัตโนมัติ คุณไม่ต้องรอ Admin"
+        :""),
+      false,
+      "EasySlip ไม่ผ่าน"
+    );
   }finally{
     setLiveLoading(false);
   }
