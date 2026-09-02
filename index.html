@@ -757,6 +757,7 @@
         <div class="p-3 bg-primary bg-opacity-10 rounded text-center mb-3">
           <div class="small text-muted">ยอดค่างวดปกติ (เงินต้น + ดอกเบี้ย)</div>
           <div class="h3 fw-bold text-primary my-1" id="payAmountDue">฿ 120.00</div>
+          <div class="extra-small text-muted mb-1" id="payFullBreakdown">เต็มงวด = เงินต้น + ดอกเบี้ย</div>
           <div class="extra-small text-muted">ยอดเฉพาะดอกเบี้ย (ดอกลอย): <strong id="payInterestOnly" class="text-danger">฿ 20.00</strong></div>
         </div>
 
@@ -770,7 +771,7 @@
             </label>
           </div>
           <div class="form-check border p-2 rounded">
-            <input class="form-check-input ms-1" type="radio" name="payType" id="payInterest" value="INTEREST" onchange="updatePaySummary()">
+            <input class="form-check-input ms-1" type="radio" name="payType" id="payInterest" value="INTEREST_ONLY" onchange="updatePaySummary()">
             <label class="form-check-label small fw-bold ms-2 text-danger" for="payInterest">
               ชำระเฉพาะดอกเบี้ย (ดอกลอย - ไม่ตัดเงินต้น)
             </label>
@@ -1146,7 +1147,7 @@
             <div class="promo-body">
               <div class="promo-title" id="promoTitle">ข่าวประชาสัมพันธ์</div>
               <div class="promo-hint">แตะสื่อหรือปุ่มด้านล่างเพื่อเปิดรายละเอียด • ปิดแล้วจะไม่เด้งโฆษณาตัวถัดไป</div><div class="promo-round-info" id="promoRoundInfo"></div>
-              <button class="promo-open-btn" type="button" onclick="openCurrentPromo()">
+              <button id="promoOpenBtn" class="promo-open-btn" type="button" onclick="openCurrentPromo()">
                 ดูรายละเอียด <i class="bi bi-box-arrow-up-right"></i>
               </button>
               <div class="promo-controls">
@@ -2154,6 +2155,14 @@ function renderPromo(){
     ? `กำลังดู ${promoIndex+1} / ${ads.length} • เลื่อนดูรายการอื่นได้เอง`
     : `โฆษณา ${promoIndex+1} / ${ads.length} • ปิดแล้วจะไม่เด้งรายการถัดไป`;
 
+  const target=normalizePromoTarget(ad.targetUrl);
+  const openBtn=document.getElementById("promoOpenBtn");
+  if(openBtn)openBtn.classList.toggle("d-none",!target);
+  if(wrap){
+    wrap.style.cursor=target?"pointer":"default";
+    wrap.setAttribute("aria-label",target?"เปิดรายละเอียดประชาสัมพันธ์":"สื่อประชาสัมพันธ์");
+  }
+
   stopPromoVideo();
   wrap.classList.toggle('youtube-mode',type==='youtube');
   img.classList.add('d-none');
@@ -2219,11 +2228,22 @@ function changePromo(delta){
   promoIndex+=delta;
   renderPromo();
 }
+function normalizePromoTarget(value){
+  const raw=String(value||"").trim();
+  if(!raw)return "";
+  try{
+    const u=new URL(raw,window.location.href);
+    if(!["http:","https:"].includes(u.protocol))return "";
+    return u.href;
+  }catch(_){return "";}
+}
 function openCurrentPromo(){
   const ads=activePromoAds();
   if(!ads.length)return;
   const ad=ads[((promoIndex%ads.length)+ads.length)%ads.length];
-  if(ad.targetUrl)window.open(ad.targetUrl,'_blank','noopener');
+  const target=normalizePromoTarget(ad.targetUrl);
+  if(!target)return;
+  window.open(target,'_blank','noopener,noreferrer');
 }
 
 /* ---------- Ad manager demo ---------- */
@@ -2730,7 +2750,7 @@ async function loadLiveAdvertisements(){
       title:a.title,
       mediaType:String(a.media_type||"AUTO").toLowerCase(),
       imageUrl:a.media_url,
-      targetUrl:a.target_url||"#",
+      targetUrl:a.target_url||"",
       active:true
     }));
 
@@ -2926,11 +2946,16 @@ function updateLoanDashboard(){
     setSafeText("nextInstallmentDue",`กำหนด ${new Date(next.due_date+"T00:00:00").toLocaleDateString("th-TH")}`);
     setSafeText("payAmountDue",money(outstanding));
     setSafeText("payInterestOnly",money(Number(next.interest_due||0)));
+    setSafeText(
+      "payFullBreakdown",
+      `เต็มงวด = เงินต้น ${money(Number(next.principal_due||0))} + ดอกเบี้ย ${money(Number(next.interest_due||0))}`
+    );
   }else{
     setSafeText("nextInstallmentAmount",liveLoan?.status==="completed"?"ชำระครบ":"-");
     setSafeText("nextInstallmentDue","");
     setSafeText("payAmountDue","฿0.00");
     setSafeText("payInterestOnly","฿0.00");
+    setSafeText("payFullBreakdown","เต็มงวด = เงินต้น + ดอกเบี้ย");
   }
   if(typeof updatePaySummary==="function")updatePaySummary();
 }
@@ -3487,44 +3512,47 @@ window.openQrModal=async function(){
   if(btn)btn.disabled=true;
   setLiveLoading(true,"กำลังสร้างรายการชำระเงินจริง...");
   try{
-    const existing=livePayments.find(p=>
-      String(p.installment_id)===String(next.id) &&
-      String(p.payment_source)==="CUSTOMER_SCAN" &&
-      ["pending","verifying"].includes(String(p.status))
-    );
-
-    let data;
-    if(existing){
-      data={
-        payment_id:existing.id,
-        payment_code:existing.payment_code,
-        installment_id:existing.installment_id,
-        gross_due:Number(existing.gross_due||0),
-        points_used:Number(existing.points_used||0),
-        discount_amount:Number(existing.discount_amount||0),
-        real_payment_amount:Number(existing.cash_amount||0),
-        evidence_path:existing.evidence_path||null,
-        status:existing.status
-      };
-    }else{
-      const created=await liveSb.rpc("fdg_create_customer_scan_payment",{
-        p_loan_id:liveLoan.id,
-        p_installment_id:next.id,
-        p_payment_type:finalSelectedPaymentType(),
-        p_points_requested:finalRequestedPoints()
-      });
-      if(created.error)throw created.error;
-      data=created.data;
-    }
+    // IMPORTANT:
+    // Do not reuse an old pending payment blindly.
+    // The server cancels the previous pending QR for this installment,
+    // releases reserved Ranking points, then creates a fresh request
+    // using the CURRENT payment type selected by the customer.
+    const selectedPaymentType=finalSelectedPaymentType();
+    const created=await liveSb.rpc("fdg_prepare_customer_scan_payment",{
+      p_loan_id:liveLoan.id,
+      p_installment_id:next.id,
+      p_payment_type:selectedPaymentType,
+      p_points_requested:finalRequestedPoints()
+    });
+    if(created.error)throw created.error;
+    const data=created.data;
     finalOpenPayment=data;
 
     const amount=Number(data.real_payment_amount||0);
+    const gross=Number(data.gross_due||0);
+    const expectedGross=selectedPaymentType==="INTEREST_ONLY"
+      ? Number(next.interest_due||0)
+      : Math.max(0,Number(next.amount_due||0)-Number(next.amount_paid||0));
+
+    // Guard against a stale/wrong backend payment object.
+    if(Math.abs(gross-expectedGross)>0.009){
+      throw new Error(
+        `ยอดที่ Backend สร้างไม่ตรงกับประเภทการชำระ: ต้องเป็น ${money(expectedGross)} แต่ได้ ${money(gross)}`
+      );
+    }
+    if(!(amount>0)){
+      throw new Error("ยอด QR ต้องมากกว่า 0 บาท");
+    }
+
     document.getElementById("imgPromptPayQr").src=`https://promptpay.io/${encodeURIComponent(finalPromptPayId())}/${amount.toFixed(2)}.png`;
     document.getElementById("modalQrAmount").innerText=money(amount);
     document.getElementById("modalOriginalAmount").innerText=`ยอดงวดก่อนส่วนลด: ${money(data.gross_due)}`;
     document.getElementById("modalPointDiscount").innerText=`ส่วนลด Ranking: - ${money(data.discount_amount)} (${Number(data.points_used||0).toLocaleString()} คะแนน)`;
+    const confirmedPaymentType=String(data.payment_type||selectedPaymentType);
     document.getElementById("modalPayTypeTitle").innerText=
-      finalSelectedPaymentType()==="INTEREST_ONLY"?"ชำระเฉพาะดอกเบี้ย (ไม่ตัดเงินต้น)":"ชำระเต็มงวด";
+      confirmedPaymentType==="INTEREST_ONLY"
+        ?"ชำระเฉพาะดอกเบี้ย (ดอกลอย — ไม่ตัดเงินต้น)"
+        :"ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)";
     const accountText=document.querySelector("#qrModal .modal-body .extra-small.text-muted.mb-3");
     if(accountText)accountText.innerHTML=`บัญชีรับเงิน PromptPay: <strong>${finalPromptPayId()}</strong>`;
     new bootstrap.Modal(document.getElementById("qrModal")).show();
