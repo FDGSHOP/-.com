@@ -3385,6 +3385,11 @@ window.openQrModal=async function(){
 
   const type=checkpoint2SelectedPaymentType();
   const expectedGross=checkpoint2ExpectedGross(inst,type);
+
+  // Force a fresh Server quote at the moment the customer requests a QR.
+  // This prevents device clock manipulation and handles crossing 18:00 exactly.
+  const quote=await checkpoint2cLoadQuote({force:true});
+
   if(!(expectedGross>0)){
     liveToast("งวดนี้ไม่มียอดที่ต้องชำระ",false);
     return;
@@ -3423,20 +3428,24 @@ window.openQrModal=async function(){
         ?"ชำระเฉพาะดอกเบี้ย (ดอกลอย — ไม่ตัดเงินต้น)"
         :"ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)";
 
+    const lateFee=Number(data.late_fee_amount||0);
+    const totalBeforePoints=Number(data.total_before_points||gross+lateFee);
+
     document.getElementById("modalQrAmount").textContent=money(realAmount);
     document.getElementById("modalOriginalAmount").textContent=
-      `ยอดก่อนใช้ Ranking: ${money(gross)}`;
+      `ค่างวด ${money(gross)} + ค่าปรับ ${money(lateFee)} = ${money(totalBeforePoints)}`;
     document.getElementById("modalPointDiscount").textContent=
       `ส่วนลด Ranking: - ${money(Number(data.discount_amount||0))} (${Number(data.points_used||0).toLocaleString()} คะแนน)`;
 
     // Keep the page summary aligned to the server-authoritative amount.
-    setSafeText("summaryBasePay",money(gross));
-    setSafeText("summaryFine",money(0));
-    setSafeText("summaryTotalPay",money(gross));
-    setSafeText("summaryFinalPayMirror",money(realAmount));
-    setSafeText("summaryPayAfterPoints",money(realAmount));
-    document.getElementById("rowFine")?.style.setProperty("display","none");
-    document.getElementById("fineReasonText")?.style.setProperty("display","none");
+    checkpoint2cRenderQuote({
+      contract_due:gross,
+      late_fee_amount:lateFee,
+      discount_amount:Number(data.discount_amount||0),
+      total_before_points:totalBeforePoints,
+      real_payment_amount:realAmount,
+      cutoff_hour:Number(data.cutoff_hour||18)
+    });
 
     document.getElementById("imgPromptPayQr").src=
       `https://promptpay.io/${encodeURIComponent(PROMPTPAY_PHONE)}/${realAmount.toFixed(2)}.png`;
@@ -3584,6 +3593,9 @@ window.submitPaymentSlip=async function(){
     bootstrap.Modal.getInstance(document.getElementById("qrModal"))?.hide();
     checkpoint2ClearSlipPreview();
     checkpoint2OpenPayment=null;
+    checkpoint2cQuote=null;
+    checkpoint2cQuoteKey="";
+    checkpoint2cQuoteAt=0;
 
     const dbPay=confirmed.payment||{};
     const paid=Number(dbPay.amount_received||result?.amount||0);
@@ -3645,6 +3657,80 @@ window.updateLoanDashboard=function(){
   document.getElementById("fineReasonText")?.style.setProperty("display","none");
 };
 
+// ============================================================
+// CHECKPOINT 2C — SERVER-SIDE LATE FEE QUOTE
+// The old clock may call updatePaySummary every second.
+// We cache the server quote for 30s to avoid spamming Supabase.
+// The prepare RPC is still the final authority at QR creation time.
+// ============================================================
+let checkpoint2cQuote=null;
+let checkpoint2cQuoteKey="";
+let checkpoint2cQuoteAt=0;
+let checkpoint2cQuoteSeq=0;
+
+function checkpoint2cRenderQuote(q){
+  if(!q)return;
+  const contractDue=Number(q.contract_due||0);
+  const lateFee=Number(q.late_fee_amount||0);
+  const discount=Number(q.discount_amount||0);
+  const beforePoints=Number(q.total_before_points||contractDue+lateFee);
+  const realAmount=Number(q.real_payment_amount||beforePoints-discount);
+
+  setSafeText("summaryBasePay",money(contractDue));
+  setSafeText("summaryFine",money(lateFee));
+  setSafeText("summaryPointDiscount",`- ${money(discount)}`);
+  setSafeText("summaryTotalPay",money(beforePoints));
+  setSafeText("summaryFinalPayMirror",money(realAmount));
+  setSafeText("summaryPayAfterPoints",money(realAmount));
+
+  const rowFine=document.getElementById("rowFine");
+  const fineText=document.getElementById("fineReasonText");
+  if(lateFee>0){
+    rowFine?.style.setProperty("display","flex");
+    fineText?.style.setProperty("display","block");
+    if(fineText){
+      fineText.textContent=
+        `* ชำระหลัง ${String(q.cutoff_hour||18).padStart(2,"0")}:00 น. `+
+        `(เวลาไทย) ระบบเพิ่มค่าปรับ ${money(lateFee)} โดย Server`;
+    }
+  }else{
+    rowFine?.style.setProperty("display","none");
+    fineText?.style.setProperty("display","none");
+  }
+}
+
+async function checkpoint2cLoadQuote({force=false}={}){
+  if(!liveSession || !liveLoan || String(liveLoan.status)!=="active")return null;
+  const inst=checkpoint2CurrentInstallment();
+  if(!inst)return null;
+
+  const type=checkpoint2SelectedPaymentType();
+  const points=checkpoint2RequestedPoints();
+  const key=`${liveLoan.id}|${inst.id}|${type}|${points}`;
+  const now=Date.now();
+
+  if(!force && checkpoint2cQuote && checkpoint2cQuoteKey===key && now-checkpoint2cQuoteAt<30000){
+    checkpoint2cRenderQuote(checkpoint2cQuote);
+    return checkpoint2cQuote;
+  }
+
+  const seq=++checkpoint2cQuoteSeq;
+  const {data,error}=await liveSb.rpc("fdg_customer_payment_quote",{
+    p_loan_id:liveLoan.id,
+    p_installment_id:inst.id,
+    p_payment_type:type,
+    p_points_requested:points
+  });
+  if(error)throw error;
+  if(seq!==checkpoint2cQuoteSeq)return checkpoint2cQuote;
+
+  checkpoint2cQuote=data||null;
+  checkpoint2cQuoteKey=key;
+  checkpoint2cQuoteAt=Date.now();
+  checkpoint2cRenderQuote(checkpoint2cQuote);
+  return checkpoint2cQuote;
+}
+
 // Override old demo summary so FULL cannot accidentally inherit the interest-only value.
 window.updatePaySummary=function(){
   const inst=checkpoint2CurrentInstallment();
@@ -3654,17 +3740,20 @@ window.updatePaySummary=function(){
     setSafeText("summaryTotalPay",money(0));
     setSafeText("summaryFinalPayMirror",money(0));
     setSafeText("summaryPayAfterPoints",money(0));
+    document.getElementById("rowFine")?.style.setProperty("display","none");
+    document.getElementById("fineReasonText")?.style.setProperty("display","none");
     return;
   }
+
+  // Immediate local base display while the server quote loads.
   const type=checkpoint2SelectedPaymentType();
-  const gross=checkpoint2ExpectedGross(inst,type);
-  setSafeText("summaryBasePay",money(gross));
-  setSafeText("summaryFine",money(0));
-  setSafeText("summaryTotalPay",money(gross));
-  setSafeText("summaryFinalPayMirror",money(gross));
-  setSafeText("summaryPayAfterPoints",money(gross));
-  document.getElementById("rowFine")?.style.setProperty("display","none");
-  document.getElementById("fineReasonText")?.style.setProperty("display","none");
+  const contractDue=checkpoint2ExpectedGross(inst,type);
+  setSafeText("summaryBasePay",money(contractDue));
+
+  checkpoint2cLoadQuote().catch(err=>{
+    console.warn("Late-fee quote unavailable:",err);
+    // Do not invent a fee from device time. QR creation will ask Server again.
+  });
 };
 </script>
 
