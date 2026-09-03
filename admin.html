@@ -345,6 +345,32 @@
                         </div>
                     </div>
 
+                    <div class="bg-white rounded-xl shadow overflow-hidden">
+                        <div class="p-4 border-b flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-gray-700">มอบหมายงาน CASH ให้ Rider</div>
+                                <div class="text-xs text-gray-500">ระบบตรวจพื้นที่ที่ Master อนุมัติ + CASH LOCK ก่อนมอบหมายจริง</div>
+                            </div>
+                            <button onclick="checkpoint4RefreshManagement()" class="text-xs font-bold text-indigo-600">↻ รีเฟรช</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="p-3">งาน / ลูกค้า</th>
+                                        <th class="p-3">กำหนด / ยอด</th>
+                                        <th class="p-3">พื้นที่</th>
+                                        <th class="p-3">Rider ปัจจุบัน</th>
+                                        <th class="p-3">มอบหมาย</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="checkpoint4-assignment-list">
+                                    <tr><td colspan="5" class="p-4 text-center text-gray-400">กำลังโหลด...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <div class="bg-white rounded-xl shadow p-4 space-y-3">
                         <h3 class="font-bold text-red-600 text-sm flex items-center gap-1">
                             <i data-lucide="alert-triangle" class="w-4 h-4"></i> หมายเหตุจากไรเดอร์ (งานที่ติดปัญหา / ขอเลื่อน / ไม่สามารถติดต่อได้)
@@ -405,16 +431,35 @@
                                 <option value="rider">Rider (ไรเดอร์ - คอมฯ 7%)</option>
                                 <option value="admin">Admin (แอดมิน - อนุมัติสินเชื่อ)</option>
                             </select>
-                            <input type="text" id="new-user-username" placeholder="Username" class="p-2 border rounded text-sm">
+                            <input type="email" id="new-user-username" placeholder="Email สำหรับ Login" class="p-2 border rounded text-sm">
                             <input type="password" id="new-user-password" placeholder="Password" class="p-2 border rounded text-sm">
                             <input type="text" id="new-user-bankname" placeholder="ชื่อธนาคาร (เช่น กสิกร, ไทยพาณิชย์)" class="p-2 border rounded text-sm">
                             <input type="text" id="new-user-bankacc" placeholder="เลขบัญชีธนาคาร" class="p-2 border rounded text-sm">
                             <textarea id="new-user-address" placeholder="ที่อยู่ปัจจุบัน" class="p-2 border rounded text-sm md:col-span-2" rows="2"></textarea>
                         </div>
                         <div class="flex items-center justify-between">
-                            <p class="text-xs text-amber-600">* บัญชีที่สร้างจะต้องรอ Master อนุมัติการใช้งาน</p>
-                            <button onclick="createUser()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold text-sm">สร้างบัญชีพนักงาน</button>
+                            <p class="text-xs text-amber-600">* Master สร้างแล้วใช้งานได้ทันที • ทุกการเปลี่ยนแปลงมี Audit Log</p>
+                            <button onclick="checkpoint4CreateStaff()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold text-sm">สร้างบัญชีพนักงาน</button>
                         </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl shadow space-y-3">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold">พื้นที่ทำงาน Rider</h3>
+                                <p class="text-xs text-gray-500">Master อนุมัติ/ถอนพื้นที่ • Admin มอบหมายงานได้เฉพาะพื้นที่ที่อนุมัติแล้ว</p>
+                            </div>
+                            <button onclick="checkpoint4RefreshManagement()" class="text-xs font-bold text-indigo-600">↻ รีเฟรช</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <select id="checkpoint4-area-rider" class="p-2 border rounded text-sm"></select>
+                            <select id="checkpoint4-area-id" class="p-2 border rounded text-sm"></select>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="checkpoint4SetArea('APPROVE')" class="bg-emerald-600 text-white rounded font-bold text-sm p-2">อนุมัติพื้นที่</button>
+                                <button onclick="checkpoint4SetArea('REVOKE')" class="bg-red-600 text-white rounded font-bold text-sm p-2">ถอนพื้นที่</button>
+                            </div>
+                        </div>
+                        <div id="checkpoint4-area-summary" class="text-xs text-gray-500"></div>
                     </div>
 
                     <div class="bg-white rounded-xl shadow overflow-hidden">
@@ -1919,7 +1964,6 @@ function renderLiveAdmin(){
 
   // Hide legacy areas that still mutate mock data.
   const selectors=[
-    'a[onclick*="showAdminTab(\'users\')"]',
     'a[onclick*="showAdminTab(\'approve\')"]',
     'a[onclick*="showAdminTab(\'slips\')"]',
     'a[onclick*="showAdminTab(\'remit\')"]',
@@ -2152,6 +2196,373 @@ openDashboard=function(role){
 window.addEventListener("load",()=>setTimeout(bootAdminSession,900));
 </script>
 
+
+<script>
+/* ============================================================
+   CHECKPOINT 4 — LIVE STAFF / RIDER MANAGEMENT
+   ============================================================ */
+let checkpoint4Staff=[];
+let checkpoint4Areas=[];
+let checkpoint4Jobs=[];
+let checkpoint4Busy=false;
+
+async function checkpoint4Edge(body){
+  const {data:s}=await adminSb.auth.getSession();
+  const token=s?.session?.access_token;
+  if(!token)throw new Error("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+
+  const res=await fetch(`${ADMIN_SUPABASE_URL}/functions/v1/dynamic-api`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "apikey":ADMIN_SUPABASE_KEY,
+      "Authorization":`Bearer ${token}`
+    },
+    body:JSON.stringify(body)
+  });
+  let data={};
+  try{data=await res.json();}catch(_){}
+  if(!res.ok || data?.status==="error"){
+    throw new Error(data?.message||`ดำเนินการไม่สำเร็จ (HTTP ${res.status})`);
+  }
+  return data;
+}
+
+function checkpoint4RoleBadge(role){
+  const r=String(role||"");
+  if(r==="master")return '<span class="px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">MASTER</span>';
+  if(r==="admin")return '<span class="px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold">ADMIN</span>';
+  return '<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">RIDER</span>';
+}
+
+function checkpoint4StatusHtml(u){
+  if(u.deleted_at)return '<span class="text-slate-500 font-bold">ARCHIVED</span>';
+  if(String(u.status)==="active")return '<span class="text-emerald-600 font-bold">ACTIVE</span>';
+  return '<span class="text-red-600 font-bold">SUSPENDED</span>';
+}
+
+function checkpoint4AreaChips(areas){
+  if(!Array.isArray(areas)||!areas.length)return '<span class="text-gray-400">ยังไม่มีพื้นที่</span>';
+  return areas.map(a=>`<span class="inline-block bg-blue-50 text-blue-700 rounded-full px-2 py-0.5 mr-1 mb-1">${liveEsc(a.display_name)}</span>`).join("");
+}
+
+function checkpoint4RenderStaff(){
+  const body=document.getElementById("admin-user-list");
+  if(!body)return;
+
+  const visible=checkpoint4Staff.filter(u=>["master","admin","rider"].includes(String(u.role)));
+  if(!visible.length){
+    body.innerHTML='<tr><td colspan="5" class="p-4 text-center text-gray-400">ไม่พบบัญชีพนักงาน</td></tr>';
+    return;
+  }
+
+  body.innerHTML=visible.map(u=>{
+    const masterTarget=String(u.role)!=="master";
+    const archived=!!u.deleted_at;
+    const cash=Number(u.company_money_outstanding||0);
+    const jobs=Number(u.open_jobs||0);
+
+    let actions='<span class="text-xs text-gray-400">ดูข้อมูล</span>';
+    if(isMaster && masterTarget){
+      if(archived){
+        actions=`<button onclick="checkpoint4RestoreStaff('${u.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold">กู้คืน</button>`;
+      }else{
+        const suspendAction=String(u.status)==="active"?"suspended":"active";
+        const suspendText=String(u.status)==="active"?"ระงับ":"ปลดระงับ";
+        const suspendClass=String(u.status)==="active"?"bg-amber-500":"bg-emerald-600";
+        actions=`
+          <div class="flex gap-1 flex-wrap">
+            <button onclick="checkpoint4SetStatus('${u.id}','${suspendAction}')" class="${suspendClass} text-white px-2 py-1 rounded text-xs font-bold">${suspendText}</button>
+            <button onclick="checkpoint4ArchiveStaff('${u.id}')" class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">ลบบัญชี</button>
+          </div>`;
+      }
+    }
+
+    return `<tr class="border-b align-top">
+      <td class="p-3">
+        <div class="font-bold">${liveEsc(u.display_name||u.username||"-")}</div>
+        <div class="text-xs text-gray-500">${liveEsc(u.username||"-")}</div>
+        <div class="text-xs text-gray-400">📞 ${liveEsc(u.phone||"-")}</div>
+        ${u.role==="rider"?`<div class="mt-1 text-xs">${checkpoint4AreaChips(u.approved_areas)}</div>`:""}
+      </td>
+      <td class="p-3">
+        ${checkpoint4RoleBadge(u.role)}
+        ${u.role==="rider"?`<div class="text-xs mt-2 text-emerald-700">คอมฯ ${(Number(u.commission_rate||0)*100).toFixed(0)}%</div>`:""}
+        ${u.role==="admin"?`<div class="text-xs mt-2 text-indigo-700">เงินเดือน ${liveMoney(u.base_salary)}</div>`:""}
+      </td>
+      <td class="p-3 text-xs">
+        <div>${liveEsc(u.bank_name||"ยังไม่ระบุ")}</div>
+        <div class="font-mono">${liveEsc(u.bank_account_number||"-")}</div>
+        <div class="text-gray-400 mt-1">${liveEsc(u.address||"")}</div>
+      </td>
+      <td class="p-3 text-xs">
+        ${checkpoint4StatusHtml(u)}
+        ${u.role==="rider"?`
+          <div class="mt-2">เงินบริษัทค้าง: <b class="${cash>0?"text-red-600":"text-emerald-600"}">${liveMoney(cash)}</b></div>
+          <div>งานเปิด: <b>${jobs}</b></div>`:""}
+        ${archived&&u.delete_reason?`<div class="text-[10px] text-gray-400 mt-1">${liveEsc(u.delete_reason)}</div>`:""}
+      </td>
+      <td class="p-3">${actions}</td>
+    </tr>`;
+  }).join("");
+
+  const riderSel=document.getElementById("checkpoint4-area-rider");
+  if(riderSel){
+    const prev=riderSel.value;
+    riderSel.innerHTML='<option value="">เลือก Rider</option>'+
+      checkpoint4Staff
+        .filter(u=>u.role==="rider"&&!u.deleted_at)
+        .map(u=>`<option value="${u.id}">${liveEsc(u.display_name||u.username)}</option>`).join("");
+    if([...riderSel.options].some(o=>o.value===prev))riderSel.value=prev;
+  }
+
+  const areaSel=document.getElementById("checkpoint4-area-id");
+  if(areaSel){
+    const prev=areaSel.value;
+    areaSel.innerHTML='<option value="">เลือกพื้นที่</option>'+
+      checkpoint4Areas.map(a=>`<option value="${a.id}">${liveEsc(a.display_name)}</option>`).join("");
+    if([...areaSel.options].some(o=>o.value===prev))areaSel.value=prev;
+  }
+
+  const badge=document.getElementById("master-badge-indicator");
+  if(badge){
+    badge.textContent=isMaster
+      ?"Master: สร้าง / ระงับ / ลบ / พื้นที่"
+      :"Admin: ดูบัญชี + มอบหมายงาน";
+  }
+}
+
+function checkpoint4EligibleRiderOptions(job){
+  const areaId=String(job.area_id||"");
+  return checkpoint4Staff
+    .filter(u=>{
+      if(u.role!=="rider"||u.deleted_at||String(u.status)!=="active")return false;
+      if(Number(u.company_money_outstanding||0)>0)return false;
+      return (u.approved_areas||[]).some(a=>String(a.area_id)===areaId);
+    })
+    .map(u=>`<option value="${u.id}" ${String(job.rider_id||"")===String(u.id)?"selected":""}>${liveEsc(u.display_name||u.username)}</option>`)
+    .join("");
+}
+
+function checkpoint4RenderAssignments(){
+  const body=document.getElementById("checkpoint4-assignment-list");
+  if(!body)return;
+  if(!checkpoint4Jobs.length){
+    body.innerHTML='<tr><td colspan="5" class="p-4 text-center text-emerald-600 font-bold">ไม่มีงาน CASH ที่รอมอบหมาย</td></tr>';
+    return;
+  }
+
+  body.innerHTML=checkpoint4Jobs.map(j=>{
+    const options=checkpoint4EligibleRiderOptions(j);
+    return `<tr class="border-b">
+      <td class="p-3">
+        <div class="font-bold">${liveEsc(j.collection_code||"-")}</div>
+        <div class="text-xs">${liveEsc(j.customer_name||"-")} • ${liveEsc(j.customer_code||"-")}</div>
+      </td>
+      <td class="p-3 text-xs">
+        <div>${j.due_date?new Date(j.due_date+"T00:00:00").toLocaleDateString("th-TH"):"-"}</div>
+        <div class="font-bold text-indigo-600">${liveMoney(j.amount)}</div>
+        <div class="text-gray-400">${liveEsc(j.payment_type||"FULL")}</div>
+      </td>
+      <td class="p-3 text-xs">${liveEsc(j.area_name||"ไม่พบพื้นที่")}</td>
+      <td class="p-3 text-xs">${liveEsc(j.rider_name||"ยังไม่มอบหมาย")}</td>
+      <td class="p-3">
+        ${options
+          ? `<div class="flex gap-1">
+               <select id="assign-${j.id}" class="border rounded p-1 text-xs">
+                 <option value="">เลือก Rider</option>${options}
+               </select>
+               <button onclick="checkpoint4AssignJob('${j.id}')" class="bg-indigo-600 text-white rounded px-2 py-1 text-xs font-bold">มอบหมาย</button>
+             </div>`
+          : `<span class="text-xs text-red-500">ไม่มี Rider Active ที่ผ่านพื้นที่/ไม่ติด CASH LOCK</span>`
+        }
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+async function checkpoint4RefreshManagement(showMessage=false){
+  if(checkpoint4Busy)return;
+  if(!currentUser||!["admin","master"].includes(String(currentUser.role)))return;
+
+  checkpoint4Busy=true;
+  try{
+    const [staffRes,jobRes]=await Promise.all([
+      adminSb.rpc("fdg_staff_management_snapshot"),
+      adminSb.rpc("fdg_collection_assignment_snapshot")
+    ]);
+    if(staffRes.error)throw staffRes.error;
+    if(jobRes.error)throw jobRes.error;
+
+    checkpoint4Staff=staffRes.data?.staff||[];
+    checkpoint4Areas=staffRes.data?.areas||[];
+    checkpoint4Jobs=jobRes.data?.jobs||[];
+
+    checkpoint4RenderStaff();
+    checkpoint4RenderAssignments();
+
+    const summary=document.getElementById("checkpoint4-area-summary");
+    if(summary){
+      const riders=checkpoint4Staff.filter(u=>u.role==="rider"&&!u.deleted_at);
+      const approved=riders.reduce((n,u)=>n+(u.approved_areas?.length||0),0);
+      summary.textContent=`Rider ${riders.length} บัญชี • พื้นที่อนุมัติรวม ${approved} รายการ • งานรอมอบหมาย ${checkpoint4Jobs.length}`;
+    }
+
+    if(showMessage)showToast("รีเฟรชระบบจัดการ Rider/Admin แล้ว",true);
+  }catch(err){
+    console.error("Checkpoint4 refresh",err);
+    if(showMessage)showToast(err?.message||"โหลดระบบจัดการไม่สำเร็จ",false);
+  }finally{
+    checkpoint4Busy=false;
+    lucide.createIcons();
+  }
+}
+
+window.checkpoint4CreateStaff=async function(){
+  if(!isMaster){showToast("เฉพาะ Master เท่านั้นที่สร้างบัญชีได้",false);return;}
+
+  const displayName=document.getElementById("new-user-fullname")?.value.trim();
+  const phone=document.getElementById("new-user-phone")?.value.trim();
+  const role=document.getElementById("new-user-role")?.value;
+  const email=document.getElementById("new-user-username")?.value.trim();
+  const password=document.getElementById("new-user-password")?.value||"";
+  const bankName=document.getElementById("new-user-bankname")?.value.trim();
+  const bankAccount=document.getElementById("new-user-bankacc")?.value.trim();
+  const address=document.getElementById("new-user-address")?.value.trim();
+
+  if(!displayName||!email||password.length<8){
+    showToast("กรอกชื่อ Email และ Password อย่างน้อย 8 ตัวอักษร",false);return;
+  }
+
+  if(!confirm(`ยืนยันสร้างบัญชี ${role.toUpperCase()}\\n${displayName}\\n${email}`))return;
+
+  liveSetBusy(true,"กำลังสร้าง Supabase Auth + Staff Profile...");
+  try{
+    const data=await checkpoint4Edge({
+      type:"STAFF_CREATE",
+      display_name:displayName,
+      phone,
+      role,
+      email,
+      password,
+      bank_name:bankName,
+      bank_account_number:bankAccount,
+      address
+    });
+
+    ["new-user-fullname","new-user-phone","new-user-username","new-user-password",
+     "new-user-bankname","new-user-bankacc","new-user-address"].forEach(id=>{
+       const el=document.getElementById(id);if(el)el.value="";
+     });
+
+    showToast(`สร้างบัญชี ${data.role} สำเร็จ`,true);
+    await checkpoint4RefreshManagement();
+  }catch(err){
+    showToast(err?.message||"สร้างบัญชีไม่สำเร็จ",false);
+  }finally{liveSetBusy(false);}
+};
+
+window.checkpoint4SetStatus=async function(userId,status){
+  if(!isMaster){showToast("เฉพาะ Master เท่านั้น",false);return;}
+  const u=checkpoint4Staff.find(x=>String(x.id)===String(userId));
+  if(!u)return;
+
+  const text=status==="active"?"ปลดระงับ":"ระงับ";
+  if(!confirm(`ยืนยัน${text}บัญชี ${u.display_name||u.username}?`))return;
+
+  try{
+    const {error}=await adminSb.rpc("fdg_master_set_staff_status",{
+      p_user_id:userId,
+      p_status:status
+    });
+    if(error)throw error;
+    showToast(`${text}บัญชีสำเร็จ`,true);
+    await checkpoint4RefreshManagement();
+  }catch(err){showToast(err?.message||`${text}ไม่สำเร็จ`,false);}
+};
+
+window.checkpoint4ArchiveStaff=async function(userId){
+  if(!isMaster){showToast("เฉพาะ Master เท่านั้น",false);return;}
+  const u=checkpoint4Staff.find(x=>String(x.id)===String(userId));
+  if(!u)return;
+
+  const reason=prompt(
+    `ลบบัญชี ${u.display_name||u.username}\\nระบบจะปิดสิทธิ์ Login แต่เก็บประวัติการเงินไว้\\nกรอกเหตุผล:`,
+    "ยกเลิกบัญชีพนักงาน"
+  );
+  if(reason===null)return;
+  if(!confirm("ยืนยันลบบัญชีแบบ Archive? ประวัติธุรกรรมจะไม่ถูกลบ"))return;
+
+  try{
+    const {error}=await adminSb.rpc("fdg_master_archive_staff_account",{
+      p_user_id:userId,
+      p_reason:reason
+    });
+    if(error)throw error;
+    showToast("ลบบัญชีเรียบร้อย • เก็บประวัติไว้ครบ",true);
+    await checkpoint4RefreshManagement();
+  }catch(err){showToast(err?.message||"ลบบัญชีไม่สำเร็จ",false);}
+};
+
+window.checkpoint4RestoreStaff=async function(userId){
+  if(!isMaster){showToast("เฉพาะ Master เท่านั้น",false);return;}
+  try{
+    const {error}=await adminSb.rpc("fdg_master_restore_staff_account",{p_user_id:userId});
+    if(error)throw error;
+    showToast("กู้คืนบัญชีสำเร็จ",true);
+    await checkpoint4RefreshManagement();
+  }catch(err){showToast(err?.message||"กู้คืนบัญชีไม่สำเร็จ",false);}
+};
+
+window.checkpoint4SetArea=async function(action){
+  if(!isMaster){showToast("เฉพาะ Master เท่านั้นที่อนุมัติ/ถอนพื้นที่",false);return;}
+  const riderId=document.getElementById("checkpoint4-area-rider")?.value;
+  const areaId=document.getElementById("checkpoint4-area-id")?.value;
+  if(!riderId||!areaId){showToast("เลือก Rider และพื้นที่ก่อน",false);return;}
+
+  try{
+    const {error}=await adminSb.rpc("fdg_master_set_rider_area",{
+      p_rider_id:riderId,
+      p_area_id:areaId,
+      p_action:action
+    });
+    if(error)throw error;
+    showToast(action==="APPROVE"?"อนุมัติพื้นที่แล้ว":"ถอนพื้นที่แล้ว",true);
+    await checkpoint4RefreshManagement();
+  }catch(err){showToast(err?.message||"จัดการพื้นที่ไม่สำเร็จ",false);}
+};
+
+window.checkpoint4AssignJob=async function(collectionId){
+  const riderId=document.getElementById(`assign-${collectionId}`)?.value;
+  if(!riderId){showToast("เลือก Rider ก่อน",false);return;}
+
+  try{
+    const {data,error}=await adminSb.rpc("fdg_assign_collection_rider",{
+      p_collection_id:collectionId,
+      p_rider_id:riderId
+    });
+    if(error)throw error;
+    showToast("มอบหมายงานให้ Rider สำเร็จ",true);
+    await checkpoint4RefreshManagement();
+  }catch(err){
+    const msg=String(err?.message||"");
+    if(msg.includes("RIDER_AREA_NOT_APPROVED"))showToast("Rider ยังไม่ได้รับอนุมัติพื้นที่ของลูกค้ารายนี้",false);
+    else if(msg.includes("RIDER_CASH_LOCKED_OR_UNAVAILABLE"))showToast("Rider ติด CASH LOCK / ไม่พร้อมรับงาน",false);
+    else showToast(msg||"มอบหมายงานไม่สำเร็จ",false);
+  }
+};
+
+// Refresh on opening relevant tabs.
+const checkpoint4BaseShowAdminTab=window.showAdminTab;
+window.showAdminTab=function(tab){
+  checkpoint4BaseShowAdminTab(tab);
+  if(tab==="users"||tab==="loans")checkpoint4RefreshManagement(false);
+};
+
+// Initial load after staff login.
+setTimeout(()=>checkpoint4RefreshManagement(false),1200);
+</script>
+
 </body>
 </html>
 
@@ -2349,7 +2760,18 @@ function phase2d2PendingRemittance(){
 }
 function phase2d2IsSettlementOnly(){
   const state=String(liveRiderDashboard?.state||"OFFLINE");
-  return state==="CASH_LOCKED" || state==="SETTLEMENT_PENDING" || !!phase2d2PendingRemittance();
+  const amount=phase2d2Outstanding();
+  const pending=phase2d2PendingRemittance();
+
+  // ถ้า Backend ยืนยันแล้วว่ายอดค้าง = 0 และไม่มีรายการกำลังตรวจ
+  // ห้ามค้างหน้า CASH LOCK แม้ state เดิมใน DOM/response รอบก่อนยังไม่เปลี่ยน
+  if(amount<=0 && !pending)return false;
+
+  return amount>0 && (
+    state==="CASH_LOCKED" ||
+    state==="SETTLEMENT_PENDING" ||
+    !!pending
+  );
 }
 function phase2d2CurrentCustomer(id){
   return liveRiderCustomers.find(c=>String(c.id)===String(id))||null;
@@ -2573,6 +2995,33 @@ function phase2d2StartRiderRefresh(){
 }
 
 /* ---------- RIDER RENDER ---------- */
+async function phase2d2RefreshSettlementUI({showMessage=true}={}){
+  try{
+    if(showMessage)showToast("กำลังรีเฟรชยอดเงินบริษัท...",true);
+
+    // อ่านสถานะจริงซ้ำสั้น ๆ เผื่อ UI เดิมยังถือ response ก่อน finalize
+    for(let i=0;i<3;i++){
+      await loadLiveRiderData({silent:true});
+      if(phase2d2Outstanding()<=0 && !phase2d2PendingRemittance())break;
+      await new Promise(r=>setTimeout(r,350));
+    }
+
+    renderRider();
+
+    if(phase2d2Outstanding()<=0 && !phase2d2PendingRemittance()){
+      if(showMessage)showToast("ยอดเงินบริษัทเป็น 0 แล้ว • CASH LOCK ถูกปลด",true);
+      return true;
+    }
+
+    if(showMessage)showToast("ยังพบยอดค้างจากฐานข้อมูล กรุณารีเฟรชอีกครั้ง",false);
+    return false;
+  }catch(err){
+    console.error("Refresh settlement UI",err);
+    if(showMessage)showToast(err?.message||"รีเฟรชสถานะไม่สำเร็จ",false);
+    return false;
+  }
+}
+
 function phase2d2RenderSettlementMode(){
   phase2d2InitShell();
   const box=document.getElementById("rider-settlement-mode");
@@ -2627,7 +3076,14 @@ function phase2d2RenderSettlementMode(){
             ชำระคืนบริษัท ${liveMoney(amount)}
           </button>
         `}
-        <button onclick="openHistoryModal()" class="w-full border border-slate-300 text-slate-700 p-2.5 rounded-xl font-bold text-sm">ดูประวัติการนำส่งเงิน</button>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="phase2d2RefreshSettlementUI()" class="w-full border border-emerald-300 text-emerald-700 p-2.5 rounded-xl font-bold text-sm">
+            ↻ รีเฟรชยอด
+          </button>
+          <button onclick="openHistoryModal()" class="w-full border border-slate-300 text-slate-700 p-2.5 rounded-xl font-bold text-sm">
+            ดูประวัติ
+          </button>
+        </div>
       </div>
     </div>`;
   return true;
@@ -2964,7 +3420,36 @@ async function phase2eVerifyRiderRemittance(remittanceId,{quiet=false}={}){
       e.data=data;
       throw e;
     }
-    await loadLiveRiderData({silent:true});
+    // Server ตอบ VERIFIED แล้ว: อัปเดต UI ทันทีเพื่อไม่ให้ CASH LOCK เก่าค้างบนจอ
+    if(data?.status==="verified"){
+      liveRiderRemittances=liveRiderRemittances.map(r=>
+        String(r.id)===String(remittanceId)
+          ? {...r,status:"verified",verified_at:new Date().toISOString()}
+          : r
+      );
+
+      if(liveRiderDashboard){
+        liveRiderDashboard.today_remaining_company_money=0;
+        liveRiderDashboard.cash_lock={
+          ...(liveRiderDashboard.cash_lock||{}),
+          cash_locked:false,
+          remaining_company_money:0
+        };
+        const oldState=String(liveRiderDashboard.state||"OFFLINE");
+        if(["CASH_LOCKED","SETTLEMENT_PENDING"].includes(oldState)){
+          liveRiderDashboard.state="OFFLINE";
+        }
+      }
+
+      renderRider();
+      document.getElementById("modal-history")?.classList.add("hidden");
+
+      // แล้วอ่าน Supabase จริงซ้ำเพื่อยืนยัน state หลัง finalize
+      await phase2d2RefreshSettlementUI({showMessage:false});
+    }else{
+      await loadLiveRiderData({silent:true});
+    }
+
     showToast(`✓ EasySlip VERIFIED • คืนบริษัท ${liveMoney(data?.amount||0)} เรียบร้อย`,true);
     return data;
   }catch(err){
@@ -3031,7 +3516,11 @@ async function startRemitLoadingProcess(){
       if(desc)desc.innerText="ยอดเงินสดยังคงค้างอยู่ กรุณาดูประวัติและส่งสลิปใหม่";
     }
 
-    await loadLiveRiderData({silent:true});
+    if(verified?.status==="verified"){
+      await phase2d2RefreshSettlementUI({showMessage:false});
+    }else{
+      await loadLiveRiderData({silent:true});
+    }
     setTimeout(()=>modal.classList.add("hidden"),1800);
   }catch(err){
     console.error(err);
