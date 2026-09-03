@@ -3432,7 +3432,9 @@ window.openQrModal=async function(){
     // Keep the page summary aligned to the server-authoritative amount.
     setSafeText("summaryBasePay",money(gross));
     setSafeText("summaryFine",money(0));
-    setSafeText("summaryTotalPay",money(realAmount));
+    setSafeText("summaryTotalPay",money(gross));
+    setSafeText("summaryFinalPayMirror",money(realAmount));
+    setSafeText("summaryPayAfterPoints",money(realAmount));
     document.getElementById("rowFine")?.style.setProperty("display","none");
     document.getElementById("fineReasonText")?.style.setProperty("display","none");
 
@@ -3565,6 +3567,8 @@ window.updateLoanDashboard=function(){
   setSafeText("summaryBasePay",money(gross));
   setSafeText("summaryFine",money(0));
   setSafeText("summaryTotalPay",money(gross));
+  setSafeText("summaryFinalPayMirror",money(gross));
+  setSafeText("summaryPayAfterPoints",money(gross));
   document.getElementById("rowFine")?.style.setProperty("display","none");
   document.getElementById("fineReasonText")?.style.setProperty("display","none");
 };
@@ -3576,6 +3580,8 @@ window.updatePaySummary=function(){
     setSafeText("summaryBasePay",money(0));
     setSafeText("summaryFine",money(0));
     setSafeText("summaryTotalPay",money(0));
+    setSafeText("summaryFinalPayMirror",money(0));
+    setSafeText("summaryPayAfterPoints",money(0));
     return;
   }
   const type=checkpoint2SelectedPaymentType();
@@ -3583,6 +3589,8 @@ window.updatePaySummary=function(){
   setSafeText("summaryBasePay",money(gross));
   setSafeText("summaryFine",money(0));
   setSafeText("summaryTotalPay",money(gross));
+  setSafeText("summaryFinalPayMirror",money(gross));
+  setSafeText("summaryPayAfterPoints",money(gross));
   document.getElementById("rowFine")?.style.setProperty("display","none");
   document.getElementById("fineReasonText")?.style.setProperty("display","none");
 };
