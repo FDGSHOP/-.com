@@ -6,7 +6,7 @@
   <title>สินเชื่อเพื่อคนพะเยา</title>
   
   <!-- PWA Metadata -->
-  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="manifest" href="phayao-clean-manifest.json">
   <meta name="theme-color" content="#1e5bb8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -40,7 +40,7 @@
 
 
     /* =========================================================
-       CUSTOMER MEMBER UI
+       FDG MONNY - MERGED CUSTOMER UI PREVIEW
        Responsive + Member + Ranking + QUID + Point Redemption
        ========================================================= */
     html { -webkit-text-size-adjust: 100%; }
@@ -110,7 +110,7 @@
     .demo-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 7px; border-radius:999px; background:#fff3cd; color:#785d00; font-size:9px; font-weight:850; border:1px solid #eedc9f; }
 
     .member-only-nav { display:flex; }
-    #page-dashboard .card-box, #page-history .card-box { overflow:hidden; }
+    #page-dashboard .card-box, #page-referral .card-box { overflow:hidden; }
     #btnCreateQr:disabled { background:#9aa7b9; }
 
     @media (max-width:359px){
@@ -744,20 +744,19 @@
       </div>
     </div>
 
-    <!-- PAGE 5: ตารางส่งเงินรายวัน & Server Time -->
+    <!-- PAGE 5: ตารางส่งเงินรายวัน & Fox Server Time Check -->
     <div id="page-payment" class="page-section">
       <div class="card-box">
         <h6 class="fw-bold mb-2"><i class="bi bi-receipt text-primary me-1"></i>ชำระค่างวดประจำวัน</h6>
         
         <!-- แจ้งเตือนเวลา Server -->
         <div id="serverTimeBanner" class="p-2 bg-light border rounded mb-3 text-center extra-small">
-          <i class="bi bi-clock-history"></i> เวลาอ้างอิงระบบ: <strong id="clockDisplay">กำลังโหลด...</strong>
+          <i class="bi bi-clock-history"></i> เวลา Server กลาง (Fox Check): <strong id="clockDisplay">กำลังโหลด...</strong>
         </div>
 
         <div class="p-3 bg-primary bg-opacity-10 rounded text-center mb-3">
           <div class="small text-muted">ยอดค่างวดปกติ (เงินต้น + ดอกเบี้ย)</div>
           <div class="h3 fw-bold text-primary my-1" id="payAmountDue">฿ 120.00</div>
-          <div class="extra-small text-muted mb-1" id="payFullBreakdown">เต็มงวด = เงินต้น + ดอกเบี้ย</div>
           <div class="extra-small text-muted">ยอดเฉพาะดอกเบี้ย (ดอกลอย): <strong id="payInterestOnly" class="text-danger">฿ 20.00</strong></div>
         </div>
 
@@ -822,7 +821,7 @@
       </div>
     </div>
 
-    <!-- PAGE 6: โปรไฟล์ + Ranking + แนะนำเพื่อน -->
+    <!-- PAGE 6: โปรไฟล์ + UID + ประวัติชำระเงิน + ใบเสร็จ -->
     <div id="page-profile" class="page-section">
 
       <div class="rank-panel">
@@ -864,7 +863,56 @@
         </div>
       </div>
 
-      <!-- แนะนำเพื่อนย้ายมาอยู่ในโปรไฟล์ตามโครงสร้างเดิม -->
+      <!-- ตารางประวัติการชำระเงิน -->
+      <div class="card-box">
+        <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติการชำระเงิน & ใบเสร็จ</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered extra-small text-center align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>วันที่/เวลา</th>
+                <th>ประเภท</th>
+                <th>จำนวนเงิน</th>
+                <th>ใบเสร็จ</th>
+              </tr>
+            </thead>
+            <tbody id="payHistoryList">
+              <tr>
+                <td colspan="4" class="text-muted py-3">ยังไม่มีประวัติการชำระเงิน</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <div class="card-box">
+        <div class="d-flex justify-content-between align-items-center gap-2">
+          <div><div class="small fw-bold">ช่องทางชำระ</div><div class="extra-small text-muted">ลูกค้าส่งคำขอเปลี่ยน แอดมินเป็นผู้แก้ไข/มอบงาน</div></div>
+          <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold" onclick="requestPaymentChannelChange()">แจ้งขอเปลี่ยน</button>
+        </div>
+      </div>
+
+      <div class="card-box ad-admin-preview">
+        <div class="d-flex justify-content-between align-items-center gap-3">
+          <div>
+            <div class="small fw-bold"><i class="bi bi-badge-ad-fill text-primary me-1"></i>ตัวอย่างระบบประชาสัมพันธ์</div>
+            <div class="extra-small text-muted">ในระบบจริงเมนูนี้จะแสดงเฉพาะ Master / Admin</div>
+          </div>
+          <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold text-nowrap" onclick="openAdManager()">
+            จัดการโฆษณา
+          </button>
+        </div>
+      </div>
+
+      <div class="card-box border-warning">
+        <div class="extra-small text-muted mb-2">เฉพาะไฟล์ตัวอย่าง UI</div>
+        <button class="btn btn-sm btn-outline-danger w-100 rounded-pill fw-bold" onclick="resetDemoMember()"><i class="bi bi-arrow-counterclockwise me-1"></i>รีเซ็ตเพื่อดูขั้นตอนสมัครตั้งแต่ต้น</button>
+      </div>
+    </div>
+
+    <!-- PAGE 7: Referral -->
+    <div id="page-referral" class="page-section">
       <div class="card-box">
         <h6 class="fw-bold mb-3"><i class="bi bi-people-fill text-primary me-1"></i>แนะนำเพื่อน & Ranking</h6>
         <div class="referral-box">
@@ -880,98 +928,13 @@
           <div class="performance-box"><strong>3</strong><span>ผ่านเกณฑ์</span></div>
           <div class="performance-box"><strong>+150</strong><span>คะแนนที่ได้รับ</span></div>
         </div>
-        <div class="extra-small text-muted mt-2">Referral สำเร็จจะได้รับคะแนนตามกติกาที่ Master กำหนด</div>
+        <div class="extra-small text-muted mt-2">ตัวอย่าง: Referral สำเร็จ +50 คะแนนต่อคน คะแนนจริงและรางวัล Master สามารถตั้งค่าได้</div>
       </div>
       <div class="card-box">
         <h6 class="fw-bold mb-2"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติคะแนน</h6>
-        <div class="extra-small text-muted">รายการคะแนนจริงจะแสดงในสารบัญ Ranking ด้านบนของหน้าโปรไฟล์</div>
-      </div>
-
-      <div class="card-box">
-        <div class="d-flex justify-content-between align-items-center gap-2">
-          <div><div class="small fw-bold">ช่องทางชำระ</div><div class="extra-small text-muted">ลูกค้าส่งคำขอเปลี่ยน แอดมินเป็นผู้แก้ไข/มอบงาน</div></div>
-          <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold" onclick="requestPaymentChannelChange()">แจ้งขอเปลี่ยน</button>
-        </div>
-      </div>
-
-      <div class="card-box ad-admin-preview">
-        <div class="d-flex justify-content-between align-items-center gap-3">
-          <div>
-            <div class="small fw-bold"><i class="bi bi-badge-ad-fill text-primary me-1"></i>ประชาสัมพันธ์</div>
-            <div class="extra-small text-muted"></div>
-          </div>
-          <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold text-nowrap" onclick="openAdManager()">
-            จัดการโฆษณา
-          </button>
-        </div>
-      </div>
-
-      <div class="card-box border-warning">
-        <div class="extra-small text-muted mb-2"></div>
-        <button class="btn btn-sm btn-outline-danger w-100 rounded-pill fw-bold" onclick="resetDemoMember()"><i class="bi bi-arrow-counterclockwise me-1"></i>รีเซ็ตเพื่อดูขั้นตอนสมัครตั้งแต่ต้น</button>
-      </div>
-    </div>
-
-    <!-- PAGE 7: ประวัติการชำระสินเชื่อ -->
-    <div id="page-history" class="page-section">
-      <div class="card-box">
-        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-          <div>
-            <h6 class="fw-bold mb-1"><i class="bi bi-graph-up-arrow text-primary me-1"></i>ความคืบหน้าการชำระสินเชื่อ</h6>
-            <div class="extra-small text-muted">สรุปจากยอดสัญญาและยอดคงเหลือจริงในระบบ</div>
-          </div>
-          <div class="text-end">
-            <div class="h4 fw-bold text-primary m-0" id="historyPaidPct">0%</div>
-            <div class="extra-small text-muted">ชำระแล้ว</div>
-          </div>
-        </div>
-        <div class="progress mb-3" style="height:12px;border-radius:999px;">
-          <div id="historyPaidProgress" class="progress-bar bg-primary" role="progressbar" style="width:0%" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-        <div class="row g-2">
-          <div class="col-4">
-            <div class="p-2 rounded-3 bg-light text-center h-100">
-              <div class="extra-small text-muted">ยอดสัญญารวม</div>
-              <div class="fw-bold" id="historyContractTotal">฿0.00</div>
-            </div>
-          </div>
-          <div class="col-4">
-            <div class="p-2 rounded-3 bg-success-subtle text-center h-100">
-              <div class="extra-small text-muted">ชำระแล้ว</div>
-              <div class="fw-bold text-success" id="historyPaidAmount">฿0.00</div>
-            </div>
-          </div>
-          <div class="col-4">
-            <div class="p-2 rounded-3 bg-warning-subtle text-center h-100">
-              <div class="extra-small text-muted">คงเหลือ</div>
-              <div class="fw-bold text-danger" id="historyRemainingAmount">฿0.00</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card-box">
-        <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-1"></i>ประวัติการชำระสินเชื่อ</h6>
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered extra-small text-center align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>วันที่/เวลา</th>
-                <th>ประเภท</th>
-                <th>จำนวนเงิน</th>
-                <th style="width:54px;">ข้อมูล</th>
-              </tr>
-            </thead>
-            <tbody id="payHistoryList">
-              <tr>
-                <td colspan="4" class="text-muted py-3">ยังไม่มีประวัติการชำระเงิน</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="extra-small text-muted mt-2">
-          กด <i class="bi bi-info-circle"></i> เพื่อดูใบเสร็จและสลิปที่แนบกับรายการนั้น
-        </div>
+        <div class="d-flex justify-content-between py-2 border-bottom"><div><div class="small fw-bold">Referral สำเร็จ</div><div class="extra-small text-muted">เพื่อนผ่านเงื่อนไขครั้งแรก</div></div><strong class="text-success">+50</strong></div>
+        <div class="d-flex justify-content-between py-2 border-bottom"><div><div class="small fw-bold">ชำระตรงเวลา</div><div class="extra-small text-muted">งวดต่อเนื่อง</div></div><strong class="text-success">+10</strong></div>
+        <div class="d-flex justify-content-between py-2"><div><div class="small fw-bold">ใช้เป็นส่วนลด</div><div class="extra-small text-muted">จะถูกหักหลัง EasySlip VERIFIED</div></div><strong class="text-danger">- ตามที่ใช้</strong></div>
       </div>
     </div>
 
@@ -1003,9 +966,9 @@
             <div class="upload-zone p-2" id="zoneSlip" onclick="document.getElementById('fileSlip').click()">
               <span id="labelSlip" class="extra-small text-muted"><i class="bi bi-file-earmark-arrow-up fs-4 d-block"></i> เลือกไฟล์สลิปการโอน</span>
               <img id="previewSlip" class="img-fluid d-none rounded" style="max-height: 120px;">
-              <div id="btnRemoveSlip" class="btn-remove-img d-none" onclick="removeImage(event, 'Slip')">✕</div>
+              <div id="btnRemoveSlip" class="btn-remove-img d-none" onclick="checkpoint2RemovePaymentSlip(event)">✕</div>
             </div>
-            <input type="file" id="fileSlip" class="d-none" accept="image/*" onchange="processImageWithWatermark(this, 'Slip')">
+            <input type="file" id="fileSlip" class="d-none" accept="image/jpeg,image/png,image/gif,image/webp" onchange="processPaymentSlip(this)">
           </div>
         </div>
         <div class="modal-footer py-2">
@@ -1054,14 +1017,6 @@
               </tr>
             </tbody>
           </table>
-
-          <div id="recSlipSection" class="d-none mb-3">
-            <div class="extra-small fw-bold text-start mb-1"><i class="bi bi-image me-1"></i>สลิปที่แนบกับรายการ</div>
-            <div class="border rounded-3 bg-light p-2 text-center">
-              <img id="recSlipImage" src="" alt="สลิปการชำระ" class="img-fluid rounded d-none" style="max-height:320px;">
-              <div id="recSlipUnavailable" class="extra-small text-muted py-2">ไม่พบรูปสลิปสำหรับรายการนี้</div>
-            </div>
-          </div>
 
           <div class="extra-small text-muted text-center border-top pt-2" id="recFineNote">
             * เอกสารนี้สร้างขึ้นโดยระบบอัตโนมัติ ชำระผ่านระบบ PromptPay 0658351446
@@ -1191,7 +1146,7 @@
             <div class="promo-body">
               <div class="promo-title" id="promoTitle">ข่าวประชาสัมพันธ์</div>
               <div class="promo-hint">แตะสื่อหรือปุ่มด้านล่างเพื่อเปิดรายละเอียด • ปิดแล้วจะไม่เด้งโฆษณาตัวถัดไป</div><div class="promo-round-info" id="promoRoundInfo"></div>
-              <button id="promoOpenBtn" class="promo-open-btn" type="button" onclick="openCurrentPromo()">
+              <button class="promo-open-btn" type="button" onclick="openCurrentPromo()">
                 ดูรายละเอียด <i class="bi bi-box-arrow-up-right"></i>
               </button>
               <div class="promo-controls">
@@ -1292,8 +1247,8 @@
     <div class="nav-item-btn" id="navPayment" onclick="switchTab('page-payment')">
       <i class="bi bi-receipt d-block fs-5"></i> ชำระเงิน
     </div>
-    <div class="nav-item-btn" id="navHistory" onclick="switchTab('page-history')">
-      <i class="bi bi-clock-history d-block fs-5"></i> ประวัติ
+    <div class="nav-item-btn" id="navReferral" onclick="switchTab('page-referral')">
+      <i class="bi bi-people d-block fs-5"></i> แนะนำเพื่อน
     </div>
     <div class="nav-item-btn" id="navProfile" onclick="switchTab('page-profile')">
       <i class="bi bi-person-circle d-block fs-5"></i> โปรไฟล์
@@ -1342,7 +1297,7 @@
     };
 
     // -------------------------------------------------------------
-    // 1. Server Time (ป้องกันการปรับเวลาในเครื่อง)
+    // 1. Fox Server Time Check (ป้องกันการปรับเวลาในเครื่อง)
     // -------------------------------------------------------------
     async function startFoxServerClock() {
       await fetchServerTime();
@@ -1499,20 +1454,17 @@
           const ctxObj = canvasObj.getContext('2d');
           ctxObj.drawImage(img, 0, 0, canvasObj.width, canvasObj.height);
 
-          // Identity documents get a watermark. Bank payment slips stay untouched
-          // so EasySlip can read the original banking data reliably.
-          if (String(id) !== "Slip") {
-            const text = "ใช้สำหรับขอสินเชื่อเพื่อคนพะเยาเท่านั้น";
-            const fontSize = Math.floor(canvasObj.width / 22);
-            ctxObj.save();
-            ctxObj.translate(canvasObj.width / 2, canvasObj.height / 2);
-            ctxObj.rotate(-Math.PI / 6);
-            ctxObj.font = `bold ${fontSize}px sans-serif`;
-            ctxObj.fillStyle = "rgba(220, 38, 38, 0.45)";
-            ctxObj.textAlign = "center";
-            ctxObj.fillText(text, 0, 0);
-            ctxObj.restore();
-          }
+          // Watermark
+          const text = "ใช้สำหรับขอสินเชื่อเพื่อคนพะเยาเท่านั้น";
+          const fontSize = Math.floor(canvasObj.width / 22);
+          ctxObj.save();
+          ctxObj.translate(canvasObj.width / 2, canvasObj.height / 2);
+          ctxObj.rotate(-Math.PI / 6);
+          ctxObj.font = `bold ${fontSize}px sans-serif`;
+          ctxObj.fillStyle = "rgba(220, 38, 38, 0.45)";
+          ctxObj.textAlign = "center";
+          ctxObj.fillText(text, 0, 0);
+          ctxObj.restore();
 
           const compressedUrl = canvasObj.toDataURL('image/jpeg', 0.7);
 
@@ -1699,7 +1651,7 @@
             <td>${item.type}</td>
             <td class="fw-bold text-primary">฿ ${item.total}</td>
             <td>
-              <button class="btn btn-sm btn-outline-primary rounded-circle py-0 px-1" style="width:30px;height:30px;" onclick="showReceiptModal(${index})" title="ดูใบเสร็จ" aria-label="ดูใบเสร็จ"><i class="bi bi-info-circle"></i></button>
+              <button class="btn btn-xs btn-outline-primary py-0 px-1 extra-small" onclick="showReceiptModal(${index})">ดูใบเสร็จ</button>
             </td>
           </tr>
         `;
@@ -1708,9 +1660,6 @@
 
     function showReceiptModal(index) {
       const item = userProfile.history[index];
-      document.getElementById('recSlipSection')?.classList.add('d-none');
-      const recSlipImage=document.getElementById('recSlipImage');
-      if(recSlipImage){recSlipImage.src='';recSlipImage.classList.add('d-none');}
       document.getElementById('recUid').innerText = "QUID: " + ((typeof FDG_DEMO!=='undefined' && FDG_DEMO.qid) ? FDG_DEMO.qid : userProfile.uid);
       document.getElementById('recNo').innerText = item.rcNo;
       document.getElementById('recDate').innerText = item.date;
@@ -1856,7 +1805,7 @@
   <script>
     /* =========================================================
        FDG MONNY MERGED PREVIEW LOGIC
-       Live customer state helpers.
+       UI demo only - Supabase/EasySlip will replace mock state.
        ========================================================= */
     const FDG_DEMO = {
       pointsPerBaht: 10,
@@ -1867,7 +1816,7 @@
       qid: localStorage.getItem('fdg_demo_qid') || 'CUS-A7K92',
       paymentChannel: localStorage.getItem('fdg_demo_pay_channel') || 'SCAN'
     };
-    let FDG_RANKS = [
+    const FDG_RANKS = [
       {name:'MEMBER',min:0,icon:'👤'},
       {name:'BRONZE',min:500,icon:'🥉'},
       {name:'SILVER',min:1000,icon:'🥈'},
@@ -1902,12 +1851,6 @@
       const rem=document.getElementById('demoRemaining'); if(rem) rem.textContent='฿'+FDG_DEMO.remaining.toLocaleString(undefined,{maximumFractionDigits:2});
       const pct=Math.max(0,Math.min(100,Math.round(((FDG_DEMO.contractTotal-FDG_DEMO.remaining)/FDG_DEMO.contractTotal)*100)));
       const paid=document.getElementById('demoPaidPct'); if(paid) paid.textContent=pct+'%';
-      const demoPaidAmount=Math.max(0,FDG_DEMO.contractTotal-FDG_DEMO.remaining);
-      const hp=document.getElementById('historyPaidPct'); if(hp) hp.textContent=pct+'%';
-      const ht=document.getElementById('historyContractTotal'); if(ht) ht.textContent='฿'+Number(FDG_DEMO.contractTotal||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-      const ha=document.getElementById('historyPaidAmount'); if(ha) ha.textContent='฿'+demoPaidAmount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-      const hr=document.getElementById('historyRemainingAmount'); if(hr) hr.textContent='฿'+Number(FDG_DEMO.remaining||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-      const hb=document.getElementById('historyPaidProgress'); if(hb){hb.style.width=pct+'%';hb.setAttribute('aria-valuenow',String(pct));}
       updatePaymentChannelUI();
     }
 
@@ -2006,7 +1949,7 @@
     function switchTab(pageId){
       document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item-btn').forEach(n=>n.classList.remove('active'));
       const target=document.getElementById(pageId);if(target)target.classList.add('active');
-      const map={'page-dashboard':'navDashboard','page-payment':'navPayment','page-history':'navHistory','page-profile':'navProfile'};if(map[pageId])document.getElementById(map[pageId])?.classList.add('active');
+      const map={'page-dashboard':'navDashboard','page-payment':'navPayment','page-referral':'navReferral','page-profile':'navProfile'};if(map[pageId])document.getElementById(map[pageId])?.classList.add('active');
       window.scrollTo({top:0,behavior:'smooth'}); if(pageId==='page-payment')updatePaySummary();
     }
 
@@ -2025,7 +1968,7 @@
     // LIVE mode: old localStorage preview initializer disabled.
 
     if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-      window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+      window.addEventListener('load',()=>navigator.serviceWorker.register('./phayao-clean-sw.js').catch(()=>{}));
     }
   </script>
 
@@ -2208,14 +2151,6 @@ function renderPromo(){
     ? `กำลังดู ${promoIndex+1} / ${ads.length} • เลื่อนดูรายการอื่นได้เอง`
     : `โฆษณา ${promoIndex+1} / ${ads.length} • ปิดแล้วจะไม่เด้งรายการถัดไป`;
 
-  const target=normalizePromoTarget(ad.targetUrl);
-  const openBtn=document.getElementById("promoOpenBtn");
-  if(openBtn)openBtn.classList.toggle("d-none",!target);
-  if(wrap){
-    wrap.style.cursor=target?"pointer":"default";
-    wrap.setAttribute("aria-label",target?"เปิดรายละเอียดประชาสัมพันธ์":"สื่อประชาสัมพันธ์");
-  }
-
   stopPromoVideo();
   wrap.classList.toggle('youtube-mode',type==='youtube');
   img.classList.add('d-none');
@@ -2281,22 +2216,11 @@ function changePromo(delta){
   promoIndex+=delta;
   renderPromo();
 }
-function normalizePromoTarget(value){
-  const raw=String(value||"").trim();
-  if(!raw)return "";
-  try{
-    const u=new URL(raw,window.location.href);
-    if(!["http:","https:"].includes(u.protocol))return "";
-    return u.href;
-  }catch(_){return "";}
-}
 function openCurrentPromo(){
   const ads=activePromoAds();
   if(!ads.length)return;
   const ad=ads[((promoIndex%ads.length)+ads.length)%ads.length];
-  const target=normalizePromoTarget(ad.targetUrl);
-  if(!target)return;
-  window.open(target,'_blank','noopener,noreferrer');
+  if(ad.targetUrl)window.open(ad.targetUrl,'_blank','noopener');
 }
 
 /* ---------- Ad manager demo ---------- */
@@ -2803,7 +2727,7 @@ async function loadLiveAdvertisements(){
       title:a.title,
       mediaType:String(a.media_type||"AUTO").toLowerCase(),
       imageUrl:a.media_url,
-      targetUrl:a.target_url||"",
+      targetUrl:a.target_url||"#",
       active:true
     }));
 
@@ -2989,17 +2913,7 @@ function updateLoanDashboard(){
   const paidPct=contractTotal>0
     ? Math.max(0,Math.min(100,((contractTotal-remaining)/contractTotal)*100))
     : 0;
-  const paidAmount=Math.max(0,contractTotal-remaining);
   setSafeText("demoPaidPct",paidPct.toFixed(0)+"%");
-  setSafeText("historyPaidPct",paidPct.toFixed(0)+"%");
-  setSafeText("historyContractTotal",money(contractTotal));
-  setSafeText("historyPaidAmount",money(paidAmount));
-  setSafeText("historyRemainingAmount",money(remaining));
-  const historyBar=document.getElementById("historyPaidProgress");
-  if(historyBar){
-    historyBar.style.width=paidPct.toFixed(2)+"%";
-    historyBar.setAttribute("aria-valuenow",paidPct.toFixed(0));
-  }
   setSafeText("effectiveInterestDisplay",liveLoan?percentFromDecimal(liveLoan.interest_rate):"-");
 
   const next=liveInstallments.find(i=>["pending","partial","late"].includes(i.status));
@@ -3009,16 +2923,11 @@ function updateLoanDashboard(){
     setSafeText("nextInstallmentDue",`กำหนด ${new Date(next.due_date+"T00:00:00").toLocaleDateString("th-TH")}`);
     setSafeText("payAmountDue",money(outstanding));
     setSafeText("payInterestOnly",money(Number(next.interest_due||0)));
-    setSafeText(
-      "payFullBreakdown",
-      `เต็มงวด = เงินต้น ${money(Number(next.principal_due||0))} + ดอกเบี้ย ${money(Number(next.interest_due||0))}`
-    );
   }else{
     setSafeText("nextInstallmentAmount",liveLoan?.status==="completed"?"ชำระครบ":"-");
     setSafeText("nextInstallmentDue","");
     setSafeText("payAmountDue","฿0.00");
     setSafeText("payInterestOnly","฿0.00");
-    setSafeText("payFullBreakdown","เต็มงวด = เงินต้น + ดอกเบี้ย");
   }
   if(typeof updatePaySummary==="function")updatePaySummary();
 }
@@ -3037,88 +2946,15 @@ function renderRealPaymentHistory(){
   }
   body.innerHTML=livePayments.map(p=>{
     const dt=new Date(p.verified_at||p.created_at);
-    const type=p.payment_source==="RIDER_CASH"
-      ?"เงินสด Rider"
-      :p.payment_type==="INTEREST_ONLY"
-        ?"ดอกเบี้ย"
-        :"เต็มงวด";
+    const type=p.payment_source==="RIDER_CASH"?"เงินสด Rider":p.payment_type==="INTEREST_ONLY"?"ดอกเบี้ย":"SCAN";
     const amount=Number(p.amount_received||0)+Number(p.discount_amount||0);
     return `<tr>
       <td>${dt.toLocaleDateString("th-TH")}<br><span class="text-muted">${dt.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"})}</span></td>
       <td>${type}<br><span class="badge ${p.status==="verified"?"bg-success":"bg-secondary"}">${p.status}</span></td>
-      <td class="fw-bold text-primary">${money(amount)}</td>
-      <td>
-        <button
-          type="button"
-          class="btn btn-sm btn-outline-primary rounded-circle p-0"
-          style="width:30px;height:30px;"
-          onclick="showLivePaymentReceipt('${p.id}')"
-          title="ดูใบเสร็จและสลิป"
-          aria-label="ดูใบเสร็จและสลิป">
-          <i class="bi bi-info-circle"></i>
-        </button>
-      </td>
+      <td>${money(amount)}</td>
+      <td><span class="text-primary fw-bold">${p.payment_code||"-"}</span></td>
     </tr>`;
   }).join("");
-}
-
-async function showLivePaymentReceipt(paymentId){
-  const p=livePayments.find(x=>String(x.id)===String(paymentId));
-  if(!p)return;
-
-  const dt=new Date(p.verified_at||p.created_at);
-  const type=p.payment_source==="RIDER_CASH"
-    ?"ชำระเงินสดผ่าน Rider"
-    :p.payment_type==="INTEREST_ONLY"
-      ?"ชำระเฉพาะดอกเบี้ย (ดอกลอย)"
-      :"ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)";
-
-  const amountReceived=Number(p.amount_received||0);
-  const discount=Number(p.discount_amount||0);
-  const gross=Number(p.gross_due||0) || (amountReceived+discount);
-
-  setSafeText("recUid","QUID: "+(liveCustomer?.customer_code||"-"));
-  setSafeText("recNo",p.payment_code||String(p.id).slice(0,8).toUpperCase());
-  setSafeText("recDate",dt.toLocaleString("th-TH"));
-  setSafeText("recName",liveCustomer?.full_name||"-");
-  setSafeText("recType",type);
-  setSafeText("recItemTitle",type);
-  setSafeText("recBaseAmount",gross.toFixed(2));
-  setSafeText("recFineAmount","0.00");
-  setSafeText("recTotalAmount",gross.toFixed(2));
-  document.getElementById("recFineRow")?.style.setProperty("display","none");
-  setSafeText(
-    "recFineNote",
-    discount>0
-      ? `ชำระเงินจริง ${money(amountReceived)} • ใช้ Ranking เป็นส่วนลด ${money(discount)} • สถานะ ${String(p.status||"-").toUpperCase()}`
-      : `ชำระเงินจริง ${money(amountReceived)} • สถานะ ${String(p.status||"-").toUpperCase()}`
-  );
-
-  const section=document.getElementById("recSlipSection");
-  const img=document.getElementById("recSlipImage");
-  const unavailable=document.getElementById("recSlipUnavailable");
-  section?.classList.remove("d-none");
-  img?.classList.add("d-none");
-  if(img)img.src="";
-  unavailable?.classList.remove("d-none");
-  if(unavailable)unavailable.textContent="กำลังโหลดสลิป...";
-
-  if(p.evidence_path){
-    const {data,error}=await liveSb.storage
-      .from("payment-evidence")
-      .createSignedUrl(p.evidence_path,300);
-    if(!error && data?.signedUrl && img){
-      img.src=data.signedUrl;
-      img.classList.remove("d-none");
-      unavailable?.classList.add("d-none");
-    }else if(unavailable){
-      unavailable.textContent="ไม่สามารถเปิดรูปสลิปของรายการนี้ได้";
-    }
-  }else if(unavailable){
-    unavailable.textContent="รายการนี้ไม่มีรูปสลิปแนบ";
-  }
-
-  new bootstrap.Modal(document.getElementById("receiptModal")).show();
 }
 
 async function requestPaymentChannelChange(){
@@ -3186,7 +3022,7 @@ function submitPaymentSlip(){
 
 // Override switchTab to protect pages that require authentication.
 function switchTab(pageId){
-  const memberPages=["page-dashboard","page-payment","page-history","page-profile","page-status"];
+  const memberPages=["page-dashboard","page-payment","page-referral","page-profile","page-status"];
   if(memberPages.includes(pageId) && !liveSession){
     pageId="page-auth";
   }
@@ -3203,16 +3039,12 @@ function switchTab(pageId){
   const map={
     "page-dashboard":"navDashboard",
     "page-payment":"navPayment",
-    "page-history":"navHistory",
+    "page-referral":"navReferral",
     "page-profile":"navProfile"
   };
   if(map[pageId])document.getElementById(map[pageId])?.classList.add("active");
   window.scrollTo({top:0,behavior:"smooth"});
   if(pageId==="page-payment" && typeof updatePaySummary==="function")updatePaySummary();
-  if(pageId==="page-history"){
-    if(typeof updateLoanDashboard==="function")updateLoanDashboard();
-    if(typeof renderRealPaymentHistory==="function")renderRealPaymentHistory();
-  }
 }
 
 async function bootLiveCustomerApp(){
@@ -3398,330 +3230,116 @@ updateLoanDashboard=function(){
 </script>
 
 
-<!-- FINAL CORE: centered customer notice -->
-<div class="modal fade" id="fdgNoticeModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg">
-      <div class="modal-body p-4 text-center">
-        <div id="fdgNoticeIcon" class="display-5 mb-2">ℹ️</div>
-        <h5 id="fdgNoticeTitle" class="fw-bold mb-2">แจ้งเตือน</h5>
-        <div id="fdgNoticeMessage" class="small text-muted" style="white-space:pre-line"></div>
-        <button type="button" class="btn btn-primary rounded-pill px-4 mt-3" data-bs-dismiss="modal">รับทราบ</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script>
 /* ============================================================
-   FINAL CORE CUSTOMER OVERRIDES
-   - centered notices
-   - direct PWA install when browser permits
-   - DB-enforced registration hours with visible client status
-   - live Customer SCAN payment + Ranking redemption + EasySlip
-   - Ranking guide + real point ledger
+   CHECKPOINT 2 — CUSTOMER SCAN + EASYSLIP
+   Scope:
+   - FULL = amount_due - amount_paid (principal + interest)
+   - INTEREST_ONLY = interest_due only
+   - original slip image, NO loan-document watermark
+   - EasySlip automatic verification through dynamic-api
+   - VERIFIED -> server-side fdg_finalize_customer_scan_payment
    ============================================================ */
-let finalPublicConfig=null;
-let finalOpenPayment=null;
-let finalPointLedger=[];
-let finalReferrals=[];
 
-function finalNotice(message,ok=true,title=""){
-  const modalEl=document.getElementById("fdgNoticeModal");
-  if(!modalEl){ alert(message); return; }
-  document.getElementById("fdgNoticeIcon").textContent=ok?"✅":"⚠️";
-  document.getElementById("fdgNoticeTitle").textContent=title||(ok?"สำเร็จ":"แจ้งเตือน");
-  document.getElementById("fdgNoticeMessage").textContent=String(message||"");
-  bootstrap.Modal.getOrCreateInstance(modalEl).show();
-}
-liveToast=finalNotice;
+let checkpoint2OpenPayment=null;
+let checkpoint2SlipFile=null;
+let checkpoint2SlipObjectUrl=null;
 
-async function finalLoadPublicConfig(){
-  try{
-    const {data,error}=await liveSb.rpc("fdg_public_app_config");
-    if(error)throw error;
-    finalPublicConfig=data||{};
-    const rs=finalPublicConfig.reward_settings||{};
-    FDG_DEMO.pointsPerBaht=Number(rs.points_per_baht||10);
-    FDG_DEMO.minimumCashPayment=Number(rs.min_real_payment??1);
-    if(Array.isArray(finalPublicConfig.rank_tiers)&&finalPublicConfig.rank_tiers.length){
-      const icons={MEMBER:"👤",BRONZE:"🥉",SILVER:"🥈",GOLD:"🥇",PLATINUM:"💠",DIAMOND:"💎"};
-      FDG_RANKS=finalPublicConfig.rank_tiers.map(r=>({
-        name:String(r.code),
-        min:Number(r.min_points||0),
-        icon:icons[String(r.code)]||"⭐",
-        maxLoan:Number(r.max_loan_amount||0),
-        maxTerm:Number(r.max_term_days||0),
-        discount:Number(r.interest_discount_pp||0)
-      }));
-    }
-    finalRenderRankGuide();
-    return finalPublicConfig;
-  }catch(e){
-    console.warn("Public config",e);
-    return finalPublicConfig||{};
-  }
-}
-
-async function finalRegistrationOpen(){
-  const cfg=await finalLoadPublicConfig();
-  return cfg?.registration_open!==false;
-}
-
-const finalBaseStartRegistration=window.startRealRegistration;
-window.startRealRegistration=async function(){
-  if(!(await finalRegistrationOpen())){
-    finalNotice(
-      "ขณะนี้ปิดรับสมัครสมาชิกใหม่\nเปิดรับสมัครอีกครั้งเวลา 00:00 น.\nช่วง 18:00–23:59 เป็นช่วงสรุปรอบและตรวจสอบข้อมูลของบริษัท",
-      false,
-      "ปิดรับสมัครชั่วคราว"
-    );
-    return;
-  }
-  return finalBaseStartRegistration();
-};
-
-const finalBaseSubmitApplication=window.submitApplication;
-window.submitApplication=async function(){
-  if(!(await finalRegistrationOpen())){
-    finalNotice("ปิดรับสมัครแล้ว กรุณาสมัครใหม่หลังเวลา 00:00 น.",false,"ไม่สามารถส่งใบสมัครได้");
-    return;
-  }
-  return finalBaseSubmitApplication();
-};
-
-/* PWA: a site cannot force-install without the browser install prompt.
-   When available, one press immediately opens the native install dialog. */
-let finalInstallPrompt=null;
-window.addEventListener("beforeinstallprompt",e=>{
-  e.preventDefault();
-  finalInstallPrompt=e;
-  const b=document.getElementById("btnPwaInstall");
-  if(b)b.style.display="inline-block";
-});
-window.installPWA=async function(){
-  if(finalInstallPrompt){
-    finalInstallPrompt.prompt();
-    const choice=await finalInstallPrompt.userChoice;
-    if(choice?.outcome==="accepted"){
-      document.getElementById("btnPwaInstall")?.classList.add("d-none");
-    }
-    finalInstallPrompt=null;
-    return;
-  }
-  if(window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone){
-    finalNotice("เว็บแอปนี้ติดตั้งอยู่บนเครื่องแล้ว");
-    return;
-  }
-  finalNotice(
-    "เบราว์เซอร์ยังไม่เปิดคำสั่งติดตั้งอัตโนมัติ\nAndroid/Chrome: เมนู ⋮ → ติดตั้งแอป\nSafari iPhone: แชร์ → เพิ่มไปยังหน้าจอโฮม",
-    false,
-    "ติดตั้งเว็บแอป"
-  );
-};
-
-function finalHideNonCustomerBlocks(){
-  document.querySelectorAll(".ad-admin-preview").forEach(x=>x.classList.add("d-none"));
-  document.querySelectorAll("#page-profile .card-box").forEach(card=>{
-    const t=(card.textContent||"").trim();
-    if(t.includes("รีเซ็ตเพื่อดูขั้นตอนสมัคร") || t.includes("เฉพาะไฟล์ตัวอย่าง")) card.classList.add("d-none");
-  });
-  document.getElementById("rowFine")?.classList.add("d-none");
-  document.getElementById("fineReasonText")?.classList.add("d-none");
-}
-
-function finalRenderRankGuide(){
-  const profile=document.getElementById("page-profile");
-  if(!profile || document.getElementById("finalRankGuide"))return;
-  const card=document.createElement("div");
-  card.id="finalRankGuide";
-  card.className="card-box";
-  profile.insertBefore(card,profile.children[1]||null);
-
-  const rs=finalPublicConfig?.reward_settings||{};
-  const ppb=Number(rs.points_per_baht||10);
-  const minPay=Number(rs.min_real_payment??1);
-  const refPoints=Number(rs.referral_success_points||50);
-  const tiers=(finalPublicConfig?.rank_tiers||FDG_RANKS||[]);
-
-  card.innerHTML=`
-    <h6 class="fw-bold mb-2"><i class="bi bi-journal-star text-warning me-1"></i>สารบัญ Ranking & คะแนน</h6>
-    <div class="small mb-2">
-      <div class="d-flex justify-content-between border-bottom py-2"><span>ชำระเต็มงวดตรงเวลา</span><b class="text-success">รับคะแนนตามกติกาบริษัท</b></div>
-      <div class="d-flex justify-content-between border-bottom py-2"><span>แนะนำเพื่อนสำเร็จ</span><b class="text-success">+${refPoints.toLocaleString()} คะแนน</b></div>
-      <div class="d-flex justify-content-between border-bottom py-2"><span>ใช้เป็นส่วนลด</span><b>${ppb} คะแนน = 1 บาท</b></div>
-      <div class="d-flex justify-content-between py-2"><span>ยอดเงินจริงขั้นต่ำ</span><b>${money(minPay)}</b></div>
-    </div>
-    <div class="alert alert-warning extra-small mb-3">
-      <b>ข้อควรระวัง:</b> เมื่อยืนยันใช้คะแนนและ EasySlip ตรวจผ่าน คะแนนจะถูกหักจริง
-      ซึ่งอาจทำให้ Ranking ลดลง และสิทธิ์วงเงิน/ระยะเวลา/ส่วนลดดอกเบี้ยในอนาคตเปลี่ยนตาม Ranking ใหม่
-    </div>
-    <div class="table-responsive">
-      <table class="table table-sm extra-small align-middle mb-0">
-        <thead><tr><th>Rank</th><th>คะแนนขั้นต่ำ</th><th>วงเงินสูงสุด</th><th>ระยะเวลา</th><th>ลดดอกเบี้ย</th></tr></thead>
-        <tbody>${tiers.map(r=>`
-          <tr>
-            <td><b>${r.display_name||r.name||r.code}</b></td>
-            <td>${Number(r.min_points??r.min??0).toLocaleString()}</td>
-            <td>${Number((r.max_loan_amount ?? r.maxLoan ?? 0))>0?money(r.max_loan_amount ?? r.maxLoan ?? 0):"ตามการพิจารณา"}</td>
-            <td>${Number((r.max_term_days ?? r.maxTerm ?? 0))>0?(r.max_term_days ?? r.maxTerm ?? 0)+" วัน":"-"}</td>
-            <td>${Number((r.interest_discount_pp ?? r.discount ?? 0)).toLocaleString()} จุด%</td>
-          </tr>`).join("")}</tbody>
-      </table>
-    </div>
-    <div class="mt-3">
-      <div class="fw-bold small mb-1">ประวัติคะแนนจริง</div>
-      <div id="finalPointLedger" class="extra-small text-muted">กำลังโหลด...</div>
-    </div>`;
-}
-
-function finalRenderPointLedger(){
-  finalRenderRankGuide();
-  const box=document.getElementById("finalPointLedger");
-  if(!box)return;
-  if(!finalPointLedger.length){
-    box.innerHTML='<div class="py-2">ยังไม่มีรายการคะแนน</div>';
-    return;
-  }
-  box.innerHTML=finalPointLedger.slice(0,30).map(x=>`
-    <div class="d-flex justify-content-between gap-2 border-bottom py-2">
-      <div><b>${String(x.note||x.source_type||"คะแนน")}</b><div class="text-muted">${new Date(x.created_at).toLocaleString("th-TH")}</div></div>
-      <div class="text-end"><b class="${Number(x.delta)>0?"text-success":"text-danger"}">${Number(x.delta)>0?"+":""}${Number(x.delta).toLocaleString()}</b><div>คงเหลือ ${Number(x.balance_after||0).toLocaleString()}</div></div>
-    </div>`).join("");
-}
-
-async function finalLoadCustomerExtras(){
-  if(!liveCustomer)return;
-  const [pt,rf]=await Promise.all([
-    liveSb.from("rank_point_transactions").select("*").eq("customer_id",liveCustomer.id).order("created_at",{ascending:false}).limit(50),
-    liveSb.from("referrals").select("id,status,created_at,qualified_at,rewarded_at").eq("referrer_customer_id",liveCustomer.id).order("created_at",{ascending:false}).limit(100)
-  ]);
-  finalPointLedger=pt.error?[]:(pt.data||[]);
-  finalReferrals=rf.error?[]:(rf.data||[]);
-  finalRenderPointLedger();
-
-  const boxes=document.querySelectorAll("#page-profile .performance-box strong");
-  if(boxes.length>=3){
-    const total=finalReferrals.length;
-    const qualified=finalReferrals.filter(x=>["qualified","rewarded"].includes(String(x.status))).length;
-    const rewardPoints=qualified*Number(finalPublicConfig?.reward_settings?.referral_success_points||50);
-    boxes[0].textContent=total.toLocaleString();
-    boxes[1].textContent=qualified.toLocaleString();
-    boxes[2].textContent="+"+rewardPoints.toLocaleString();
-  }
-}
-
-const finalBaseLoadAccount=window.loadLiveAccount;
-window.loadLiveAccount=async function(route=true){
-  await finalLoadPublicConfig();
-  const r=await finalBaseLoadAccount(route);
-  await finalLoadCustomerExtras();
-  finalHideNonCustomerBlocks();
-  return r;
-};
-
-function finalSelectedPaymentType(){
+function checkpoint2SelectedPaymentType(){
   return document.getElementById("payInterest")?.checked ? "INTEREST_ONLY" : "FULL";
 }
-function finalRequestedPoints(){
-  const ppb=Number(finalPublicConfig?.reward_settings?.points_per_baht||10);
-  let n=Math.max(0,Number(document.getElementById("redeemPointsInput")?.value||0));
+
+function checkpoint2RequestedPoints(){
+  const input=document.getElementById("redeemPointsInput");
+  const ppb=Math.max(1,Number(window.FDG_DEMO?.pointsPerBaht||10));
+  let n=Math.max(0,Math.floor(Number(input?.value||0)));
   n=Math.floor(n/ppb)*ppb;
   return n;
 }
-function finalPromptPayId(){
-  return String(finalPublicConfig?.company_promptpay_id||"0658351446").replace(/\s/g,"");
+
+function checkpoint2CurrentInstallment(){
+  return liveInstallments.find(i=>["pending","partial","late"].includes(String(i.status)))||null;
 }
 
-window.openQrModal=async function(){
-  if(!liveSession){showAuthPage();return;}
-  if(!liveLoan || String(liveLoan.status)!=="active"){
-    finalNotice("ยังไม่มีสินเชื่อ Active สำหรับชำระ",false);return;
+function checkpoint2ExpectedGross(inst,type){
+  if(!inst)return 0;
+  if(type==="INTEREST_ONLY"){
+    return Math.max(0,Number(inst.interest_due||0));
   }
-  if(String(liveLoan.disbursement_status||"pending")!=="paid"){
-    finalNotice("ยังไม่เริ่มรอบชำระ เพราะบริษัทอยู่ระหว่างโอนเงินสินเชื่อให้คุณ",false);return;
+  return Math.max(0,Number(inst.amount_due||0)-Number(inst.amount_paid||0));
+}
+
+function checkpoint2ClearSlipPreview(){
+  checkpoint2SlipFile=null;
+  if(checkpoint2SlipObjectUrl){
+    try{URL.revokeObjectURL(checkpoint2SlipObjectUrl);}catch(_){}
+    checkpoint2SlipObjectUrl=null;
   }
-  if(String(liveLoan.payment_channel||"SCAN")==="CASH"){
-    finalNotice("สัญญานี้ใช้ช่องทาง CASH กรุณาชำระกับ Rider ที่ได้รับมอบหมาย",false);return;
+  const input=document.getElementById("fileSlip");
+  if(input)input.value="";
+  const preview=document.getElementById("previewSlip");
+  if(preview){
+    preview.src="";
+    preview.classList.add("d-none");
+  }
+  document.getElementById("labelSlip")?.classList.remove("d-none");
+  document.getElementById("btnRemoveSlip")?.classList.add("d-none");
+  try{delete fileStore["Slip"];}catch(_){}
+}
+
+window.processPaymentSlip=function(input){
+  const file=input?.files?.[0];
+  if(!file)return;
+
+  const allowed=["image/jpeg","image/png","image/gif","image/webp"];
+  if(!allowed.includes(String(file.type||"").toLowerCase())){
+    checkpoint2ClearSlipPreview();
+    liveToast("รองรับสลิป JPEG, PNG, GIF และ WebP เท่านั้น",false);
+    return;
+  }
+  if(file.size>4*1024*1024){
+    checkpoint2ClearSlipPreview();
+    liveToast("ไฟล์สลิปต้องไม่เกิน 4 MB",false);
+    return;
   }
 
-  const next=liveInstallments.find(i=>["pending","partial","late"].includes(String(i.status)));
-  if(!next){finalNotice("ไม่พบงวดที่ต้องชำระ",false);return;}
+  checkpoint2SlipFile=file;
 
-  const btn=document.getElementById("btnCreateQr");
-  if(btn)btn.disabled=true;
-  setLiveLoading(true,"กำลังสร้างรายการชำระเงินจริง...");
-  try{
-    // IMPORTANT:
-    // Do not reuse an old pending payment blindly.
-    // The server cancels the previous pending QR for this installment,
-    // releases reserved Ranking points, then creates a fresh request
-    // using the CURRENT payment type selected by the customer.
-    const selectedPaymentType=finalSelectedPaymentType();
-    const created=await liveSb.rpc("fdg_prepare_customer_scan_payment",{
-      p_loan_id:liveLoan.id,
-      p_installment_id:next.id,
-      p_payment_type:selectedPaymentType,
-      p_points_requested:finalRequestedPoints()
-    });
-    if(created.error)throw created.error;
-    const data=created.data;
-    finalOpenPayment=data;
-
-    if(data?.reused===true && String(data?.status)==="verifying"){
-      console.info("Reuse verifying payment:",data.payment_id);
-    }
-
-    const amount=Number(data.real_payment_amount||0);
-    const gross=Number(data.gross_due||0);
-    const expectedGross=selectedPaymentType==="INTEREST_ONLY"
-      ? Number(next.interest_due||0)
-      : Math.max(0,Number(next.amount_due||0)-Number(next.amount_paid||0));
-
-    // Guard against a stale/wrong backend payment object.
-    if(Math.abs(gross-expectedGross)>0.009){
-      throw new Error(
-        `ยอดที่ Backend สร้างไม่ตรงกับประเภทการชำระ: ต้องเป็น ${money(expectedGross)} แต่ได้ ${money(gross)}`
-      );
-    }
-    if(!(amount>0)){
-      throw new Error("ยอด QR ต้องมากกว่า 0 บาท");
-    }
-
-    document.getElementById("imgPromptPayQr").src=`https://promptpay.io/${encodeURIComponent(finalPromptPayId())}/${amount.toFixed(2)}.png`;
-    document.getElementById("modalQrAmount").innerText=money(amount);
-    document.getElementById("modalOriginalAmount").innerText=`ยอดงวดก่อนส่วนลด: ${money(data.gross_due)}`;
-    document.getElementById("modalPointDiscount").innerText=`ส่วนลด Ranking: - ${money(data.discount_amount)} (${Number(data.points_used||0).toLocaleString()} คะแนน)`;
-    const confirmedPaymentType=String(data.payment_type||selectedPaymentType);
-    document.getElementById("modalPayTypeTitle").innerText=
-      confirmedPaymentType==="INTEREST_ONLY"
-        ?"ชำระเฉพาะดอกเบี้ย (ดอกลอย — ไม่ตัดเงินต้น)"
-        :"ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)";
-    const accountText=document.querySelector("#qrModal .modal-body .extra-small.text-muted.mb-3");
-    if(accountText)accountText.innerHTML=`บัญชีรับเงิน PromptPay: <strong>${finalPromptPayId()}</strong>`;
-    new bootstrap.Modal(document.getElementById("qrModal")).show();
-  }catch(e){
-    console.error(e);
-    finalNotice(e?.message||"สร้างรายการชำระไม่สำเร็จ",false,"ไม่สามารถสร้าง QR");
-  }finally{
-    setLiveLoading(false);
-    if(btn)btn.disabled=false;
+  if(checkpoint2SlipObjectUrl){
+    try{URL.revokeObjectURL(checkpoint2SlipObjectUrl);}catch(_){}
   }
+  checkpoint2SlipObjectUrl=URL.createObjectURL(file);
+
+  const preview=document.getElementById("previewSlip");
+  if(preview){
+    preview.src=checkpoint2SlipObjectUrl;
+    preview.classList.remove("d-none");
+  }
+  document.getElementById("labelSlip")?.classList.add("d-none");
+  document.getElementById("btnRemoveSlip")?.classList.remove("d-none");
 };
 
-async function finalCallEasySlipAuto(paymentId){
-  if(!liveSession?.access_token)throw new Error("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+window.checkpoint2RemovePaymentSlip=function(e){
+  e?.stopPropagation?.();
+  checkpoint2ClearSlipPreview();
+};
 
-  // เรียก Edge Function ตรงจาก HTML แต่ EasySlip API KEY ยังคงอยู่ใน Supabase Secret
-  // จึงไม่เปิดเผย KEY ใน GitHub / Browser source
+async function checkpoint2CallEasySlip(paymentId){
+  const {data:sessionData}=await liveSb.auth.getSession();
+  const session=sessionData?.session;
+  if(!session?.access_token)throw new Error("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+
   const res=await fetch(`${LIVE_SUPABASE_URL}/functions/v1/dynamic-api`,{
     method:"POST",
     headers:{
       "Content-Type":"application/json",
       "apikey":LIVE_SUPABASE_PUBLISHABLE_KEY,
-      "Authorization":`Bearer ${liveSession.access_token}`
+      "Authorization":`Bearer ${session.access_token}`
     },
-    body:JSON.stringify({type:"CUSTOMER_PAYMENT",id:paymentId})
+    body:JSON.stringify({
+      type:"CUSTOMER_PAYMENT",
+      id:paymentId
+    })
   });
 
   let data={};
@@ -3730,104 +3348,244 @@ async function finalCallEasySlipAuto(paymentId){
   if(!res.ok || data?.status!=="verified"){
     const err=new Error(
       data?.message ||
-      (res.status===401?"Session ไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่":
-       res.status===429?"ระบบป้องกันการส่งสลิปซ้ำ กรุณารอสักครู่":
-       `EasySlip ตรวจสอบไม่สำเร็จ (HTTP ${res.status})`)
+      (res.status===429
+        ?"ระบบป้องกันการตรวจสลิปซ้ำ กรุณารอสักครู่"
+        :`EasySlip ตรวจไม่สำเร็จ (HTTP ${res.status})`)
     );
     err.data=data;
     err.httpStatus=res.status;
     throw err;
   }
-
   return data;
 }
 
-window.submitPaymentSlip=async function(){
-  if(!finalOpenPayment?.payment_id){
-    finalNotice("กรุณาปิดหน้าต่างและกดสร้าง QR ใหม่",false);return;
-  }
-  if(!fileStore["Slip"] && !finalOpenPayment.evidence_path){
-    finalNotice("กรุณาแนบภาพสลิปก่อนส่ง",false);return;
+window.openQrModal=async function(){
+  if(!liveSession){showAuthPage();return;}
+
+  if(!liveLoan || String(liveLoan.status)!=="active"){
+    liveToast("ยังไม่มีสินเชื่อ Active สำหรับชำระ",false);
+    return;
   }
 
-  setLiveLoading(true,"กำลังส่งสลิปและตรวจ EasySlip...");
+  if(String(liveLoan.disbursement_status||"pending")!=="paid"){
+    liveToast("ยังไม่สามารถชำระได้ เพราะบริษัทยังไม่ได้ยืนยันการโอนเงินสินเชื่อ",false);
+    return;
+  }
+
+  if(String(liveLoan.payment_channel||"SCAN")!=="SCAN"){
+    liveToast("สัญญานี้ใช้ช่องทาง CASH กรุณาชำระกับ Rider",false);
+    return;
+  }
+
+  const inst=checkpoint2CurrentInstallment();
+  if(!inst){
+    liveToast("ไม่พบงวดที่ต้องชำระ",false);
+    return;
+  }
+
+  const type=checkpoint2SelectedPaymentType();
+  const expectedGross=checkpoint2ExpectedGross(inst,type);
+  if(!(expectedGross>0)){
+    liveToast("งวดนี้ไม่มียอดที่ต้องชำระ",false);
+    return;
+  }
+
+  const btn=document.getElementById("btnCreateQr");
+  if(btn)btn.disabled=true;
+  setLiveLoading(true,"กำลังสร้างรายการชำระ...");
+
   try{
-    if(fileStore["Slip"]){
-      const blob=dataUrlToBlob(fileStore["Slip"]);
-      if(blob.size>4*1024*1024)throw new Error("ไฟล์สลิปต้องไม่เกิน 4 MB");
+    const {data,error}=await liveSb.rpc("fdg_prepare_customer_scan_payment",{
+      p_loan_id:liveLoan.id,
+      p_installment_id:inst.id,
+      p_payment_type:type,
+      p_points_requested:checkpoint2RequestedPoints()
+    });
+    if(error)throw error;
+    if(!data?.payment_id)throw new Error("Backend ไม่ได้คืน Payment ID");
 
-      const ext=blob.type==="image/png"?"png":blob.type==="image/webp"?"webp":"jpg";
-      const path=`${liveSession.user.id}/${new Date().toISOString().slice(0,10)}/customer-payment-${finalOpenPayment.payment_id}-${Date.now()}.${ext}`;
+    const gross=Number(data.gross_due||0);
+    const realAmount=Number(data.real_payment_amount||0);
 
-      const {error:upErr}=await liveSb.storage.from("payment-evidence").upload(path,blob,{
-        upsert:false,contentType:blob.type||"image/jpeg",cacheControl:"3600"
-      });
+    // Hard guard: never show a QR if backend amount belongs to the wrong payment type.
+    if(Math.abs(gross-expectedGross)>0.009){
+      throw new Error(
+        `ยอด Backend ไม่ตรงกับประเภทการชำระ: ควรเป็น ${money(expectedGross)} แต่ได้ ${money(gross)}`
+      );
+    }
+    if(!(realAmount>0))throw new Error("ยอด QR ต้องมากกว่า 0 บาท");
+
+    checkpoint2OpenPayment=data;
+    checkpoint2ClearSlipPreview();
+
+    document.getElementById("modalPayTypeTitle").textContent=
+      type==="INTEREST_ONLY"
+        ?"ชำระเฉพาะดอกเบี้ย (ดอกลอย — ไม่ตัดเงินต้น)"
+        :"ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)";
+
+    document.getElementById("modalQrAmount").textContent=money(realAmount);
+    document.getElementById("modalOriginalAmount").textContent=
+      `ยอดก่อนใช้ Ranking: ${money(gross)}`;
+    document.getElementById("modalPointDiscount").textContent=
+      `ส่วนลด Ranking: - ${money(Number(data.discount_amount||0))} (${Number(data.points_used||0).toLocaleString()} คะแนน)`;
+
+    // Keep the page summary aligned to the server-authoritative amount.
+    setSafeText("summaryBasePay",money(gross));
+    setSafeText("summaryFine",money(0));
+    setSafeText("summaryTotalPay",money(realAmount));
+    document.getElementById("rowFine")?.style.setProperty("display","none");
+    document.getElementById("fineReasonText")?.style.setProperty("display","none");
+
+    document.getElementById("imgPromptPayQr").src=
+      `https://promptpay.io/${encodeURIComponent(PROMPTPAY_PHONE)}/${realAmount.toFixed(2)}.png`;
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById("qrModal")).show();
+
+    if(data?.reused===true && data?.evidence_path){
+      liveToast("พบรายการเดิมที่กำลังตรวจอยู่ สามารถกดส่งตรวจ EasySlip ซ้ำได้โดยไม่ต้องสร้างยอดใหม่");
+    }
+  }catch(err){
+    console.error("Create customer payment",err);
+    checkpoint2OpenPayment=null;
+    liveToast(err?.message||"สร้าง QR ไม่สำเร็จ",false);
+  }finally{
+    setLiveLoading(false);
+    if(btn)btn.disabled=false;
+  }
+};
+
+window.submitPaymentSlip=async function(){
+  if(!checkpoint2OpenPayment?.payment_id){
+    liveToast("กรุณาสร้าง QR ก่อนส่งสลิป",false);
+    return;
+  }
+
+  // A reused verifying payment may already have an evidence_path.
+  if(!checkpoint2SlipFile && !checkpoint2OpenPayment.evidence_path){
+    liveToast("กรุณาแนบภาพสลิปการโอนเงินก่อนส่ง",false);
+    return;
+  }
+
+  setLiveLoading(true,"กำลังตรวจสลิปกับ EasySlip...");
+  const paymentId=checkpoint2OpenPayment.payment_id;
+
+  try{
+    if(checkpoint2SlipFile){
+      const file=checkpoint2SlipFile;
+      const mime=String(file.type||"image/jpeg").toLowerCase();
+      const ext=
+        mime==="image/png"?"png":
+        mime==="image/gif"?"gif":
+        mime==="image/webp"?"webp":"jpg";
+
+      const uid=liveSession?.user?.id;
+      if(!uid)throw new Error("ไม่พบ Session ลูกค้า");
+
+      const date=new Intl.DateTimeFormat("en-CA",{
+        timeZone:"Asia/Bangkok",
+        year:"numeric",month:"2-digit",day:"2-digit"
+      }).format(new Date());
+
+      const path=`${uid}/${date}/customer-payment-${paymentId}-${Date.now()}.${ext}`;
+
+      // IMPORTANT: upload the ORIGINAL slip. Do not watermark/re-render QR images.
+      const {error:upErr}=await liveSb.storage
+        .from("payment-evidence")
+        .upload(path,file,{
+          upsert:false,
+          cacheControl:"3600",
+          contentType:mime
+        });
       if(upErr)throw upErr;
 
       const {error:attachErr}=await liveSb.rpc("fdg_attach_customer_payment_evidence",{
-        p_payment_id:finalOpenPayment.payment_id,
+        p_payment_id:paymentId,
         p_evidence_path:path
       });
       if(attachErr)throw attachErr;
-      finalOpenPayment.evidence_path=path;
+
+      checkpoint2OpenPayment.evidence_path=path;
     }
 
-    // ตรวจ EasySlip อัตโนมัติทันที ไม่ส่งไปให้ Admin อนุมัติ
-    const data=await finalCallEasySlipAuto(finalOpenPayment.payment_id);
+    const result=await checkpoint2CallEasySlip(paymentId);
 
     bootstrap.Modal.getInstance(document.getElementById("qrModal"))?.hide();
-    try{ removeImage(new Event("click"),"Slip"); }catch(_){}
-    finalOpenPayment=null;
+    checkpoint2ClearSlipPreview();
+    checkpoint2OpenPayment=null;
+
+    // Re-read authoritative balances/installments/payment history after finalize.
     await loadLiveAccount(false);
-    finalNotice(
-      `EasySlip VERIFIED\nรับชำระ ${money(data.amount||0)} เรียบร้อย\nระบบอัปเดตยอดหนี้และ Ranking แล้ว`,
-      true,
-      "ชำระเงินสำเร็จ"
+
+    const f=result?.result||{};
+    liveToast(
+      `EasySlip VERIFIED\nรับชำระ ${money(Number(result?.amount||0))} เรียบร้อย`+
+      (f?.balance_after!=null
+        ? `\nยอดคงเหลือหลังชำระ ${money(Number(f.balance_after||0))}`
+        :"")
     );
+
     switchTab("page-dashboard");
-  }catch(e){
-    console.error("Customer EasySlip",e);
-    const msg=e?.data?.message||e?.message||"ตรวจสลิปไม่ผ่าน";
+  }catch(err){
+    console.error("Customer EasySlip",err);
 
-    // โหลดสถานะจริงกลับมา แล้วค่อยตัด context เฉพาะเมื่อ backend ปิดรายการแล้ว
-    const paymentId=finalOpenPayment?.payment_id;
+    const msg=err?.data?.message||err?.message||"ตรวจสลิปไม่ผ่าน";
     await loadLiveAccount(false).catch(()=>{});
-    const dbPayment=livePayments.find(p=>String(p.id)===String(paymentId));
 
-    if(dbPayment && ["pending","verifying"].includes(String(dbPayment.status))){
-      // ยัง retry รายการเดิมได้ ไม่ต้องให้ Admin ตรวจ
-      if(finalOpenPayment)finalOpenPayment.evidence_path=dbPayment.evidence_path||finalOpenPayment.evidence_path||null;
-    }else{
-      finalOpenPayment=null;
+    const dbPay=livePayments.find(p=>String(p.id)===String(paymentId));
+    if(!dbPay || ["failed","cancelled","verified"].includes(String(dbPay.status))){
+      checkpoint2OpenPayment=null;
+    }else if(checkpoint2OpenPayment){
+      checkpoint2OpenPayment.evidence_path=
+        dbPay.evidence_path||checkpoint2OpenPayment.evidence_path||null;
     }
 
-    finalNotice(
-      msg + (dbPayment?.status==="verifying"
-        ?"\n\nระบบยังอยู่ระหว่างตรวจ EasySlip อัตโนมัติ คุณไม่ต้องรอ Admin"
-        :""),
-      false,
-      "EasySlip ไม่ผ่าน"
-    );
+    liveToast(msg,false);
   }finally{
     setLiveLoading(false);
   }
 };
 
-const finalBaseRequestChannel=window.requestPaymentChannelChange;
-window.requestPaymentChannelChange=async function(){
-  return finalBaseRequestChannel();
+// After every live account refresh, ensure payment numbers on screen use DB values.
+const checkpoint2BaseUpdateLoanDashboard=window.updateLoanDashboard;
+window.updateLoanDashboard=function(){
+  checkpoint2BaseUpdateLoanDashboard();
+
+  const inst=checkpoint2CurrentInstallment();
+  if(!inst)return;
+
+  const full=Math.max(0,Number(inst.amount_due||0)-Number(inst.amount_paid||0));
+  const interest=Math.max(0,Number(inst.interest_due||0));
+
+  setSafeText("payAmountDue",money(full));
+  setSafeText("payInterestOnly",money(interest));
+
+  // Current selected option decides the visible summary.
+  const selected=checkpoint2SelectedPaymentType();
+  const gross=selected==="INTEREST_ONLY"?interest:full;
+  setSafeText("summaryBasePay",money(gross));
+  setSafeText("summaryFine",money(0));
+  setSafeText("summaryTotalPay",money(gross));
+  document.getElementById("rowFine")?.style.setProperty("display","none");
+  document.getElementById("fineReasonText")?.style.setProperty("display","none");
 };
 
-window.addEventListener("load",async()=>{
-  finalHideNonCustomerBlocks();
-  await finalLoadPublicConfig();
-  finalRenderRankGuide();
-  // Update registration button state at opening time.
-  if(finalPublicConfig?.registration_open===false){
-    const startButtons=[...document.querySelectorAll("button")].filter(b=>(b.textContent||"").includes("สมัคร"));
-    startButtons.forEach(b=>b.title="เปิดรับสมัครอีกครั้งเวลา 00:00 น.");
+// Override old demo summary so FULL cannot accidentally inherit the interest-only value.
+window.updatePaySummary=function(){
+  const inst=checkpoint2CurrentInstallment();
+  if(!inst){
+    setSafeText("summaryBasePay",money(0));
+    setSafeText("summaryFine",money(0));
+    setSafeText("summaryTotalPay",money(0));
+    return;
   }
-});
+  const type=checkpoint2SelectedPaymentType();
+  const gross=checkpoint2ExpectedGross(inst,type);
+  setSafeText("summaryBasePay",money(gross));
+  setSafeText("summaryFine",money(0));
+  setSafeText("summaryTotalPay",money(gross));
+  document.getElementById("rowFine")?.style.setProperty("display","none");
+  document.getElementById("fineReasonText")?.style.setProperty("display","none");
+};
 </script>
 
 </body>
