@@ -2871,14 +2871,51 @@ function handleFloatingInterest(){showToast("ระบบ LIVE ใช้ปร�
 function submitCloseAccount(){showToast("ระบบ LIVE ปิดการตัดยอดแบบจำลองแล้ว",false);}
 
 /* ---------- FULL REMITTANCE ---------- */
-function openRemitModal(){
+async function phase2d2ExpireStaleRemittance(){
+  try{
+    const {data,error}=await adminSb.rpc("fdg_expire_my_stale_rider_remittances",{
+      p_stale_minutes:10
+    });
+    if(error)throw error;
+    if(Number(data?.expired_count||0)>0){
+      await loadLiveRiderData({silent:true});
+      showToast("ปลดรายการตรวจสลิปที่ค้างเกิน 10 นาทีแล้ว • ยอดเงินบริษัทยังคงเดิม",true);
+    }
+    return data;
+  }catch(err){
+    console.error("Expire stale remittance",err);
+    return null;
+  }
+}
+
+async function openRemitModal(){
+  await phase2d2ExpireStaleRemittance();
   const amount=phase2d2Outstanding();
   if(amount<=0){showToast("ไม่มียอดเงินสดค้างนำส่ง",false);return;}
   const pending=phase2d2PendingRemittance();
   if(pending){
-    showToast("มีรายการนำส่งเงินที่กำลังรอตรวจสอบอยู่แล้ว",false);
-    openHistoryModal();
-    return;
+    if(pending.evidence_path){
+      showToast("พบรายการเดิมที่ยังรอตรวจ • กำลังลองตรวจ EasySlip อีกครั้ง",true);
+      const result=await phase2eVerifyRiderRemittance(pending.id,{quiet:true});
+      await phase2d2ExpireStaleRemittance();
+      await loadLiveRiderData({silent:true});
+      if(result?.status==="verified"){
+        showToast("ตรวจรายการเดิมผ่านแล้ว • ยอดค้างถูกคืนบริษัทเรียบร้อย",true);
+        return;
+      }
+      const stillPending=phase2d2PendingRemittance();
+      if(stillPending){
+        showToast("รายการยังอยู่ระหว่างตรวจสอบ กรุณารอสักครู่แล้วลองอีกครั้ง",false);
+        openHistoryModal();
+        return;
+      }
+      // ถ้า EasySlip ทำให้รายการเดิมเป็น failed หรือ stale ถูกปลดแล้ว
+      // ให้ flow ด้านล่างเปิดหน้าส่งสลิปใหม่ได้ทันที
+    }else{
+      showToast("รายการเดิมไม่มีไฟล์สลิปและกำลังรอตรวจสอบ กรุณารอให้ครบ 10 นาทีแล้วลองอีกครั้ง",false);
+      openHistoryModal();
+      return;
+    }
   }
 
   document.getElementById("remit-cash-amount").innerText=liveMoney(amount);
@@ -2907,12 +2944,25 @@ async function phase2eVerifyRiderRemittance(remittanceId,{quiet=false}={}){
   if(!remittanceId)return null;
   try{
     if(!quiet)showToast("กำลังตรวจสลิปกับ EasySlip...",true);
-    const {data,error}=await adminSb.functions.invoke("dynamic-api",{
-      body:{type:"RIDER_REMITTANCE",id:remittanceId}
+    const {data:sessionData}=await adminSb.auth.getSession();
+    const token=sessionData?.session?.access_token;
+    if(!token)throw new Error("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+
+    const res=await fetch(`${ADMIN_SUPABASE_URL}/functions/v1/dynamic-api`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "apikey":ADMIN_SUPABASE_PUBLISHABLE_KEY,
+        "Authorization":`Bearer ${token}`
+      },
+      body:JSON.stringify({type:"RIDER_REMITTANCE",id:remittanceId})
     });
-    if(error)throw error;
-    if(data?.status!=="verified"){
-      throw new Error(data?.message||"EasySlip ไม่อนุมัติสลิป");
+    let data={};
+    try{data=await res.json();}catch(_){}
+    if(!res.ok || data?.status!=="verified"){
+      const e=new Error(data?.message||`EasySlip ตรวจไม่สำเร็จ (HTTP ${res.status})`);
+      e.data=data;
+      throw e;
     }
     await loadLiveRiderData({silent:true});
     showToast(`✓ EasySlip VERIFIED • คืนบริษัท ${liveMoney(data?.amount||0)} เรียบร้อย`,true);
@@ -2920,7 +2970,7 @@ async function phase2eVerifyRiderRemittance(remittanceId,{quiet=false}={}){
   }catch(err){
     console.error("EasySlip verify",err);
     await loadLiveRiderData({silent:true});
-    if(!quiet)showToast(err?.context?.body?.message||err?.message||"ตรวจ EasySlip ไม่ผ่าน",false);
+    if(!quiet)showToast(err?.data?.message||err?.message||"ตรวจ EasySlip ไม่ผ่าน",false);
     return null;
   }
 }
@@ -3011,7 +3061,8 @@ function openHistoryModal(){
         </div>
         <div class="flex items-center gap-2">
           ${badge}
-          ${st!=="verified" && r.evidence_path ? `<button onclick="phase2eVerifyRiderRemittance('${r.id}')" class="bg-indigo-600 text-white px-2 py-1 rounded font-bold">ตรวจ EasySlip</button>` : ""}
+          ${["pending","verifying"].includes(st) && r.evidence_path ? `<button onclick="phase2eVerifyRiderRemittance('${r.id}')" class="bg-indigo-600 text-white px-2 py-1 rounded font-bold">ตรวจ EasySlip</button>` : ""}
+          ${st==="failed" ? `<span class="text-[10px] text-red-500">สร้างรายการใหม่ได้</span>` : ""}
         </div>
       </div>`;
     }).join("");
