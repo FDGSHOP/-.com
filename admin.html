@@ -433,7 +433,49 @@
                             </select>
                             <input type="email" id="new-user-username" placeholder="Email สำหรับ Login" class="p-2 border rounded text-sm">
                             <input type="password" id="new-user-password" placeholder="Password" class="p-2 border rounded text-sm">
-                            <input type="text" id="new-user-bankname" placeholder="ชื่อธนาคาร (เช่น กสิกร, ไทยพาณิชย์)" class="p-2 border rounded text-sm">
+                            <select id="new-user-bankname" class="p-2 border rounded text-sm bg-white">
+                                <option value="">เลือกธนาคาร</option>
+                                <optgroup label="ธนาคารพาณิชย์ในประเทศไทย">
+                                    <option>ธนาคารกรุงเทพ จำกัด (มหาชน)</option>
+                                    <option>ธนาคารกรุงไทย จำกัด (มหาชน)</option>
+                                    <option>ธนาคารกรุงศรีอยุธยา จำกัด (มหาชน)</option>
+                                    <option>ธนาคารกสิกรไทย จำกัด (มหาชน)</option>
+                                    <option>ธนาคารเกียรตินาคินภัทร จำกัด (มหาชน)</option>
+                                    <option>ธนาคารซีไอเอ็มบี ไทย จำกัด (มหาชน)</option>
+                                    <option>ธนาคารทหารไทยธนชาต จำกัด (มหาชน)</option>
+                                    <option>ธนาคารทิสโก้ จำกัด (มหาชน)</option>
+                                    <option>ธนาคารไทยเครดิต จำกัด (มหาชน)</option>
+                                    <option>ธนาคารไทยพาณิชย์ จำกัด (มหาชน)</option>
+                                    <option>ธนาคารยูโอบี จำกัด (มหาชน)</option>
+                                    <option>ธนาคารแลนด์ แอนด์ เฮ้าส์ จำกัด (มหาชน)</option>
+                                    <option>ธนาคารไอซีบีซี (ไทย) จำกัด (มหาชน)</option>
+                                    <option>ธนาคารแห่งประเทศจีน (ไทย) จำกัด (มหาชน)</option>
+                                    <option>ธนาคารเมกะ สากลพาณิชย์ จำกัด (มหาชน)</option>
+                                    <option>ธนาคารซูมิโตโม มิตซุย ทรัสต์ (ไทย) จำกัด (มหาชน)</option>
+                                    <option>ธนาคารสแตนดาร์ดชาร์เตอร์ด (ไทย) จำกัด (มหาชน)</option>
+                                </optgroup>
+                                <optgroup label="สาขาธนาคารต่างประเทศในประเทศไทย">
+                                    <option>ธนาคารอินเดียนโอเวอร์ซีส์</option>
+                                    <option>ธนาคารบีเอ็นพี พารีบาส์</option>
+                                    <option>ธนาคารแห่งอเมริกา เนชั่นแนล แอสโซซิเอชั่น</option>
+                                    <option>ธนาคารเจพีมอร์แกน เชส</option>
+                                    <option>ธนาคารซิตี้แบงก์ เอ็น.เอ.</option>
+                                    <option>ธนาคารอาร์ เอช บี เบอร์ฮาด</option>
+                                    <option>ธนาคารดอยซ์แบงก์</option>
+                                    <option>ธนาคารฮ่องกงและเซี่ยงไฮ้แบงกิ้งคอร์ปอเรชั่น จำกัด (HSBC)</option>
+                                    <option>ธนาคารมิซูโฮ จำกัด สาขากรุงเทพฯ</option>
+                                    <option>ธนาคารโอเวอร์ซี-ไชนีส แบงกิ้ง คอร์ปอเรชั่น จำกัด (OCBC)</option>
+                                    <option>ธนาคารซูมิโตโม มิตซุย แบงกิ้ง คอร์ปอเรชั่น สาขากรุงเทพฯ</option>
+                                </optgroup>
+                                <optgroup label="สถาบันการเงินเฉพาะกิจของรัฐ">
+                                    <option>ธนาคารออมสิน</option>
+                                    <option>ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร (ธ.ก.ส.)</option>
+                                    <option>ธนาคารอาคารสงเคราะห์ (ธอส.)</option>
+                                    <option>ธนาคารเพื่อการส่งออกและนำเข้าแห่งประเทศไทย (EXIM BANK)</option>
+                                    <option>ธนาคารพัฒนาวิสาหกิจขนาดกลางและขนาดย่อมแห่งประเทศไทย (SME D Bank)</option>
+                                    <option>ธนาคารอิสลามแห่งประเทศไทย</option>
+                                </optgroup>
+                            </select>
                             <input type="text" id="new-user-bankacc" placeholder="เลขบัญชีธนาคาร" class="p-2 border rounded text-sm">
                             <textarea id="new-user-address" placeholder="ที่อยู่ปัจจุบัน" class="p-2 border rounded text-sm md:col-span-2" rows="2"></textarea>
                         </div>
@@ -451,14 +493,22 @@
                             </div>
                             <button onclick="checkpoint4RefreshManagement()" class="text-xs font-bold text-indigo-600">↻ รีเฟรช</button>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                            <select id="checkpoint4-area-rider" class="p-2 border rounded text-sm"></select>
-                            <select id="checkpoint4-area-id" class="p-2 border rounded text-sm"></select>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                            <select id="checkpoint4-area-rider" class="p-2 border rounded text-sm bg-white">
+                                <option value="">เลือก Rider</option>
+                            </select>
+                            <select id="checkpoint4-area-district" onchange="checkpoint4RenderSubdistricts()" class="p-2 border rounded text-sm bg-white">
+                                <option value="">เลือกอำเภอ</option>
+                            </select>
+                            <select id="checkpoint4-area-id" class="p-2 border rounded text-sm bg-white">
+                                <option value="">เลือกตำบล</option>
+                            </select>
                             <div class="grid grid-cols-2 gap-2">
                                 <button onclick="checkpoint4SetArea('APPROVE')" class="bg-emerald-600 text-white rounded font-bold text-sm p-2">อนุมัติพื้นที่</button>
                                 <button onclick="checkpoint4SetArea('REVOKE')" class="bg-red-600 text-white rounded font-bold text-sm p-2">ถอนพื้นที่</button>
                             </div>
                         </div>
+                        <div id="checkpoint4-area-load-state" class="text-[11px] text-gray-400">กำลังโหลดอำเภอและตำบลจาก Supabase...</div>
                         <div id="checkpoint4-area-summary" class="text-xs text-gray-500"></div>
                     </div>
 
@@ -2316,13 +2366,7 @@ function checkpoint4RenderStaff(){
     if([...riderSel.options].some(o=>o.value===prev))riderSel.value=prev;
   }
 
-  const areaSel=document.getElementById("checkpoint4-area-id");
-  if(areaSel){
-    const prev=areaSel.value;
-    areaSel.innerHTML='<option value="">เลือกพื้นที่</option>'+
-      checkpoint4Areas.map(a=>`<option value="${a.id}">${liveEsc(a.display_name)}</option>`).join("");
-    if([...areaSel.options].some(o=>o.value===prev))areaSel.value=prev;
-  }
+  checkpoint4RenderDistricts();
 
   const badge=document.getElementById("master-badge-indicator");
   if(badge){
@@ -2331,6 +2375,51 @@ function checkpoint4RenderStaff(){
       :"Admin: ดูบัญชี + มอบหมายงาน";
   }
 }
+
+function checkpoint4RenderDistricts(){
+  const districtSel=document.getElementById("checkpoint4-area-district");
+  const state=document.getElementById("checkpoint4-area-load-state");
+  if(!districtSel)return;
+
+  const oldDistrict=districtSel.value;
+  const districts=[...new Set(
+    checkpoint4Areas
+      .filter(a=>String(a.province||"พะเยา")==="พะเยา" && a.district && a.subdistrict)
+      .map(a=>String(a.district))
+  )].sort((a,b)=>a.localeCompare(b,"th"));
+
+  districtSel.innerHTML='<option value="">เลือกอำเภอ</option>'+
+    districts.map(d=>`<option value="${liveEsc(d)}">${liveEsc(d)}</option>`).join("");
+
+  if(districts.includes(oldDistrict))districtSel.value=oldDistrict;
+
+  checkpoint4RenderSubdistricts();
+
+  if(state){
+    state.textContent=districts.length
+      ? `โหลดแล้ว ${districts.length} อำเภอ • ${checkpoint4Areas.filter(a=>a.subdistrict).length} ตำบล/พื้นที่`
+      : "ไม่พบข้อมูลอำเภอ/ตำบลใน service_areas";
+    state.className=districts.length
+      ?"text-[11px] text-emerald-600"
+      :"text-[11px] text-red-500";
+  }
+}
+
+window.checkpoint4RenderSubdistricts=function(){
+  const district=document.getElementById("checkpoint4-area-district")?.value||"";
+  const areaSel=document.getElementById("checkpoint4-area-id");
+  if(!areaSel)return;
+
+  const oldArea=areaSel.value;
+  const rows=checkpoint4Areas
+    .filter(a=>a.subdistrict && (!district || String(a.district)===String(district)))
+    .sort((a,b)=>String(a.subdistrict).localeCompare(String(b.subdistrict),"th"));
+
+  areaSel.innerHTML='<option value="">เลือกตำบล</option>'+
+    rows.map(a=>`<option value="${a.id}">${liveEsc(a.subdistrict)} — อ.${liveEsc(a.district)}</option>`).join("");
+
+  if(rows.some(a=>String(a.id)===String(oldArea)))areaSel.value=oldArea;
+};
 
 function checkpoint4EligibleRiderOptions(job){
   const areaId=String(job.area_id||"");
@@ -2387,16 +2476,38 @@ async function checkpoint4RefreshManagement(showMessage=false){
 
   checkpoint4Busy=true;
   try{
-    const [staffRes,jobRes]=await Promise.all([
+    const [staffRes,jobRes,areaRes]=await Promise.all([
       adminSb.rpc("fdg_staff_management_snapshot"),
-      adminSb.rpc("fdg_collection_assignment_snapshot")
+      adminSb.rpc("fdg_collection_assignment_snapshot"),
+      adminSb.from("service_areas")
+        .select("id,code,province,district,subdistrict,display_name,is_active")
+        .eq("is_active",true)
+        .eq("province","พะเยา")
+        .not("subdistrict","is",null)
+        .order("district")
+        .order("subdistrict")
     ]);
-    if(staffRes.error)throw staffRes.error;
-    if(jobRes.error)throw jobRes.error;
 
-    checkpoint4Staff=staffRes.data?.staff||[];
-    checkpoint4Areas=staffRes.data?.areas||[];
-    checkpoint4Jobs=jobRes.data?.jobs||[];
+    // พื้นที่โหลดแยกจาก Staff snapshot เพื่อไม่ให้ Dropdown ว่าง
+    // หาก Staff RPC มีปัญหา แต่ service_areas ยังอ่านได้ พื้นที่จะยังแสดงได้.
+    if(areaRes.error)throw areaRes.error;
+    checkpoint4Areas=areaRes.data||[];
+
+    if(staffRes.error){
+      console.error("Staff snapshot:",staffRes.error);
+      const fallback=await adminSb.rpc("fdg_staff_management_options");
+      if(fallback.error)throw staffRes.error;
+      checkpoint4Staff=fallback.data?.staff||[];
+    }else{
+      checkpoint4Staff=staffRes.data?.staff||[];
+    }
+
+    if(jobRes.error){
+      console.warn("Assignment snapshot:",jobRes.error);
+      checkpoint4Jobs=[];
+    }else{
+      checkpoint4Jobs=jobRes.data?.jobs||[];
+    }
 
     checkpoint4RenderStaff();
     checkpoint4RenderAssignments();
@@ -2518,7 +2629,7 @@ window.checkpoint4SetArea=async function(action){
   if(!isMaster){showToast("เฉพาะ Master เท่านั้นที่อนุมัติ/ถอนพื้นที่",false);return;}
   const riderId=document.getElementById("checkpoint4-area-rider")?.value;
   const areaId=document.getElementById("checkpoint4-area-id")?.value;
-  if(!riderId||!areaId){showToast("เลือก Rider และพื้นที่ก่อน",false);return;}
+  if(!riderId){showToast("เลือก Rider ก่อน",false);return;}\n  if(!document.getElementById("checkpoint4-area-district")?.value){showToast("เลือกอำเภอก่อน",false);return;}\n  if(!areaId){showToast("เลือกตำบลก่อน",false);return;}
 
   try{
     const {error}=await adminSb.rpc("fdg_master_set_rider_area",{
