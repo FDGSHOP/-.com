@@ -3456,6 +3456,46 @@ window.openQrModal=async function(){
   }
 };
 
+async function checkpoint2ConfirmPaymentInDatabase(paymentId,{maxAttempts=6,delayMs=450}={}){
+  let lastPayment=null;
+
+  for(let attempt=1;attempt<=maxAttempts;attempt++){
+    await loadLiveAccount(false);
+
+    lastPayment=livePayments.find(
+      p=>String(p.id)===String(paymentId)
+    )||null;
+
+    if(lastPayment && String(lastPayment.status)==="verified"){
+      const loanBalance=liveLoan ? Number(liveLoan.remaining_balance||0) : null;
+      return {
+        confirmed:true,
+        payment:lastPayment,
+        loan_balance:loanBalance,
+        attempt
+      };
+    }
+
+    if(lastPayment && ["failed","cancelled"].includes(String(lastPayment.status))){
+      return {
+        confirmed:false,
+        terminal:true,
+        payment:lastPayment,
+        attempt
+      };
+    }
+
+    await new Promise(r=>setTimeout(r,delayMs));
+  }
+
+  return {
+    confirmed:false,
+    terminal:false,
+    payment:lastPayment,
+    attempt:maxAttempts
+  };
+}
+
 window.submitPaymentSlip=async function(){
   if(!checkpoint2OpenPayment?.payment_id){
     liveToast("กรุณาสร้าง QR ก่อนส่งสลิป",false);
@@ -3511,19 +3551,51 @@ window.submitPaymentSlip=async function(){
 
     const result=await checkpoint2CallEasySlip(paymentId);
 
+    // EasySlip VERIFIED is not enough for the UI.
+    // Confirm that the server-side finalize transaction is visible in Supabase first.
+    setLiveLoading(true,"ตรวจผ่านแล้ว • กำลังอัปเดตยอดสินเชื่อ...");
+
+    const confirmed=await checkpoint2ConfirmPaymentInDatabase(paymentId,{
+      maxAttempts:6,
+      delayMs:450
+    });
+
+    if(!confirmed.confirmed){
+      if(confirmed.terminal){
+        throw new Error(
+          `EasySlip ตอบกลับแล้ว แต่รายการในฐานข้อมูลเป็น ${String(confirmed.payment?.status||"ไม่ทราบสถานะ")}`
+        );
+      }
+
+      // Do not show a false "debt deducted" message.
+      // The bank/provider may already be verified, but the browser has not yet observed
+      // the authoritative payment ledger update.
+      bootstrap.Modal.getInstance(document.getElementById("qrModal"))?.hide();
+      checkpoint2ClearSlipPreview();
+      checkpoint2OpenPayment=null;
+
+      liveToast(
+        "EasySlip ตรวจผ่านแล้ว แต่หน้าจอยังรอซิงก์ยอดจากฐานข้อมูล\\nกรุณากดรีเฟรชข้อมูลอีกครั้งก่อนทำรายการใหม่",
+        false
+      );
+      return;
+    }
+
     bootstrap.Modal.getInstance(document.getElementById("qrModal"))?.hide();
     checkpoint2ClearSlipPreview();
     checkpoint2OpenPayment=null;
 
-    // Re-read authoritative balances/installments/payment history after finalize.
-    await loadLiveAccount(false);
+    const dbPay=confirmed.payment||{};
+    const paid=Number(dbPay.amount_received||result?.amount||0);
+    const balanceAfter=
+      dbPay.balance_after!=null
+        ? Number(dbPay.balance_after||0)
+        : Number(confirmed.loan_balance||0);
 
-    const f=result?.result||{};
     liveToast(
-      `EasySlip VERIFIED\nรับชำระ ${money(Number(result?.amount||0))} เรียบร้อย`+
-      (f?.balance_after!=null
-        ? `\nยอดคงเหลือหลังชำระ ${money(Number(f.balance_after||0))}`
-        :"")
+      `✓ ชำระสำเร็จและอัปเดตยอดแล้ว`+
+      `\\nรับชำระ ${money(paid)}`+
+      `\\nยอดคงเหลือ ${money(balanceAfter)}`
     );
 
     switchTab("page-dashboard");
