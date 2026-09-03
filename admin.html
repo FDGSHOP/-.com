@@ -1,5 +1,4 @@
-<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-</head><body><!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html>
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head><body><!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -50,7 +49,6 @@
     <!-- 1. PORTAL LANDING -->
     <div id="portal-screen" class="hidden min-h-screen flex flex-col justify-center items-center p-4">
         <div class="text-center mb-8">
-            <img src="./fdg-logo-192.png" alt="เงินกู้เพื่อคนพะเยา" class="w-24 h-24 rounded-full object-cover mx-auto mb-4 shadow border-4 border-white">
             <h1 class="text-3xl font-bold text-slate-800">ระบบบริหารจัดการไรเดอร์ & ยอดชำระ</h1>
             <p class="text-gray-500 text-sm mt-1">กรุณาเลือกระบบที่ต้องการเข้าใช้งาน</p>
         </div>
@@ -76,8 +74,7 @@
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> ย้อนกลับ
             </button>
             
-            <img src="./fdg-logo-192.png" alt="เงินกู้เพื่อคนพะเยา" class="w-20 h-20 rounded-full object-cover mx-auto mt-5 mb-2 shadow border">
-            <h2 id="login-title" class="text-2xl font-bold text-center mt-2 mb-2">เข้าสู่ระบบ</h2>
+            <h2 id="login-title" class="text-2xl font-bold text-center mt-4 mb-2">เข้าสู่ระบบ</h2>
             <p class="text-xs text-gray-400 text-center mb-6" id="login-subtitle">กรอกข้อมูลผู้ใช้งานเพื่อยืนยันตัวตน</p>
 
             <div class="space-y-4">
@@ -103,10 +100,7 @@
     <div id="rider-app" class="hidden min-h-screen bg-gray-50 pb-12 relative">
         <div id="rider-sidebar" class="fixed inset-y-0 left-0 z-40 w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col">
             <div class="p-4 bg-emerald-600 text-white flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <img src="./fdg-logo-192.png" alt="โลโก้" class="w-10 h-10 rounded-full object-cover bg-white border-2 border-white">
-                    <span class="font-bold text-lg">แดชบอร์ด & คอมมิชชั่นไรเดอร์ (7%)</span>
-                </div>
+                <span class="font-bold text-lg">แดชบอร์ด & คอมมิชชั่นไรเดอร์ (7%)</span>
                 <button onclick="toggleRiderSidebar()" class="text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="p-4 flex-1 overflow-y-auto space-y-4">
@@ -144,12 +138,9 @@
 
         <header class="bg-emerald-600 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
             <div class="flex items-center gap-3">
-                <button onclick="toggleRiderSidebar()" aria-label="เปิดเมนูรายได้" class="text-white p-2 hover:bg-emerald-700 rounded-lg border border-emerald-500/60">
-                    <i data-lucide="menu" class="w-7 h-7"></i>
-                </button>
+                <button onclick="toggleRiderSidebar()" class="text-white p-1 hover:bg-emerald-700 rounded"><i data-lucide="menu" class="w-6 h-6"></i></button>
                 <div class="flex items-center gap-2">
-                    <img src="./fdg-logo-192.png" alt="โลโก้" class="w-10 h-10 rounded-full object-cover bg-white border-2 border-white shadow">
-                    <i data-lucide="bike" class="w-5 h-5"></i>
+                    <i data-lucide="bike" class="w-6 h-6"></i>
                     <div>
                         <span class="font-bold text-base block leading-tight" id="rider-profile-name">Rider Name</span>
                         <span class="text-[10px] text-emerald-200">พนักงานเก็บเงิน (คอมฯ 7%)</span>
@@ -214,10 +205,7 @@
     <div id="admin-app" class="hidden min-h-screen flex flex-col md:flex-row">
         <aside id="sidebar" class="bg-slate-900 text-white w-full md:w-64 fixed md:relative z-30 transition-all duration-300 transform -translate-x-full md:translate-x-0 h-screen flex flex-col">
             <div class="p-4 font-bold text-xl border-b border-slate-800 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <img src="./fdg-logo-192.png" alt="โลโก้" class="w-11 h-11 rounded-full object-cover bg-white border-2 border-slate-700">
-                    <span id="admin-sidebar-role" class="text-indigo-400">ADMIN SYSTEM</span>
-                </div>
+                <span id="admin-sidebar-role" class="text-indigo-400">ADMIN SYSTEM</span>
                 <button onclick="toggleSidebar()" class="md:hidden text-gray-400"><i data-lucide="x"></i></button>
             </div>
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -243,7 +231,7 @@
         <div class="flex-1 flex flex-col min-h-screen">
             <header class="bg-slate-800 text-white p-4 flex justify-between items-center md:hidden sticky top-0 z-20">
                 <button onclick="toggleSidebar()" class="text-white"><i data-lucide="menu" class="w-7 h-7"></i></button>
-                <span class="font-bold flex items-center gap-2"><img src="./fdg-logo-192.png" alt="โลโก้" class="w-8 h-8 rounded-full object-cover bg-white"> ADMIN MANAGEMENT</span>
+                <span class="font-bold">ADMIN MANAGEMENT</span>
                 <div></div>
             </header>
 
@@ -253,7 +241,7 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h2 class="text-2xl font-bold">แดชบอร์ดการเงิน & ภาพรวมบริษัท</h2>
-                            <p class="text-xs text-gray-500">ดอกเบี้ยรับจริง ค่าใช้จ่าย Rider/Admin เงินสดคงค้าง และผลกำไร/ขาดทุน</p>
+                            <p class="text-xs text-gray-500">เปรียบเทียบวงเงินลงทุน ยอดที่ต้องเก็บ และคอมมิชชั่นไรเดอร์ 7%</p>
                         </div>
                         <button onclick="adminCloseDay()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold shadow text-sm">
                             กดปิดรอบวัน (Cut-off & ระงับผู้ค้างเงิน)
@@ -288,69 +276,10 @@
                             <p class="text-lg font-bold text-amber-600" id="dash-cash-total">เงินสด: 0 ฿</p>
                         </div>
                         <div class="bg-white p-4 rounded-xl shadow border">
-                            <span class="text-xs text-gray-500 font-bold">ผลประกอบการสุทธิ (ดอกเบี้ย - ค่าใช้จ่าย)</span>
+                            <span class="text-xs text-gray-500 font-bold">รายรับสุทธิบริษัท (หักคอมฯ ไรเดอร์ 7%)</span>
                             <p class="text-2xl font-bold text-indigo-600" id="dash-net-total">0 ฿</p>
                         </div>
                     </div>
-
-
-                    <!-- FINAL CORE FINANCIAL DASHBOARD -->
-                    <section id="final-finance-panel" class="bg-white rounded-2xl shadow border p-4 md:p-5 space-y-4">
-                      <div class="flex flex-col md:flex-row md:items-end justify-between gap-3">
-                        <div>
-                          <h3 class="font-extrabold text-lg">ผลประกอบการบริษัท</h3>
-                          <p class="text-xs text-gray-500">รายได้หลัก = ดอกเบี้ยที่รับจริง • ค่าใช้จ่ายหลัก = คอม Rider + ค่าแรง Admin เฉลี่ย</p>
-                        </div>
-                        <div class="flex flex-wrap gap-2 items-end">
-                          <label class="text-xs">จาก<input id="final-fin-from" type="date" class="block border rounded p-2 mt-1"></label>
-                          <label class="text-xs">ถึง<input id="final-fin-to" type="date" class="block border rounded p-2 mt-1"></label>
-                          <button onclick="finalLoadFinancial()" class="bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold text-sm">อัปเดต</button>
-                        </div>
-                      </div>
-                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div class="rounded-xl border p-3 bg-emerald-50"><div class="text-[11px] text-emerald-700 font-bold">ดอกเบี้ยรับจริง</div><div id="final-interest" class="text-xl font-extrabold text-emerald-700">0 ฿</div></div>
-                        <div class="rounded-xl border p-3 bg-red-50"><div class="text-[11px] text-red-700 font-bold">ค่าใช้จ่ายหลัก</div><div id="final-expense" class="text-xl font-extrabold text-red-700">0 ฿</div></div>
-                        <div class="rounded-xl border p-3 bg-slate-50"><div class="text-[11px] text-gray-600 font-bold">คอม Rider</div><div id="final-rider-commission" class="text-xl font-extrabold">0 ฿</div></div>
-                        <div class="rounded-xl border p-3 bg-slate-50"><div class="text-[11px] text-gray-600 font-bold">ค่าแรง Admin เฉลี่ย</div><div id="final-admin-wage" class="text-xl font-extrabold">0 ฿</div></div>
-                      </div>
-                      <div id="final-net-card" class="rounded-xl p-4 border bg-emerald-50">
-                        <div class="text-xs font-bold">ผลประกอบการสุทธิ</div>
-                        <div id="final-net" class="text-3xl font-black">+0 ฿</div>
-                        <div class="text-[11px] text-gray-500 mt-1">ค่าคอมแนะนำ Staff 2% แสดงแยกในรายละเอียดเพื่อการตรวจบัญชี</div>
-                      </div>
-                      <div class="h-72"><canvas id="final-finance-chart"></canvas></div>
-                      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                        <div class="border rounded-lg p-3"><span class="text-gray-500">CASH เก็บ</span><b id="final-cash-collected" class="block text-base">0 ฿</b></div>
-                        <div class="border rounded-lg p-3"><span class="text-gray-500">คืนบริษัท</span><b id="final-cash-returned" class="block text-base text-emerald-600">0 ฿</b></div>
-                        <div class="border rounded-lg p-3"><span class="text-gray-500">Rider คงค้าง</span><b id="final-cash-outstanding" class="block text-base text-red-600">0 ฿</b></div>
-                        <div class="border rounded-lg p-3"><span class="text-gray-500">ค่าคอมแนะนำ Staff</span><b id="final-referral-commission" class="block text-base">0 ฿</b></div>
-                      </div>
-                      <div id="final-smart-analysis" class="rounded-xl bg-slate-900 text-white p-4 text-sm"></div>
-                    </section>
-
-                    <section class="bg-white rounded-2xl shadow border p-4 md:p-5">
-                      <div class="font-bold mb-3">เงินสดบริษัทที่อยู่กับ Rider</div>
-                      <div id="final-rider-cash-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm"></div>
-                    </section>
-
-
-                    <section id="final-payroll-panel" class="bg-white rounded-2xl shadow border p-4 md:p-5 space-y-3">
-                      <div class="flex justify-between items-center gap-2">
-                        <div><div class="font-bold">Payroll รายเดือน</div><div class="text-xs text-gray-500">Admin เงินเดือนประจำ • Rider คอม 7% + คอมแนะนำที่เกิดจริง</div></div>
-                        <button id="final-generate-payroll" onclick="finalGeneratePayroll()" class="bg-amber-500 text-slate-900 px-3 py-2 rounded-lg font-bold text-xs">สรุป Payroll เดือนนี้</button>
-                      </div>
-                      <div id="final-payroll-list" class="space-y-2 text-xs"></div>
-                    </section>
-
-                    <section class="bg-white rounded-2xl shadow border p-4 md:p-5 space-y-3">
-                      <div class="font-bold">ประชาสัมพันธ์ / โฆษณาหน้าลูกค้า</div>
-                      <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
-                        <input id="final-ad-title" class="border rounded p-2 text-sm" placeholder="หัวข้อ">
-                        <input id="final-ad-url" class="border rounded p-2 text-sm md:col-span-2" placeholder="Media URL: รูป/GIF/YouTube/MP4">
-                        <button onclick="finalAddAdvertisement()" class="bg-blue-600 text-white rounded p-2 font-bold text-sm">เพิ่มโฆษณา</button>
-                      </div>
-                      <div id="final-ad-list" class="space-y-2 text-xs"></div>
-                    </section>
 
                     <div class="bg-white rounded-xl shadow overflow-hidden">
                         <div class="p-4 border-b font-bold text-gray-700">ติดตามสถานะการทำงานของ Rider & ค่าคอมมิชชั่นสะสม (7%)</div>
@@ -382,35 +311,6 @@
                         </div>
                     </div>
                     
-
-                    <!-- FINAL CORE OPERATIONS -->
-                    <section class="bg-white rounded-2xl shadow border p-4 space-y-5">
-                      <div>
-                        <h3 class="font-extrabold text-lg">งาน CASH / ช่องทางชำระ / สิทธิ์พื้นที่ Rider</h3>
-                        <p class="text-xs text-gray-500">Backend ตรวจสิทธิ์พื้นที่และ CASH LOCK อีกชั้นก่อนมอบหมายงาน</p>
-                      </div>
-
-                      <div>
-                        <div class="font-bold text-sm mb-2">คำขอเปลี่ยนช่องทาง SCAN ↔ CASH</div>
-                        <div id="final-channel-requests" class="space-y-2 text-xs"></div>
-                      </div>
-
-                      <div>
-                        <div class="font-bold text-sm mb-2">งาน CASH ที่รอมอบหมาย Rider</div>
-                        <div id="final-unassigned-cash" class="space-y-2 text-xs"></div>
-                      </div>
-
-                      <div class="border-t pt-4">
-                        <div class="font-bold text-sm mb-2">ขอสิทธิ์พื้นที่ให้ Rider</div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                          <select id="final-area-rider" class="border rounded p-2 text-sm"></select>
-                          <select id="final-area-select" class="border rounded p-2 text-sm"></select>
-                          <button onclick="finalRequestRiderArea()" class="bg-indigo-600 text-white rounded p-2 font-bold text-sm">ส่งคำขอพื้นที่</button>
-                        </div>
-                        <div id="final-area-access-list" class="space-y-2 text-xs mt-3"></div>
-                      </div>
-                    </section>
-
                     <div class="bg-white p-6 rounded-xl shadow space-y-4">
                         <h3 class="font-bold text-lg border-b pb-2">เพิ่มข้อมูลลูกค้าขอสินเชื่อใหม่ (ตรวจสอบเทียบกับวงเงินลงทุนที่มีอยู่)</h3>
                         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -2252,264 +2152,6 @@ openDashboard=function(role){
 window.addEventListener("load",()=>setTimeout(bootAdminSession,900));
 </script>
 
-
-<script>
-/* ============================================================
-   FINAL CORE ADMIN/MASTER OVERRIDES
-   ============================================================ */
-let finalFinanceChart=null;
-let finalChannelRequests=[];
-let finalCashJobs=[];
-let finalAreaAccess=[];
-let finalAllAreas=[];
-let finalAds=[];
-let finalPayroll=[];
-
-function finalThb(n){
-  return Number(n||0).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2})+" ฿";
-}
-function finalEsc(v){
-  return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-}
-function finalMonthStart(){
-  const d=new Date();
-  const bangkok=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Bangkok",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
-  return bangkok.slice(0,7)+"-01";
-}
-function finalToday(){
-  return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Bangkok",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
-}
-function finalInitDates(){
-  const f=document.getElementById("final-fin-from"),t=document.getElementById("final-fin-to");
-  if(f&&!f.value)f.value=finalMonthStart();
-  if(t&&!t.value)t.value=finalToday();
-}
-
-async function finalLoadFinancial(){
-  if(!currentUser||!["admin","master"].includes(String(currentUser.role)))return;
-  finalInitDates();
-  const p_from=document.getElementById("final-fin-from")?.value||finalMonthStart();
-  const p_to=document.getElementById("final-fin-to")?.value||finalToday();
-  try{
-    const {data,error}=await adminSb.rpc("fdg_financial_dashboard",{p_from,p_to});
-    if(error)throw error;
-
-    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-    set("final-interest",finalThb(data.interest_income));
-    set("final-expense",finalThb(data.core_expense));
-    set("final-rider-commission",finalThb(data.rider_commission));
-    set("final-admin-wage",finalThb(data.admin_wage_cost));
-    set("final-referral-commission",finalThb(data.staff_referral_commission));
-    set("final-cash-collected",finalThb(data.rider_cash_collected));
-    set("final-cash-returned",finalThb(data.rider_cash_returned));
-    set("final-cash-outstanding",finalThb(data.rider_cash_outstanding));
-
-    const net=Number(data.core_net_profit||0);
-    set("final-net",(net>=0?"+":"")+finalThb(net));
-    const nc=document.getElementById("final-net-card");
-    if(nc)nc.className="rounded-xl p-4 border "+(net>=0?"bg-emerald-50":"bg-red-50");
-
-    const daily=Array.isArray(data.daily)?data.daily:[];
-    const canvas=document.getElementById("final-finance-chart");
-    if(canvas&&window.Chart){
-      if(finalFinanceChart)finalFinanceChart.destroy();
-      finalFinanceChart=new Chart(canvas,{
-        type:"bar",
-        data:{
-          labels:daily.map(x=>String(x.date).slice(5)),
-          datasets:[
-            {label:"รายได้ดอกเบี้ย",data:daily.map(x=>Number(x.interest_income||0)),backgroundColor:"rgba(22,163,74,.75)"},
-            {label:"ค่าใช้จ่าย",data:daily.map(x=>Number(x.expense||0)),backgroundColor:"rgba(220,38,38,.72)"}
-          ]
-        },
-        options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}
-      });
-    }
-
-    const riders=Array.isArray(data.rider_outstanding)?data.rider_outstanding:[];
-    const rb=document.getElementById("final-rider-cash-list");
-    if(rb)rb.innerHTML=riders.length?riders.map(r=>`
-      <div class="border rounded-lg p-3 flex justify-between items-center">
-        <div><b>${finalEsc(r.name||"Rider")}</b><div class="text-[10px] text-gray-400">เก็บ ${finalThb(r.total_collected)} • คืน ${finalThb(r.total_returned)}</div></div>
-        <b class="${Number(r.remaining_company_money)>0?"text-red-600":"text-emerald-600"}">${finalThb(r.remaining_company_money)}</b>
-      </div>`).join(""):'<div class="text-gray-400">ยังไม่มี Rider</div>';
-
-    const insight=document.getElementById("final-smart-analysis");
-    if(insight){
-      const out=Number(data.rider_cash_outstanding||0);
-      const interest=Number(data.interest_income||0);
-      const expense=Number(data.core_expense||0);
-      let lines=[];
-      lines.push(net>=0?`ช่วงนี้ผลประกอบการเป็นบวก ${finalThb(net)}`:`ช่วงนี้ผลประกอบการติดลบ ${finalThb(Math.abs(net))}`);
-      if(out>0)lines.push(`มีเงินสดบริษัทค้างอยู่กับ Rider ${finalThb(out)} ควรติดตามก่อนเริ่มรอบวันถัดไป`);
-      if(interest>0)lines.push(`ค่าใช้จ่ายหลักคิดเป็น ${((expense/interest)*100).toFixed(1)}% ของดอกเบี้ยที่รับจริง`);
-      lines.push(`เงินต้นปล่อยในช่วงนี้ ${finalThb(data.loan_capital_disbursed)} • เงินต้นรับคืน ${finalThb(data.principal_recovered)}`);
-      insight.innerHTML=`<div class="font-bold mb-1">สรุปวิเคราะห์อัตโนมัติ</div>${lines.map(x=>`<div>• ${finalEsc(x)}</div>`).join("")}`;
-    }
-  }catch(e){
-    console.error(e);showToast(e?.message||"โหลด Dashboard การเงินไม่สำเร็จ",false);
-  }
-}
-
-async function finalLoadOperations(){
-  if(!currentUser||!["admin","master"].includes(String(currentUser.role)))return;
-  try{
-    const [cr,jobs,aa,areas,ads,pay]=await Promise.all([
-      adminSb.from("payment_channel_requests").select("*").eq("status","pending").order("created_at",{ascending:false}),
-      adminSb.from("collections").select("*").eq("status","pending").is("rider_id",null).order("due_date",{ascending:true}),
-      adminSb.from("rider_area_access").select("*").order("requested_at",{ascending:false}).limit(200),
-      adminSb.from("service_areas").select("*").eq("is_active",true).not("subdistrict","is",null).order("district").order("subdistrict"),
-      adminSb.from("advertisements").select("*").order("sort_order").order("created_at",{ascending:false}),
-      adminSb.from("payroll").select("*").eq("period_year",new Date().getFullYear()).eq("period_month",new Date().getMonth()+1).order("total_amount",{ascending:false})
-    ]);
-    finalChannelRequests=cr.error?[]:(cr.data||[]);
-    finalCashJobs=jobs.error?[]:(jobs.data||[]);
-    finalAreaAccess=aa.error?[]:(aa.data||[]);
-    finalAllAreas=areas.error?[]:(areas.data||[]);
-    finalAds=ads.error?[]:(ads.data||[]);
-    finalPayroll=pay.error?[]:(pay.data||[]);
-    finalRenderOperations();
-  }catch(e){console.warn("Final operations",e);}
-}
-
-function finalCustomer(id){return liveCustomers.find(x=>String(x.id)===String(id));}
-function finalArea(id){return finalAllAreas.find(x=>String(x.id)===String(id));}
-function finalRider(id){return liveRiders.find(x=>String(x.id)===String(id));}
-
-function finalRenderOperations(){
-  const cr=document.getElementById("final-channel-requests");
-  if(cr)cr.innerHTML=finalChannelRequests.length?finalChannelRequests.map(r=>{
-    const c=finalCustomer(r.customer_id);
-    return `<div class="border rounded-lg p-3 flex flex-col md:flex-row justify-between md:items-center gap-2">
-      <div><b>${finalEsc(c?.full_name||r.customer_id)}</b> <span class="text-gray-400">${finalEsc(c?.customer_code||"")}</span><div>${r.current_channel} → <b>${r.requested_channel}</b></div></div>
-      <div class="flex gap-1"><button onclick="finalReviewChannel('${r.id}',true)" class="bg-emerald-600 text-white px-2 py-1 rounded font-bold">อนุมัติ</button><button onclick="finalReviewChannel('${r.id}',false)" class="bg-red-600 text-white px-2 py-1 rounded font-bold">ปฏิเสธ</button></div>
-    </div>`;
-  }).join(""):'<div class="text-gray-400">ไม่มีคำขอค้าง</div>';
-
-  const jobs=document.getElementById("final-unassigned-cash");
-  if(jobs)jobs.innerHTML=finalCashJobs.length?finalCashJobs.map(j=>{
-    const c=finalCustomer(j.customer_id),a=finalArea(j.service_area_id);
-    const opts=liveRiders.filter(r=>String(r.status)==="active").map(r=>`<option value="${r.id}">${finalEsc(r.display_name||r.username)}</option>`).join("");
-    return `<div class="border rounded-lg p-3">
-      <div class="flex justify-between gap-2"><div><b>${finalEsc(c?.full_name||"-")}</b> ${finalEsc(c?.customer_code||"")}<div class="text-gray-500">${finalEsc(a?.display_name||"ไม่พบพื้นที่")} • ครบกำหนด ${finalEsc(j.due_date||"-")}</div></div><b>${finalThb(j.amount)}</b></div>
-      <div class="flex gap-2 mt-2"><select id="assign-${j.id}" class="border rounded p-1 flex-1"><option value="">-- เลือก Rider --</option>${opts}</select><button onclick="finalAssignCashJob('${j.id}')" class="bg-indigo-600 text-white px-2 rounded font-bold">มอบหมาย</button></div>
-    </div>`;
-  }).join(""):'<div class="text-gray-400">ไม่มีงาน CASH รอมอบหมาย</div>';
-
-  const rs=document.getElementById("final-area-rider");
-  if(rs)rs.innerHTML='<option value="">-- Rider --</option>'+liveRiders.filter(r=>String(r.status)==="active").map(r=>`<option value="${r.id}">${finalEsc(r.display_name||r.username)}</option>`).join("");
-  const as=document.getElementById("final-area-select");
-  if(as)as.innerHTML='<option value="">-- ตำบล / อำเภอ --</option>'+finalAllAreas.map(a=>`<option value="${a.id}">${finalEsc(a.display_name||("ต."+a.subdistrict+" อ."+a.district))}</option>`).join("");
-
-  const al=document.getElementById("final-area-access-list");
-  if(al)al.innerHTML=finalAreaAccess.length?finalAreaAccess.slice(0,50).map(x=>{
-    const r=finalRider(x.rider_id),a=finalArea(x.area_id);
-    return `<div class="border rounded p-2 flex justify-between items-center gap-2"><div><b>${finalEsc(r?.display_name||r?.username||"Rider")}</b> • ${finalEsc(a?.display_name||"พื้นที่")} <span class="font-bold ${x.status==="approved"?"text-emerald-600":x.status==="pending"?"text-amber-600":"text-red-600"}">${x.status}</span></div>${currentUser.role==="master"&&x.status==="pending"?`<div class="flex gap-1"><button onclick="finalReviewArea('${x.id}',true)" class="bg-emerald-600 text-white px-2 py-1 rounded">ผ่าน</button><button onclick="finalReviewArea('${x.id}',false)" class="bg-red-600 text-white px-2 py-1 rounded">ไม่ผ่าน</button></div>`:""}</div>`;
-  }).join(""):'<div class="text-gray-400">ยังไม่มีรายการพื้นที่</div>';
-
-  const ads=document.getElementById("final-ad-list");
-  if(ads)ads.innerHTML=finalAds.length?finalAds.map(a=>`<div class="border rounded p-2 flex justify-between items-center gap-2"><div><b>${finalEsc(a.title)}</b><div class="text-gray-400 truncate max-w-xl">${finalEsc(a.media_url)}</div></div><button onclick="finalToggleAd('${a.id}',${!a.is_active})" class="${a.is_active?"bg-emerald-600":"bg-gray-500"} text-white px-2 py-1 rounded font-bold">${a.is_active?"เปิด":"ปิด"}</button></div>`).join(""):'<div class="text-gray-400">ยังไม่มีโฆษณา</div>';
-
-  const pl=document.getElementById("final-payroll-list");
-  if(pl)pl.innerHTML=finalPayroll.length?finalPayroll.map(p=>{
-    const u=[...liveRiders,...(window.liveStaffUsers||[])].find(x=>String(x.id)===String(p.user_id));
-    return `<div class="border rounded p-2 flex justify-between items-center"><div><b>${finalEsc(u?.display_name||u?.username||String(p.role).toUpperCase())}</b><div>ฐาน ${finalThb(p.base_salary)} • คอม ${finalThb(p.commission)} • ${p.status}</div></div><div class="text-right"><b>${finalThb(p.total_amount)}</b>${currentUser.role==="master"&&p.status==="unpaid"?`<button onclick="finalPayPayroll('${p.id}')" class="block mt-1 ml-auto bg-emerald-600 text-white px-2 py-1 rounded">จ่ายแล้ว</button>`:""}</div></div>`;
-  }).join(""):'<div class="text-gray-400">ยังไม่ได้สร้าง Payroll เดือนนี้</div>';
-
-  const gp=document.getElementById("final-generate-payroll");
-  if(gp)gp.style.display=currentUser.role==="master"?"":"none";
-}
-
-async function finalReviewChannel(id,approve){
-  try{
-    const {error}=await adminSb.rpc("fdg_review_payment_channel_request",{p_request_id:id,p_approve:approve,p_note:"ดำเนินการผ่านหลังบ้าน"});
-    if(error)throw error;showToast(approve?"อนุมัติช่องทางแล้ว":"ปฏิเสธคำขอแล้ว",true);
-    await Promise.all([loadLiveAdminData(),finalLoadOperations()]);
-  }catch(e){showToast(e.message,false);}
-}
-async function finalAssignCashJob(id){
-  const rider=document.getElementById("assign-"+id)?.value;
-  if(!rider){showToast("กรุณาเลือก Rider",false);return;}
-  try{
-    const {error}=await adminSb.rpc("fdg_assign_collection_rider",{p_collection_id:id,p_rider_id:rider});
-    if(error)throw error;showToast("มอบหมายงานสำเร็จ",true);await finalLoadOperations();
-  }catch(e){showToast(e.message,false);}
-}
-async function finalRequestRiderArea(){
-  const rider=document.getElementById("final-area-rider")?.value;
-  const area=document.getElementById("final-area-select")?.value;
-  if(!rider||!area){showToast("เลือก Rider และพื้นที่ก่อน",false);return;}
-  try{
-    const {data,error}=await adminSb.rpc("fdg_request_rider_area",{p_rider_id:rider,p_area_id:area});
-    if(error)throw error;showToast(data?.status==="approved"?"Master อนุมัติพื้นที่แล้ว":"ส่งคำขอให้ Master แล้ว",true);await finalLoadOperations();
-  }catch(e){showToast(e.message,false);}
-}
-async function finalReviewArea(id,approve){
-  try{
-    const {error}=await adminSb.rpc("fdg_review_rider_area",{p_access_id:id,p_approve:approve,p_reason:approve?null:"ไม่อนุมัติ"});
-    if(error)throw error;showToast("บันทึกผลพื้นที่แล้ว",true);await finalLoadOperations();
-  }catch(e){showToast(e.message,false);}
-}
-async function finalGeneratePayroll(){
-  if(currentUser?.role!=="master"){showToast("เฉพาะ Master",false);return;}
-  const d=new Date();
-  try{
-    const {error}=await adminSb.rpc("fdg_generate_payroll",{p_year:d.getFullYear(),p_month:d.getMonth()+1});
-    if(error)throw error;showToast("สรุป Payroll แล้ว",true);await finalLoadOperations();
-  }catch(e){showToast(e.message,false);}
-}
-async function finalPayPayroll(id){
-  try{
-    const {error}=await adminSb.rpc("fdg_mark_payroll_paid",{p_payroll_id:id});
-    if(error)throw error;showToast("บันทึกจ่าย Payroll แล้ว",true);await finalLoadOperations();
-  }catch(e){showToast(e.message,false);}
-}
-async function finalAddAdvertisement(){
-  const title=document.getElementById("final-ad-title")?.value.trim();
-  const url=document.getElementById("final-ad-url")?.value.trim();
-  if(!title||!url){showToast("กรอกหัวข้อและ Media URL",false);return;}
-  let type="AUTO";
-  if(/youtu\.be|youtube\.com/i.test(url))type="YOUTUBE";
-  else if(/\.(mp4|webm)(\?|$)/i.test(url))type="VIDEO";
-  else if(/\.gif(\?|$)/i.test(url))type="GIF";
-  else type="IMAGE";
-  try{
-    const {error}=await adminSb.from("advertisements").insert({title,media_url:url,media_type:type,is_active:true,created_by:currentUser.id,updated_by:currentUser.id});
-    if(error)throw error;document.getElementById("final-ad-title").value="";document.getElementById("final-ad-url").value="";showToast("เพิ่มโฆษณาแล้ว",true);await finalLoadOperations();
-  }catch(e){showToast(e.message,false);}
-}
-async function finalToggleAd(id,on){
-  try{
-    const {error}=await adminSb.from("advertisements").update({is_active:on,updated_by:currentUser.id,updated_at:new Date().toISOString()}).eq("id",id);
-    if(error)throw error;await finalLoadOperations();
-  }catch(e){showToast(e.message,false);}
-}
-
-/* Manual "close day" no longer mutates Rider balances.
-   Cash lock is enforced automatically by business date. */
-window.adminCloseDay=async function(){
-  await Promise.all([loadLiveRiderMonitorData(),finalLoadFinancial(),finalLoadOperations()]);
-  const debt=liveAdminWorkSessions.reduce((s,w)=>s+Number(w.remaining_company_money||0),0);
-  showToast(debt>0?`สรุปรอบแล้ว • เงินสด Rider คงค้าง ${finalThb(debt)}`:"สรุปรอบแล้ว • ไม่มีเงินสด Rider คงค้าง",debt<=0);
-};
-
-const finalBaseLoadAdmin=window.loadLiveAdminData;
-window.loadLiveAdminData=async function(){
-  const r=await finalBaseLoadAdmin();
-  await Promise.all([finalLoadFinancial(),finalLoadOperations(),loadLiveRiderMonitorData()]);
-  return r;
-};
-
-window.addEventListener("load",()=>{
-  finalInitDates();
-  setTimeout(()=>{
-    if(currentUser&&["admin","master"].includes(String(currentUser.role))){
-      finalLoadFinancial();finalLoadOperations();
-    }
-  },1000);
-});
-</script>
-
 </body>
 </html>
 
@@ -2948,9 +2590,8 @@ function phase2d2RenderSettlementMode(){
   }
 
   main?.classList.add("hidden");
-  // CASH LOCK ซ่อนข้อมูลลูกค้า แต่ยังเปิดเมนูรายได้/คอมมิชชั่นของ Rider ได้
-  sidebar?.classList.remove("hidden");
-  menuBtn?.classList.remove("hidden");
+  sidebar?.classList.add("hidden");
+  menuBtn?.classList.add("hidden");
   box?.classList.remove("hidden");
 
   const lock=liveRiderDashboard?.cash_lock||{};
