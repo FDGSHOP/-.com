@@ -2952,7 +2952,7 @@ async function phase2eVerifyRiderRemittance(remittanceId,{quiet=false}={}){
       method:"POST",
       headers:{
         "Content-Type":"application/json",
-        "apikey":ADMIN_SUPABASE_PUBLISHABLE_KEY,
+        "apikey":ADMIN_SUPABASE_KEY,
         "Authorization":`Bearer ${token}`
       },
       body:JSON.stringify({type:"RIDER_REMITTANCE",id:remittanceId})
