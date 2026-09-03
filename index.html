@@ -307,6 +307,73 @@
     .ad-admin-preview{display:none!important}
 
 </style>
+
+<style id="checkpoint2d-receipt-style">
+  .e-receipt-sheet{
+    position:relative;
+    overflow:hidden;
+    background:#fff;
+    border:1px solid #dbe5f3;
+    border-radius:18px;
+    color:#172033;
+  }
+  .e-receipt-content{position:relative;z-index:2;}
+  .e-receipt-watermark{
+    position:absolute;
+    z-index:1;
+    width:min(68%,360px);
+    left:50%;
+    top:54%;
+    transform:translate(-50%,-50%) rotate(-8deg);
+    opacity:.075;
+    pointer-events:none;
+    user-select:none;
+    filter:saturate(.85) contrast(.9);
+  }
+  .e-receipt-logo{width:68px;height:68px;object-fit:contain;}
+  .e-receipt-title{font-weight:900;letter-spacing:.2px;color:#174fb9;}
+  .e-receipt-subtitle{font-size:11px;color:#6b7280;}
+  .e-receipt-status{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 10px;border-radius:999px;
+    background:#e9f9ef;color:#15803d;font-size:11px;font-weight:800;
+  }
+  .e-receipt-section{
+    border:1px solid #e5eaf2;border-radius:12px;padding:10px 12px;margin-top:10px;
+    background:rgba(255,255,255,.92);
+  }
+  .e-receipt-kv{
+    display:grid;grid-template-columns:minmax(110px,40%) 1fr;
+    gap:6px 10px;font-size:12px;line-height:1.45;
+  }
+  .e-receipt-kv .k{color:#6b7280;}
+  .e-receipt-kv .v{font-weight:700;text-align:right;word-break:break-word;}
+  .e-receipt-money-row{
+    display:flex;justify-content:space-between;gap:12px;padding:6px 0;
+    border-bottom:1px dashed #e5e7eb;font-size:12px;
+  }
+  .e-receipt-money-row:last-child{border-bottom:0;}
+  .e-receipt-money-row.total{font-size:14px;font-weight:900;color:#174fb9;}
+  .e-receipt-money-row.balance{font-size:13px;font-weight:900;}
+  .e-receipt-slip{
+    max-height:320px;max-width:100%;border-radius:10px;border:1px solid #e5e7eb;
+  }
+  .e-receipt-stamp-note{
+    text-align:center;font-size:10px;color:#64748b;margin-top:10px;
+  }
+  @media print{
+    body *{visibility:hidden!important;}
+    #receiptPrintArea,#receiptPrintArea *{visibility:visible!important;}
+    #receiptPrintArea{
+      position:absolute!important;left:0;top:0;width:100%!important;
+      padding:16px!important;margin:0!important;
+    }
+    #receiptModal .modal-dialog,#receiptModal .modal-content{max-width:none!important;width:100%!important;border:0!important;box-shadow:none!important;}
+    .modal-backdrop,.modal-footer,.btn-close{display:none!important;}
+    .e-receipt-sheet{border:0!important;}
+  }
+</style>
+
 </head>
 <body>
 
@@ -981,54 +1048,126 @@
 
   <!-- Modal ใบเสร็จรับเงินอิเล็กทรอนิกส์ (E-Receipt) -->
   <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-body p-4" id="receiptPrintArea">
-          <div class="text-center mb-3">
-            <h6 class="fw-bold m-0">ใบเสร็จรับเงินอิเล็กทรอนิกส์ (E-Receipt)</h6>
-            <div class="extra-small text-muted">โครงการสินเชื่อเพื่อคนพะเยา</div>
-            <div class="extra-small text-primary fw-bold mt-1" id="recUid">QUID: CUS-A7K92</div>
-            <hr class="my-2">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <div>
+            <div class="fw-bold">ใบเสร็จอิเล็กทรอนิกส์</div>
+            <div class="extra-small text-muted">แสดงเฉพาะรายการที่ยืนยันการชำระแล้ว</div>
           </div>
-          <div class="extra-small mb-1"><strong>เลขที่ใบเสร็จ:</strong> <span id="recNo">RC-001</span></div>
-          <div class="extra-small mb-1"><strong>วันที่/เวลา:</strong> <span id="recDate">-</span></div>
-          <div class="extra-small mb-1"><strong>ชื่อผู้กู้:</strong> <span id="recName">-</span></div>
-          <div class="extra-small mb-3"><strong>รายการชำระ:</strong> <span id="recType">-</span></div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
-          <table class="table table-sm table-bordered extra-small mb-3">
-            <thead>
-              <tr class="table-light text-center">
-                <th>รายละเอียด</th>
-                <th>จำนวนเงิน (บาท)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td id="recItemTitle">ค่างวดชำระ</td>
-                <td class="text-end" id="recBaseAmount">0.00</td>
-              </tr>
-              <tr id="recFineRow">
-                <td class="text-danger">ค่าปรับส่งเกินเวลา (หลัง 18:00 น.)</td>
-                <td class="text-end text-danger" id="recFineAmount">0.00</td>
-              </tr>
-              <tr class="fw-bold table-light">
-                <td class="text-center">รวมชำระสุทธิ</td>
-                <td class="text-end text-primary" id="recTotalAmount">0.00</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="modal-body p-3 p-md-4" id="receiptPrintArea">
+          <div class="e-receipt-sheet p-3 p-md-4">
+            <img class="e-receipt-watermark" src="./receipt-stamp.png" alt="" aria-hidden="true">
 
-          <div class="extra-small text-muted text-center border-top pt-2" id="recFineNote">
-            * เอกสารนี้สร้างขึ้นโดยระบบอัตโนมัติ ชำระผ่านระบบ PromptPay 0658351446
+            <div class="e-receipt-content">
+              <div class="d-flex justify-content-between align-items-start gap-3 border-bottom pb-3">
+                <div class="d-flex align-items-center gap-3">
+                  <img class="e-receipt-logo" src="./receipt-logo.png" alt="สินเชื่อเพื่อคนพะเยา">
+                  <div>
+                    <div class="e-receipt-title fs-5">ใบเสร็จรับเงินอิเล็กทรอนิกส์</div>
+                    <div class="fw-bold small">สินเชื่อเพื่อคนพะเยา</div>
+                    <div class="e-receipt-subtitle">Electronic Payment Receipt</div>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <div class="e-receipt-status"><i class="bi bi-patch-check-fill"></i> VERIFIED</div>
+                  <div class="extra-small text-muted mt-2">เลขที่ใบเสร็จ</div>
+                  <div class="fw-bold text-primary" id="recNo">-</div>
+                </div>
+              </div>
+
+              <div class="e-receipt-section">
+                <div class="fw-bold small mb-2"><i class="bi bi-person-vcard me-1"></i>ข้อมูลผู้ชำระและสัญญา</div>
+                <div class="e-receipt-kv">
+                  <div class="k">ชื่อผู้กู้</div><div class="v" id="recName">-</div>
+                  <div class="k">QUID</div><div class="v text-primary" id="recUid">-</div>
+                  <div class="k">เลขที่สัญญา</div><div class="v" id="recLoanCode">-</div>
+                  <div class="k">งวดที่</div><div class="v" id="recInstallmentNo">-</div>
+                  <div class="k">ประเภทการชำระ</div><div class="v" id="recType">-</div>
+                  <div class="k">วันที่/เวลาชำระ</div><div class="v" id="recDate">-</div>
+                </div>
+              </div>
+
+              <div class="e-receipt-section">
+                <div class="fw-bold small mb-2"><i class="bi bi-cash-stack me-1"></i>รายละเอียดจำนวนเงิน</div>
+
+                <div class="e-receipt-money-row">
+                  <span>เงินต้นของรายการนี้</span>
+                  <strong id="recPrincipalAmount">฿0.00</strong>
+                </div>
+                <div class="e-receipt-money-row">
+                  <span>ดอกเบี้ยของรายการนี้</span>
+                  <strong id="recInterestAmount">฿0.00</strong>
+                </div>
+                <div class="e-receipt-money-row" id="recFineRow">
+                  <span>ค่าปรับชำระหลังเวลา</span>
+                  <strong class="text-danger" id="recFineAmount">฿0.00</strong>
+                </div>
+                <div class="e-receipt-money-row" id="recDiscountRow">
+                  <span>ส่วนลด Ranking</span>
+                  <strong class="text-success" id="recDiscountAmount">- ฿0.00</strong>
+                </div>
+                <div class="e-receipt-money-row total">
+                  <span>ยอดที่รับชำระจริง</span>
+                  <strong id="recTotalAmount">฿0.00</strong>
+                </div>
+              </div>
+
+              <div class="e-receipt-section">
+                <div class="fw-bold small mb-2"><i class="bi bi-calculator me-1"></i>ผลต่อยอดสินเชื่อ</div>
+                <div class="e-receipt-money-row">
+                  <span>ยอดคงเหลือก่อนรายการ</span>
+                  <strong id="recBalanceBefore">฿0.00</strong>
+                </div>
+                <div class="e-receipt-money-row">
+                  <span>ยอดที่ตัดออกจากสัญญาครั้งนี้</span>
+                  <strong class="text-success" id="recDebtReduction">- ฿0.00</strong>
+                </div>
+                <div class="e-receipt-money-row balance">
+                  <span>ยอดคงเหลือหลังรายการ</span>
+                  <strong class="text-danger" id="recBalanceAfter">฿0.00</strong>
+                </div>
+              </div>
+
+              <div class="e-receipt-section">
+                <div class="fw-bold small mb-2"><i class="bi bi-bank me-1"></i>ข้อมูลธุรกรรม</div>
+                <div class="e-receipt-kv">
+                  <div class="k">Payment Code</div><div class="v" id="recPaymentCode">-</div>
+                  <div class="k">Transaction Reference</div><div class="v" id="recTransactionRef">-</div>
+                  <div class="k">ช่องทาง</div><div class="v" id="recPaymentChannel">-</div>
+                  <div class="k">สถานะ</div><div class="v text-success">VERIFIED</div>
+                </div>
+              </div>
+
+              <div class="e-receipt-section d-none" id="recSlipSection">
+                <div class="fw-bold small mb-2"><i class="bi bi-image me-1"></i>หลักฐานการชำระ</div>
+                <div class="text-center">
+                  <img id="recSlipImage" src="" class="e-receipt-slip d-none" alt="สลิปการชำระ">
+                  <div id="recSlipUnavailable" class="extra-small text-muted py-2">ไม่พบรูปสลิป</div>
+                </div>
+              </div>
+
+              <div class="e-receipt-stamp-note">
+                <i class="bi bi-shield-check me-1"></i>
+                เอกสารอิเล็กทรอนิกส์นี้สร้างจากรายการชำระที่ยืนยันแล้วในระบบ
+                ตราพื้นหลังใช้เพื่อระบุแหล่งที่มาของใบเสร็จ
+              </div>
+            </div>
           </div>
         </div>
+
         <div class="modal-footer py-2">
+          <button type="button" class="btn btn-outline-primary btn-sm rounded-pill fw-bold" onclick="printElectronicReceipt()">
+            <i class="bi bi-printer me-1"></i>พิมพ์ / บันทึก PDF
+          </button>
           <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">ปิด</button>
         </div>
       </div>
     </div>
   </div>
-
 
   <!-- Ranking quick view -->
   <div class="modal fade" id="rankQuickModal" tabindex="-1" aria-hidden="true">
@@ -2940,22 +3079,148 @@ function setSafeText(id,v){
 function renderRealPaymentHistory(){
   const body=document.getElementById("payHistoryList");
   if(!body)return;
+
   if(!livePayments.length){
-    body.innerHTML='<tr><td colspan="4" class="text-muted py-3">ยังไม่มีประวัติการชำระเงินจริง</td></tr>';
+    body.innerHTML='<tr><td colspan="4" class="text-muted py-3">ยังไม่มีประวัติการชำเงินจริง</td></tr>';
     return;
   }
+
   body.innerHTML=livePayments.map(p=>{
     const dt=new Date(p.verified_at||p.created_at);
-    const type=p.payment_source==="RIDER_CASH"?"เงินสด Rider":p.payment_type==="INTEREST_ONLY"?"ดอกเบี้ย":"SCAN";
-    const amount=Number(p.amount_received||0)+Number(p.discount_amount||0);
+    const type=
+      p.payment_source==="RIDER_CASH" ? "เงินสด Rider" :
+      p.payment_source==="ADMIN_MANUAL" ? "Admin บันทึกฉุกเฉิน" :
+      p.payment_type==="INTEREST_ONLY" ? "ดอกเบี้ยลอย" :
+      "เต็มงวด";
+
+    const amount=Number(p.amount_received||0);
+    const verified=String(p.status)==="verified";
+
     return `<tr>
-      <td>${dt.toLocaleDateString("th-TH")}<br><span class="text-muted">${dt.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"})}</span></td>
-      <td>${type}<br><span class="badge ${p.status==="verified"?"bg-success":"bg-secondary"}">${p.status}</span></td>
-      <td>${money(amount)}</td>
-      <td><span class="text-primary fw-bold">${p.payment_code||"-"}</span></td>
+      <td>${dt.toLocaleDateString("th-TH")}<br>
+        <span class="text-muted">${dt.toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span>
+      </td>
+      <td>${type}<br>
+        <span class="badge ${verified?"bg-success":"bg-secondary"}">${String(p.status||"-").toUpperCase()}</span>
+      </td>
+      <td class="fw-bold text-primary">${money(amount)}</td>
+      <td>
+        ${verified
+          ? `<button type="button"
+               class="btn btn-sm btn-outline-primary rounded-circle p-0"
+               style="width:32px;height:32px;"
+               onclick="showElectronicReceipt('${p.id}')"
+               title="ดูใบเสร็จอิเล็กทรอนิกส์"
+               aria-label="ดูใบเสร็จอิเล็กทรอนิกส์">
+               <i class="bi bi-info-circle"></i>
+             </button>`
+          : `<span class="text-muted">—</span>`
+        }
+      </td>
     </tr>`;
   }).join("");
 }
+
+function receiptMoney(v){return money(Number(v||0));}
+
+function receiptPaymentTypeLabel(type,source){
+  if(source==="RIDER_CASH")return "ชำระเงินสดผ่าน Rider";
+  if(source==="ADMIN_MANUAL")return "Admin บันทึกยอดฉุกเฉิน";
+  return type==="INTEREST_ONLY"
+    ? "ชำระเฉพาะดอกเบี้ย (ดอกลอย — ไม่ตัดเงินต้น)"
+    : "ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)";
+}
+
+async function showElectronicReceipt(paymentId){
+  if(!liveSession){showAuthPage();return;}
+
+  try{
+    setLiveLoading(true,"กำลังโหลดใบเสร็จอิเล็กทรอนิกส์...");
+
+    const {data,error}=await liveSb.rpc("fdg_customer_receipt_details",{
+      p_payment_id:paymentId
+    });
+    if(error)throw error;
+    if(!data || data.status!=="verified")throw new Error("รายการนี้ยังไม่สามารถออกใบเสร็จได้");
+
+    setSafeText("recNo",data.receipt_no||data.payment_code||"-");
+    setSafeText("recName",data.customer_name||"-");
+    setSafeText("recUid",data.customer_code||"-");
+    setSafeText("recLoanCode",data.loan_code||"-");
+    setSafeText("recInstallmentNo",data.installment_no!=null?String(data.installment_no):"-");
+    setSafeText("recType",receiptPaymentTypeLabel(data.payment_type,data.payment_source));
+
+    const dt=new Date(data.verified_at||data.created_at);
+    setSafeText(
+      "recDate",
+      dt.toLocaleString("th-TH",{
+        year:"numeric",month:"long",day:"numeric",
+        hour:"2-digit",minute:"2-digit",second:"2-digit",
+        timeZone:"Asia/Bangkok"
+      })+" น."
+    );
+
+    setSafeText("recPrincipalAmount",receiptMoney(data.principal_amount));
+    setSafeText("recInterestAmount",receiptMoney(data.interest_amount));
+    setSafeText("recFineAmount",receiptMoney(data.late_fee_amount));
+    setSafeText("recDiscountAmount","- "+receiptMoney(data.discount_amount));
+    setSafeText("recTotalAmount",receiptMoney(data.amount_received));
+
+    setSafeText("recBalanceBefore",receiptMoney(data.balance_before));
+    setSafeText("recDebtReduction","- "+receiptMoney(data.debt_reduction));
+    setSafeText("recBalanceAfter",receiptMoney(data.balance_after));
+
+    setSafeText("recPaymentCode",data.payment_code||"-");
+    setSafeText("recTransactionRef",data.transaction_reference||"-");
+    setSafeText(
+      "recPaymentChannel",
+      data.payment_source==="RIDER_CASH"
+        ?"เงินสดผ่าน Rider"
+        :data.payment_source==="ADMIN_MANUAL"
+          ?"Admin Manual"
+          :"PromptPay / EasySlip"
+    );
+
+    const fineRow=document.getElementById("recFineRow");
+    if(fineRow)fineRow.style.display=Number(data.late_fee_amount||0)>0?"flex":"none";
+
+    const discountRow=document.getElementById("recDiscountRow");
+    if(discountRow)discountRow.style.display=Number(data.discount_amount||0)>0?"flex":"none";
+
+    const slipSection=document.getElementById("recSlipSection");
+    const slipImg=document.getElementById("recSlipImage");
+    const slipUnavailable=document.getElementById("recSlipUnavailable");
+
+    slipSection?.classList.remove("d-none");
+    slipImg?.classList.add("d-none");
+    if(slipImg)slipImg.src="";
+    slipUnavailable?.classList.remove("d-none");
+    if(slipUnavailable)slipUnavailable.textContent="ไม่พบรูปสลิปสำหรับรายการนี้";
+
+    if(data.evidence_path){
+      const {data:signed,error:signedError}=await liveSb.storage
+        .from("payment-evidence")
+        .createSignedUrl(data.evidence_path,300);
+
+      if(!signedError && signed?.signedUrl && slipImg){
+        slipImg.src=signed.signedUrl;
+        slipImg.classList.remove("d-none");
+        slipUnavailable?.classList.add("d-none");
+      }
+    }
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById("receiptModal")).show();
+  }catch(err){
+    console.error("E-Receipt",err);
+    liveToast(err?.message||"ไม่สามารถเปิดใบเสร็จได้",false);
+  }finally{
+    setLiveLoading(false);
+  }
+}
+
+window.printElectronicReceipt=function(){
+  window.print();
+};
 
 async function requestPaymentChannelChange(){
   if(!liveSession || !liveCustomer){showAuthPage();return;}
@@ -3645,16 +3910,27 @@ window.updateLoanDashboard=function(){
   setSafeText("payAmountDue",money(full));
   setSafeText("payInterestOnly",money(interest));
 
-  // Current selected option decides the visible summary.
   const selected=checkpoint2SelectedPaymentType();
   const gross=selected==="INTEREST_ONLY"?interest:full;
   setSafeText("summaryBasePay",money(gross));
-  setSafeText("summaryFine",money(0));
-  setSafeText("summaryTotalPay",money(gross));
-  setSafeText("summaryFinalPayMirror",money(gross));
-  setSafeText("summaryPayAfterPoints",money(gross));
-  document.getElementById("rowFine")?.style.setProperty("display","none");
-  document.getElementById("fineReasonText")?.style.setProperty("display","none");
+
+  // Do not overwrite a Server late-fee quote with the old "0 baht" UI.
+  // Ask the server immediately after every account/dashboard refresh.
+  setSafeText("summaryFine","กำลังตรวจ...");
+  const fineText=document.getElementById("fineReasonText");
+  if(fineText){
+    fineText.style.display="block";
+    fineText.textContent="* กำลังตรวจสอบค่าปรับจากเวลา Server (Asia/Bangkok)";
+  }
+
+  Promise.resolve().then(()=>{
+    if(typeof checkpoint2cLoadQuote==="function"){
+      checkpoint2cLoadQuote({force:true}).catch(err=>{
+        console.warn("Late-fee quote refresh:",err);
+        setSafeText("summaryFine","ตรวจสอบไม่ได้");
+      });
+    }
+  });
 };
 
 // ============================================================
@@ -3709,7 +3985,7 @@ async function checkpoint2cLoadQuote({force=false}={}){
   const key=`${liveLoan.id}|${inst.id}|${type}|${points}`;
   const now=Date.now();
 
-  if(!force && checkpoint2cQuote && checkpoint2cQuoteKey===key && now-checkpoint2cQuoteAt<30000){
+  if(!force && checkpoint2cQuote && checkpoint2cQuoteKey===key && now-checkpoint2cQuoteAt<10000){
     checkpoint2cRenderQuote(checkpoint2cQuote);
     return checkpoint2cQuote;
   }
@@ -3749,6 +4025,10 @@ window.updatePaySummary=function(){
   const type=checkpoint2SelectedPaymentType();
   const contractDue=checkpoint2ExpectedGross(inst,type);
   setSafeText("summaryBasePay",money(contractDue));
+
+  if(!checkpoint2cQuote || checkpoint2cQuoteKey!==`${liveLoan.id}|${inst.id}|${type}|${checkpoint2RequestedPoints()}`){
+    setSafeText("summaryFine","กำลังตรวจ...");
+  }
 
   checkpoint2cLoadQuote().catch(err=>{
     console.warn("Late-fee quote unavailable:",err);
