@@ -134,19 +134,8 @@
                     <span class="text-gray-500">คอมฯ สะสมรวม (7%): <strong class="text-emerald-600 font-bold" id="rider-com-sum">0 ฿</strong></span>
                 </div>
                 <div class="border-t pt-3">
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="bg-violet-50 rounded-lg p-2 text-center">
-                            <span class="text-[10px] text-violet-600 font-bold block">ฐานเงินเดือนปัจจุบัน</span>
-                            <strong id="rider-base-salary" class="text-violet-800">0 ฿</strong>
-                        </div>
-                        <div class="bg-cyan-50 rounded-lg p-2 text-center">
-                            <span class="text-[10px] text-cyan-600 font-bold block">รวมประมาณการเดือนนี้</span>
-                            <strong id="rider-pay-preview-total" class="text-cyan-800">0 ฿</strong>
-                        </div>
-                    </div>
-                    <div class="text-[10px] text-slate-400 mt-1 text-center">ฐานเงินเดือน + คอมมิชชั่นที่เกิดขึ้นแล้ว • ยังไม่ใช่ยอด Payroll ที่ตัดรอบ</div>
-                    <button onclick="checkpoint4eOpenMySalaryPreview(); toggleRiderSidebar();" class="mt-2 w-full bg-violet-600 hover:bg-violet-700 text-white p-2 rounded-lg font-bold text-xs">
-                        ดูเงินเดือน / ดาวน์โหลด PDF
+                    <button onclick="checkpoint4eOpenMySalaryPreview(); toggleRiderSidebar();" class="w-full bg-violet-600 hover:bg-violet-700 text-white p-2 rounded-lg font-bold text-xs">
+                        ดูเงินเดือน
                     </button>
                 </div>
                 <button onclick="openRemitModal(); toggleRiderSidebar();" class="w-full bg-amber-600 hover:bg-amber-700 text-white p-2 rounded-lg font-bold shadow text-xs">โอนเงินสดคืนบริษัท (QR)</button>
@@ -244,22 +233,9 @@
                 <a href="#" onclick="showAdminTab('remit')" class="block p-3 rounded hover:bg-slate-800 flex items-center gap-2"><i data-lucide="banknote"></i> ตรวจสลิปเงินสดค้างส่ง</a>
             </nav>
             <div class="p-3 border-t border-slate-800">
-                <div class="bg-slate-800 rounded-xl p-3">
-                    <div class="text-[10px] uppercase tracking-wide text-slate-400 font-bold">เงินเดือนของฉัน</div>
-                    <div class="flex justify-between items-end mt-1 gap-2">
-                        <div>
-                            <div class="text-[10px] text-slate-400">ฐานเงินเดือน</div>
-                            <div id="admin-my-base-salary" class="text-sm font-bold text-violet-300">0 ฿</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-[10px] text-slate-400">รวมประมาณการ</div>
-                            <div id="admin-my-pay-preview-total" class="text-sm font-bold text-emerald-300">0 ฿</div>
-                        </div>
-                    </div>
-                    <button onclick="checkpoint4eOpenMySalaryPreview()" class="mt-2 w-full bg-violet-600 hover:bg-violet-700 rounded-lg p-2 text-xs font-bold">
-                        ดู / ดาวน์โหลด PDF
-                    </button>
-                </div>
+                <button onclick="checkpoint4eOpenMySalaryPreview()" class="w-full bg-violet-600 hover:bg-violet-700 rounded-lg p-2 text-xs font-bold">
+                    ดูเงินเดือน
+                </button>
             </div>
             <div class="p-4 border-t border-slate-800">
                 <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-700 p-2 rounded font-bold text-sm">ออกจากระบบ</button>
@@ -349,6 +325,75 @@
                         </div>
                     </div>
                     
+
+                    <!-- CHECKPOINT 5: PAYMENT CHANNEL REQUESTS -->
+                    <div class="bg-white rounded-xl shadow overflow-hidden">
+                        <div class="p-4 border-b flex justify-between items-center gap-3">
+                            <div>
+                                <div class="font-bold text-gray-700">คำขอเปลี่ยนช่องทางชำระ SCAN ↔ CASH</div>
+                                <div class="text-xs text-gray-500">ลูกค้าส่งคำขอเอง • Admin/Master อนุมัติจากหลังบ้าน • Backend เป็นผู้เปลี่ยนจริง</div>
+                            </div>
+                            <button onclick="checkpoint5LoadOperations(true)" class="text-xs font-bold text-indigo-600">↻ รีเฟรช</button>
+                        </div>
+                        <div id="checkpoint5-channel-requests" class="p-4 space-y-2">
+                            <div class="text-sm text-gray-400">กำลังโหลด...</div>
+                        </div>
+                    </div>
+
+                    <!-- CHECKPOINT 5: EMERGENCY MANUAL PAYMENT -->
+                    <div class="bg-white rounded-xl shadow p-5 space-y-4">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b pb-3">
+                            <div>
+                                <h3 class="font-bold text-lg text-rose-700">ตัดยอดฉุกเฉินด้วย QUID</h3>
+                                <p class="text-xs text-gray-500">
+                                    ใช้เมื่อ EasySlip ตรวจไม่ได้ แต่ Admin ตรวจสลิปจาก LINE/ช่องทางบริษัทแล้ว
+                                    • บันทึกเป็น ADMIN_ADJUSTMENT ไม่ปลอมว่า EasySlip VERIFIED
+                                </p>
+                            </div>
+                            <span class="text-[11px] bg-rose-50 text-rose-700 border border-rose-200 px-2 py-1 rounded-full font-bold">เงินทุกบาทตัดผ่าน Server</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-2">
+                            <input id="checkpoint5-manual-qid" type="text" class="border rounded-lg p-2 text-sm uppercase" placeholder="QUID เช่น CUS-94GR2">
+                            <select id="checkpoint5-manual-type" class="border rounded-lg p-2 text-sm bg-white" onchange="checkpoint5RefreshEmergencyQuote()">
+                                <option value="FULL">ชำระเต็มงวด</option>
+                                <option value="INTEREST_ONLY">ชำระเฉพาะดอกเบี้ย</option>
+                            </select>
+                            <input id="checkpoint5-manual-points" type="number" min="0" step="10" value="0" class="border rounded-lg p-2 text-sm" placeholder="Ranking Points" onchange="checkpoint5RefreshEmergencyQuote()">
+                            <input id="checkpoint5-manual-paid-at" type="datetime-local" class="border rounded-lg p-2 text-sm" onchange="checkpoint5RefreshEmergencyQuote()">
+                            <button onclick="checkpoint5SearchEmergency()" class="bg-slate-800 text-white rounded-lg px-3 py-2 text-sm font-bold">ค้นหา / คำนวณยอด</button>
+                        </div>
+
+                        <div id="checkpoint5-emergency-result" class="hidden border rounded-xl p-4 bg-slate-50">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
+                                <div><div class="text-[11px] text-gray-500">ลูกค้า</div><b id="checkpoint5-em-customer">-</b></div>
+                                <div><div class="text-[11px] text-gray-500">สัญญา / ช่องทางปัจจุบัน</div><b id="checkpoint5-em-loan">-</b></div>
+                                <div><div class="text-[11px] text-gray-500">ค่างวดตามสัญญา</div><b id="checkpoint5-em-contract">0 ฿</b></div>
+                                <div><div class="text-[11px] text-gray-500">ค่าปรับ</div><b id="checkpoint5-em-fee" class="text-red-600">0 ฿</b></div>
+                                <div><div class="text-[11px] text-gray-500">ส่วนลด Ranking</div><b id="checkpoint5-em-discount" class="text-emerald-600">0 ฿</b></div>
+                                <div><div class="text-[11px] text-gray-500">ยอดสลิปที่ต้องตรง</div><b id="checkpoint5-em-expected" class="text-indigo-700 text-lg">0 ฿</b></div>
+                                <div><div class="text-[11px] text-gray-500">ยอดคงเหลือก่อนชำระ</div><b id="checkpoint5-em-balance">0 ฿</b></div>
+                                <div><div class="text-[11px] text-gray-500">Ranking ใช้ได้</div><b id="checkpoint5-em-points">0 คะแนน</b></div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mt-4">
+                                <input id="checkpoint5-manual-transref" type="text" class="border rounded-lg p-2 text-sm" placeholder="Transaction Reference จากสลิป">
+                                <input id="checkpoint5-manual-amount" type="number" step="0.01" class="border rounded-lg p-2 text-sm bg-gray-100 font-bold" readonly>
+                                <input id="checkpoint5-manual-note" type="text" class="border rounded-lg p-2 text-sm" placeholder="หมายเหตุ เช่น ตรวจสลิปผ่าน LINE">
+                            </div>
+
+                            <div class="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-[11px] text-amber-800">
+                                วันที่/เวลาชำระต้องตรงกับสลิป เพราะค่าปรับหลัง 18:00 จะคำนวณจาก “เวลาที่ลูกค้าจ่ายจริง” ไม่ใช่เวลาที่ Admin มากดตัดยอด
+                            </div>
+
+                            <div class="flex justify-end mt-3">
+                                <button id="checkpoint5-post-btn" onclick="checkpoint5PostEmergencyPayment()" class="bg-rose-600 hover:bg-rose-700 disabled:bg-slate-400 text-white rounded-lg px-4 py-2 font-bold text-sm">
+                                    ยืนยันตัดยอดฉุกเฉิน
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="bg-white p-6 rounded-xl shadow space-y-4">
                         <h3 class="font-bold text-lg border-b pb-2">เพิ่มข้อมูลลูกค้าขอสินเชื่อใหม่ (ตรวจสอบเทียบกับวงเงินลงทุนที่มีอยู่)</h3>
                         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -2478,6 +2523,269 @@ window.addEventListener("load",()=>setTimeout(bootAdminSession,900));
   </div>
 </div>
 
+
+<!-- CHECKPOINT 5: MANUAL PAYMENT SUCCESS -->
+<div id="checkpoint5-success-modal" class="hidden fixed inset-0 z-[4400] bg-black/50 items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 text-center">
+    <div class="mx-auto w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mb-3">✓</div>
+    <h3 class="font-bold text-xl">ตัดยอดฉุกเฉินสำเร็จ</h3>
+    <div id="checkpoint5-success-text" class="text-sm text-slate-600 mt-3 whitespace-pre-line"></div>
+    <button onclick="checkpoint5CloseSuccess()" class="mt-5 w-full bg-emerald-600 text-white rounded-xl py-2.5 font-bold">ตกลง</button>
+  </div>
+</div>
+
+
+<script>
+/* ============================================================
+   CHECKPOINT 5 — SCAN ↔ CASH + ADMIN EMERGENCY PAYMENT
+   ============================================================ */
+let checkpoint5ChannelRequests=[];
+let checkpoint5EmergencyQuote=null;
+let checkpoint5Busy=false;
+
+function checkpoint5ThaiDateTimeLocalNow(){
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,"0");
+  const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+  return `${local.getFullYear()}-${pad(local.getMonth()+1)}-${pad(local.getDate())}T${pad(local.getHours())}:${pad(local.getMinutes())}`;
+}
+
+function checkpoint5IsoFromLocalInput(){
+  const value=document.getElementById("checkpoint5-manual-paid-at")?.value;
+  if(!value)return new Date().toISOString();
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return new Date().toISOString();
+  return d.toISOString();
+}
+
+async function checkpoint5LoadOperations(showMessage=false){
+  if(!currentUser||!["admin","master"].includes(String(currentUser.role)))return;
+
+  try{
+    const {data,error}=await adminSb.rpc("fdg_payment_channel_admin_snapshot");
+    if(error)throw error;
+    checkpoint5ChannelRequests=data?.requests||[];
+    checkpoint5RenderChannelRequests();
+    if(showMessage)showToast("รีเฟรชคำขอเปลี่ยนช่องทางแล้ว",true);
+  }catch(err){
+    console.error("Checkpoint5 operations:",err);
+    if(showMessage)showToast(err?.message||"โหลดคำขอเปลี่ยนช่องทางไม่สำเร็จ",false);
+  }
+}
+
+function checkpoint5RenderChannelRequests(){
+  const box=document.getElementById("checkpoint5-channel-requests");
+  if(!box)return;
+
+  if(!checkpoint5ChannelRequests.length){
+    box.innerHTML='<div class="text-sm text-gray-400">ไม่มีคำขอเปลี่ยนช่องทางที่รอพิจารณา</div>';
+    return;
+  }
+
+  box.innerHTML=checkpoint5ChannelRequests.map(r=>`
+    <div class="border rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div class="min-w-0">
+        <div class="font-bold">${liveEsc(r.customer_name||"-")} <span class="text-indigo-600">${liveEsc(r.customer_code||"")}</span></div>
+        <div class="text-xs text-gray-500">
+          ${liveEsc(r.loan_code||"-")} • ${liveEsc(r.current_channel)} → <b class="text-slate-800">${liveEsc(r.requested_channel)}</b>
+        </div>
+        <div class="text-xs text-gray-400 mt-1">${liveEsc(r.reason||"ลูกค้าร้องขอเปลี่ยนช่องทาง")}</div>
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <button onclick="checkpoint5ReviewChannel('${r.id}',true)" class="bg-emerald-600 text-white rounded-lg px-3 py-2 text-xs font-bold">อนุมัติ</button>
+        <button onclick="checkpoint5ReviewChannel('${r.id}',false)" class="bg-red-600 text-white rounded-lg px-3 py-2 text-xs font-bold">ปฏิเสธ</button>
+      </div>
+    </div>`).join("");
+}
+
+async function checkpoint5ReviewChannel(id,approve){
+  const item=checkpoint5ChannelRequests.find(x=>String(x.id)===String(id));
+  if(!item)return;
+
+  const action=approve?"อนุมัติ":"ปฏิเสธ";
+  if(!confirm(`${action}คำขอ ${item.current_channel} → ${item.requested_channel}\n${item.customer_name||item.customer_code||""} ?`))return;
+
+  try{
+    const {data,error}=await adminSb.rpc("fdg_review_payment_channel_request",{
+      p_request_id:id,
+      p_approve:approve,
+      p_note:"ดำเนินการผ่าน Checkpoint 5"
+    });
+    if(error)throw error;
+
+    showToast(
+      approve
+        ? `เปลี่ยนช่องทางเป็น ${data?.payment_channel||item.requested_channel} สำเร็จ`
+        : "ปฏิเสธคำขอแล้ว",
+      true
+    );
+
+    await Promise.all([
+      checkpoint5LoadOperations(false),
+      checkpoint4RefreshManagement(false),
+      loadLiveAdminData()
+    ]);
+  }catch(err){
+    const msg=String(err?.message||"");
+    if(msg.includes("SCAN_PAYMENT_VERIFYING")){
+      showToast("ยังมีรายการ SCAN กำลังตรวจอยู่ ต้องรอ/ยกเลิกก่อนเปลี่ยนเป็น CASH",false);
+    }else if(msg.includes("CASH_ALREADY_COLLECTED")){
+      showToast("มีเงิน CASH ถูกเก็บแล้ว จึงเปลี่ยนเป็น SCAN ไม่ได้จนกว่าจะเคลียร์รายการเดิม",false);
+    }else{
+      showToast(msg||"ดำเนินการไม่สำเร็จ",false);
+    }
+  }
+}
+
+async function checkpoint5SearchEmergency(){
+  const qid=document.getElementById("checkpoint5-manual-qid")?.value.trim().toUpperCase();
+  if(!qid){showToast("กรอก QUID ก่อน",false);return;}
+  await checkpoint5RefreshEmergencyQuote(true);
+}
+
+async function checkpoint5RefreshEmergencyQuote(showMessage=false){
+  const qid=document.getElementById("checkpoint5-manual-qid")?.value.trim().toUpperCase();
+  if(!qid)return;
+
+  const type=document.getElementById("checkpoint5-manual-type")?.value||"FULL";
+  const points=Math.max(0,Math.floor(Number(document.getElementById("checkpoint5-manual-points")?.value||0)));
+  const paidAt=checkpoint5IsoFromLocalInput();
+
+  try{
+    const {data,error}=await adminSb.rpc("fdg_admin_emergency_payment_quote",{
+      p_customer_code:qid,
+      p_payment_type:type,
+      p_points_requested:points,
+      p_paid_at:paidAt
+    });
+    if(error)throw error;
+
+    checkpoint5EmergencyQuote=data;
+
+    document.getElementById("checkpoint5-em-customer").textContent=
+      `${data.customer_name||"-"} • ${data.customer_code||qid}`;
+    document.getElementById("checkpoint5-em-loan").textContent=
+      `${data.loan_code||"-"} • ${data.payment_channel||"-"}`;
+    document.getElementById("checkpoint5-em-contract").textContent=liveMoney(data.contract_due||0);
+    document.getElementById("checkpoint5-em-fee").textContent=liveMoney(data.late_fee_amount||0);
+    document.getElementById("checkpoint5-em-discount").textContent=`- ${liveMoney(data.discount_amount||0)}`;
+    document.getElementById("checkpoint5-em-expected").textContent=liveMoney(data.expected_amount||0);
+    document.getElementById("checkpoint5-em-balance").textContent=liveMoney(data.balance_before||0);
+    document.getElementById("checkpoint5-em-points").textContent=
+      `${Number(data.points_available||0).toLocaleString()} คะแนน`;
+
+    document.getElementById("checkpoint5-manual-amount").value=
+      Number(data.expected_amount||0).toFixed(2);
+
+    document.getElementById("checkpoint5-emergency-result")?.classList.remove("hidden");
+
+    if(showMessage)showToast("คำนวณยอดจาก Server แล้ว",true);
+  }catch(err){
+    checkpoint5EmergencyQuote=null;
+    document.getElementById("checkpoint5-emergency-result")?.classList.add("hidden");
+    showToast(err?.message||"ค้นหาลูกค้าหรือคำนวณยอดไม่สำเร็จ",false);
+  }
+}
+
+async function checkpoint5PostEmergencyPayment(){
+  if(checkpoint5Busy)return;
+  if(!checkpoint5EmergencyQuote){
+    showToast("กรุณาค้นหาและคำนวณยอดก่อน",false);return;
+  }
+
+  const qid=document.getElementById("checkpoint5-manual-qid")?.value.trim().toUpperCase();
+  const type=document.getElementById("checkpoint5-manual-type")?.value||"FULL";
+  const points=Math.max(0,Math.floor(Number(document.getElementById("checkpoint5-manual-points")?.value||0)));
+  const trans=document.getElementById("checkpoint5-manual-transref")?.value.trim();
+  const amount=Number(document.getElementById("checkpoint5-manual-amount")?.value||0);
+  const note=document.getElementById("checkpoint5-manual-note")?.value.trim();
+  const paidAt=checkpoint5IsoFromLocalInput();
+
+  if(!trans){showToast("กรอก Transaction Reference จากสลิป",false);return;}
+  if(trans.length<6){showToast("Transaction Reference สั้นเกินไป",false);return;}
+  if(!note){showToast("กรอกหมายเหตุว่า Admin ตรวจสอบสลิปจากช่องทางใด",false);return;}
+  if(!(amount>0)){showToast("ยอดชำระไม่ถูกต้อง",false);return;}
+
+  if(!confirm(
+    `ยืนยันตัดยอดฉุกเฉิน\nQUID: ${qid}\nประเภท: ${type}\nยอดสลิป: ${liveMoney(amount)}\n\nระบบจะตัดหนี้จริงทันที`
+  ))return;
+
+  checkpoint5Busy=true;
+  const btn=document.getElementById("checkpoint5-post-btn");
+  if(btn){btn.disabled=true;btn.textContent="กำลังตัดยอด...";}
+
+  try{
+    const {data,error}=await adminSb.rpc("fdg_admin_emergency_post_payment",{
+      p_customer_code:qid,
+      p_payment_type:type,
+      p_points_requested:points,
+      p_actual_amount:amount,
+      p_transaction_reference:trans,
+      p_paid_at:paidAt,
+      p_note:note
+    });
+    if(error)throw error;
+
+    document.getElementById("checkpoint5-success-text").textContent=
+      `รับชำระ ${liveMoney(data?.amount_received||amount)}\n`+
+      `ยอดที่ตัดออกจากสัญญา ${liveMoney(data?.contract_credit||0)}\n`+
+      `ค่าปรับ ${liveMoney(data?.late_fee_amount||0)}\n`+
+      `ยอดคงเหลือ ${liveMoney(data?.balance_after||0)}`;
+
+    const modal=document.getElementById("checkpoint5-success-modal");
+    modal?.classList.remove("hidden");
+    modal?.classList.add("flex");
+
+    checkpoint5EmergencyQuote=null;
+    document.getElementById("checkpoint5-emergency-result")?.classList.add("hidden");
+    document.getElementById("checkpoint5-manual-transref").value="";
+    document.getElementById("checkpoint5-manual-note").value="";
+
+    await Promise.all([
+      loadLiveAdminData(),
+      checkpoint5LoadOperations(false),
+      checkpoint4RefreshManagement(false)
+    ]);
+
+    showToast("ตัดยอดฉุกเฉินสำเร็จ",true);
+  }catch(err){
+    const msg=String(err?.message||"");
+    if(msg.includes("DUPLICATE_BANK_TRANSACTION")){
+      showToast("Transaction Reference นี้ถูกใช้ไปแล้ว ระบบป้องกันการตัดยอดซ้ำ",false);
+    }else if(msg.includes("AMOUNT_MISMATCH")){
+      showToast("ยอดสลิปไม่ตรงกับยอดที่ Server คำนวณ กรุณาคำนวณใหม่",false);
+    }else{
+      showToast(msg||"ตัดยอดฉุกเฉินไม่สำเร็จ",false);
+    }
+  }finally{
+    checkpoint5Busy=false;
+    if(btn){btn.disabled=false;btn.textContent="ยืนยันตัดยอดฉุกเฉิน";}
+  }
+}
+
+window.checkpoint5CloseSuccess=function(){
+  const modal=document.getElementById("checkpoint5-success-modal");
+  modal?.classList.add("hidden");
+  modal?.classList.remove("flex");
+};
+
+// Default paid-at = current device time only as a form convenience.
+// Server still validates/calculates from the submitted timestamp.
+setTimeout(()=>{
+  const el=document.getElementById("checkpoint5-manual-paid-at");
+  if(el && !el.value)el.value=checkpoint5ThaiDateTimeLocalNow();
+},500);
+
+// Refresh whenever the Loans tab is opened.
+const checkpoint5BaseShowAdminTab=window.showAdminTab;
+window.showAdminTab=function(tab){
+  checkpoint5BaseShowAdminTab(tab);
+  if(tab==="loans")checkpoint5LoadOperations(false);
+};
+
+setTimeout(()=>checkpoint5LoadOperations(false),1400);
+</script>
+
 <script>
 /* ============================================================
    CHECKPOINT 4 — LIVE STAFF / RIDER MANAGEMENT
@@ -2504,16 +2812,6 @@ async function checkpoint4eLoadMyCompensation(showMessage=false){
 
     const base=Number(data?.base_salary||0);
     const total=Number(data?.estimated_gross||0);
-
-    const rb=document.getElementById("rider-base-salary");
-    const rt=document.getElementById("rider-pay-preview-total");
-    const ab=document.getElementById("admin-my-base-salary");
-    const at=document.getElementById("admin-my-pay-preview-total");
-
-    if(rb)rb.textContent=liveMoney(base);
-    if(rt)rt.textContent=liveMoney(total);
-    if(ab)ab.textContent=liveMoney(base);
-    if(at)at.textContent=liveMoney(total);
 
     if(showMessage)showToast("รีเฟรชยอดเงินเดือนและรายได้แล้ว",true);
     return data;
