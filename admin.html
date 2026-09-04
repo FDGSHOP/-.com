@@ -1813,62 +1813,99 @@ function liveSetBusy(on,msg="กำลังโหลดข้อมูล..."){
 }
 
 /* Replace legacy login completely */
+async function checkpoint4dStaffLogin(email,password){
+  const res=await fetch(`${ADMIN_SUPABASE_URL}/functions/v1/dynamic-api`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "apikey":ADMIN_SUPABASE_KEY
+    },
+    body:JSON.stringify({
+      type:"STAFF_LOGIN",
+      email,
+      password
+    })
+  });
+
+  let data={};
+  try{data=await res.json();}catch(_){}
+
+  if(!res.ok || data?.status!=="authenticated"){
+    const e=new Error(data?.message||`เข้าสู่ระบบไม่สำเร็จ (HTTP ${res.status})`);
+    e.data=data;
+    throw e;
+  }
+  return data;
+}
+
 async function handleLogin(){
   const email=document.getElementById("login-username").value.trim().toLowerCase();
   const password=document.getElementById("login-password").value;
-  if(!email||!password){
-    showToast("กรุณากรอก Email และ Password",false);return;
-  }
-  if(targetLoginRole==="rider"){
-    showToast("รอบนี้กำลังเชื่อม Admin/Master ก่อน ระบบ Rider LIVE จะเป็นขั้นถัดไป",false);
-    return;
-  }
+  if(!email||!password){showToast("กรุณากรอก Email และ Password",false);return;}
 
   try{
-    showToast("กำลังเข้าสู่ระบบ Supabase...",true);
-    const {data,error}=await adminSb.auth.signInWithPassword({email,password});
-    if(error)throw error;
-    if(!data.session)throw new Error("Session not found");
-    liveStaffSession=data.session;
+    showToast("กำลังตรวจสอบบัญชี...",true);
+
+    const login=await checkpoint4dStaffLogin(email,password);
+    const {data:setData,error:setErr}=await adminSb.auth.setSession({
+      access_token:login.access_token,
+      refresh_token:login.refresh_token
+    });
+    if(setErr)throw setErr;
+    if(!setData?.session)throw new Error("ไม่สามารถสร้าง Session ได้");
 
     const profile=await fdgLoadMyStaffProfile();
     if(!liveRoleAllowed(profile,targetLoginRole)){
       await adminSb.auth.signOut();
-      throw new Error("บัญชีนี้ไม่มีสิทธิ์เข้า Admin/Master");
+      throw new Error(targetLoginRole==="rider"
+        ?"บัญชีนี้ไม่มีสิทธิ์เข้า Rider"
+        :"บัญชีนี้ไม่มีสิทธิ์เข้า Admin/Master");
     }
     if(String(profile.status)!=="active"){
       await adminSb.auth.signOut();
       throw new Error("บัญชีนี้ไม่ได้อยู่ในสถานะ active");
     }
 
+    liveStaffSession=setData.session;
     currentUser={
       id:profile.id,
       name:profile.display_name||profile.username||email,
       username:profile.username,
       phone:profile.phone||"",
       role:String(profile.role),
-      status:String(profile.status)
+      status:String(profile.status),
+      commission_rate:Number(profile.commission_rate||0.07)
     };
     isMaster=currentUser.role==="master";
 
-    openDashboard("admin");
-    await loadLiveAdminData();
-    showToast(isMaster?"เข้าสู่ระบบ Master สำเร็จ":"เข้าสู่ระบบ Admin สำเร็จ",true);
-  }catch(err){
-    console.error(err);
-    showToast(err?.message||"เข้าสู่ระบบไม่สำเร็จ",false);
-  }
-}
+    const portalRole=currentUser.role==="rider"?"rider":"admin";
+    openDashboard(portalRole);
 
-async function logout(){
-  try{await adminSb.auth.signOut();}catch(e){}
-  liveStaffSession=null;
-  currentUser=null;
-  isMaster=false;
-  document.getElementById("admin-app").classList.add("hidden");
-  document.getElementById("rider-app").classList.add("hidden");
-  document.getElementById("portal-screen").classList.remove("hidden");
-  showToast("ออกจากระบบเรียบร้อยแล้ว",true);
+    if(portalRole==="rider"){
+      await loadLiveRiderData();
+      phase2d2StartRiderRefresh();
+      showToast(`ยินดีต้อนรับ ${currentUser.name}`,true);
+    }else{
+      await loadLiveAdminData();
+      showToast(isMaster?"เข้าสู่ระบบ Master สำเร็จ":"เข้าสู่ระบบ Admin สำเร็จ",true);
+    }
+  }catch(err){
+    console.error("Guarded login:",err);
+    const d=err?.data||{};
+    if(d?.code==="ACCOUNT_LOCKED"){
+      showToast("บัญชีถูกล็อกเพราะ Login ผิดครบ 3 ครั้ง กรุณาติดต่อ Master เพื่อเปลี่ยนรหัสผ่านและปลดล็อก",false);
+    }else if(d?.code==="LOGIN_FAILED"){
+      const remaining=Number(d.remaining_attempts);
+      showToast(
+        remaining>=0
+          ? `Email หรือ Password ไม่ถูกต้อง • เหลืออีก ${remaining} ครั้งก่อนบัญชีถูกล็อก`
+          : "Email หรือ Password ไม่ถูกต้อง",
+        false
+      );
+    }else{
+      showToast(err?.message||"เข้าสู่ระบบไม่สำเร็จ",false);
+    }
+  }
 }
 
 async function bootAdminSession(){
@@ -2271,6 +2308,17 @@ window.addEventListener("load",()=>setTimeout(bootAdminSession,900));
         </div>
       </div>
 
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="border rounded-xl p-3">
+          <div class="font-bold text-sm mb-2">ประวัติปรับฐานเงินเดือน</div>
+          <div id="checkpoint4d-salary-history" class="text-sm text-slate-500">กำลังโหลด...</div>
+        </div>
+        <div class="border rounded-xl p-3">
+          <div class="font-bold text-sm mb-2">ความปลอดภัยการเข้าสู่ระบบ</div>
+          <div id="checkpoint4d-login-security" class="text-sm text-slate-500">กำลังโหลด...</div>
+        </div>
+      </div>
+
       <div class="border rounded-xl p-3">
         <div class="font-bold text-sm mb-2">วันทำงานล่าสุด</div>
         <div id="checkpoint4-detail-work" class="text-sm overflow-x-auto"></div>
@@ -2279,6 +2327,64 @@ window.addEventListener("load",()=>setTimeout(bootAdminSession,900));
 
     <div id="checkpoint4-detail-actions" class="p-4 border-t bg-slate-50 flex flex-wrap gap-2 justify-end">
       <button onclick="checkpoint4CloseStaffDetail()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">ปิด</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- CHECKPOINT 4D: ADJUST BASE SALARY -->
+<div id="checkpoint4d-salary-modal" class="hidden fixed inset-0 z-[4200] bg-black/50 items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5">
+    <div class="flex justify-between items-start">
+      <div>
+        <div class="text-xs font-bold text-indigo-600">MASTER CONTROL</div>
+        <h3 class="font-bold text-xl">ปรับฐานเงินเดือน</h3>
+        <div id="checkpoint4d-salary-target" class="text-xs text-slate-500 mt-1"></div>
+      </div>
+      <button onclick="checkpoint4dCloseSalaryModal()" class="text-2xl text-slate-400">×</button>
+    </div>
+    <div class="mt-4 space-y-3">
+      <div>
+        <label class="text-xs font-bold text-slate-600">ฐานเงินเดือนปัจจุบัน</label>
+        <div id="checkpoint4d-current-salary" class="p-3 bg-slate-50 rounded-lg font-bold text-indigo-700">฿0.00</div>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-slate-600">ฐานเงินเดือนใหม่</label>
+        <input id="checkpoint4d-new-salary" type="number" min="0" step="0.01" class="w-full border rounded-lg p-3" placeholder="0.00">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-slate-600">เหตุผล / หมายเหตุ</label>
+        <textarea id="checkpoint4d-salary-reason" class="w-full border rounded-lg p-3" rows="3" placeholder="เช่น ปรับเงินเดือนประจำปี / ผ่านทดลองงาน"></textarea>
+      </div>
+      <button id="checkpoint4d-save-salary-btn" onclick="checkpoint4dSaveSalary()" class="w-full bg-indigo-600 text-white rounded-xl py-2.5 font-bold">บันทึกการปรับฐานเงินเดือน</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKPOINT 4D: RESET PASSWORD -->
+<div id="checkpoint4d-password-modal" class="hidden fixed inset-0 z-[4200] bg-black/50 items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5">
+    <div class="flex justify-between items-start">
+      <div>
+        <div class="text-xs font-bold text-red-600">MASTER SECURITY</div>
+        <h3 class="font-bold text-xl">ตั้งรหัสผ่านใหม่</h3>
+        <div id="checkpoint4d-password-target" class="text-xs text-slate-500 mt-1"></div>
+      </div>
+      <button onclick="checkpoint4dClosePasswordModal()" class="text-2xl text-slate-400">×</button>
+    </div>
+    <div class="mt-4 space-y-3">
+      <div>
+        <label class="text-xs font-bold text-slate-600">Password ใหม่</label>
+        <input id="checkpoint4d-new-password" type="password" minlength="8" class="w-full border rounded-lg p-3" placeholder="อย่างน้อย 8 ตัวอักษร">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-slate-600">Repassword</label>
+        <input id="checkpoint4d-repassword" type="password" minlength="8" class="w-full border rounded-lg p-3" placeholder="กรอกรหัสผ่านเดิมอีกครั้ง">
+      </div>
+      <div class="text-[11px] text-slate-500 bg-amber-50 border border-amber-200 rounded-lg p-2">
+        ถ้าบัญชีถูกล็อกเพราะ Login ผิดครบ 3 ครั้ง การตั้งรหัสใหม่สำเร็จจะปลดล็อกบัญชีให้อัตโนมัติ
+      </div>
+      <button id="checkpoint4d-reset-password-btn" onclick="checkpoint4dResetPassword()" class="w-full bg-red-600 text-white rounded-xl py-2.5 font-bold">เปลี่ยนรหัสผ่าน</button>
     </div>
   </div>
 </div>
@@ -2293,6 +2399,9 @@ let checkpoint4Jobs=[];
 let checkpoint4Busy=false;
 let checkpoint4CreateInFlight=false;
 let checkpoint4CurrentDetailUserId=null;
+let checkpoint4dDetailData=null;
+let checkpoint4dSalaryBusy=false;
+let checkpoint4dPasswordBusy=false;
 
 async function checkpoint4Edge(body){
   const {data:s}=await adminSb.auth.getSession();
@@ -2736,6 +2845,53 @@ window.checkpoint4OpenStaffDetail=async function(userId){
 
     document.getElementById("checkpoint4-detail-payroll").innerHTML=checkpoint4PayrollRows(data.payroll||[]);
     document.getElementById("checkpoint4-detail-work").innerHTML=checkpoint4WorkRows(data.recent_work_sessions||[]);
+    checkpoint4dDetailData=data;
+
+    try{
+      const [salaryRes,securityRes]=await Promise.all([
+        adminSb.rpc("fdg_salary_adjustment_history",{p_user_id:userId}),
+        adminSb.rpc("fdg_staff_security_snapshot",{p_user_id:userId})
+      ]);
+
+      const salaryRows=salaryRes.error?[]:(salaryRes.data?.items||[]);
+      const sec=securityRes.error?null:securityRes.data;
+
+      const salaryBox=document.getElementById("checkpoint4d-salary-history");
+      if(salaryBox){
+        salaryBox.innerHTML=salaryRows.length
+          ? salaryRows.map(x=>`
+              <div class="border-b last:border-0 py-2">
+                <div class="flex justify-between gap-2">
+                  <b>${liveMoney(x.old_salary)} → ${liveMoney(x.new_salary)}</b>
+                  <span class="${Number(x.delta||0)>=0?"text-emerald-600":"text-red-600"} font-bold">
+                    ${Number(x.delta||0)>=0?"+":""}${liveMoney(x.delta)}
+                  </span>
+                </div>
+                <div class="text-[11px] text-slate-500">
+                  ${x.effective_date?new Date(x.effective_date+"T00:00:00").toLocaleDateString("th-TH"):"-"}
+                  • ${liveEsc(x.reason||"ไม่ระบุเหตุผล")}
+                </div>
+              </div>`).join("")
+          : '<div class="text-slate-400">ยังไม่มีประวัติปรับฐานเงินเดือน</div>';
+      }
+
+      const secBox=document.getElementById("checkpoint4d-login-security");
+      if(secBox){
+        if(!sec){
+          secBox.innerHTML='<div class="text-slate-400">ยังไม่มีข้อมูลการล็อกอิน</div>';
+        }else{
+          const locked=!!sec.login_locked;
+          secBox.innerHTML=`
+            <div class="flex justify-between py-1"><span>Login ผิดต่อเนื่อง</span><b>${Number(sec.failed_attempts||0)} / 3</b></div>
+            <div class="flex justify-between py-1"><span>สถานะ Login Lock</span><b class="${locked?"text-red-600":"text-emerald-600"}">${locked?"LOCKED":"NORMAL"}</b></div>
+            <div class="text-[11px] text-slate-500 mt-1">
+              ${sec.last_failed_at?`ผิดล่าสุด: ${new Date(sec.last_failed_at).toLocaleString("th-TH")}`:"ยังไม่มี Login ผิดที่บันทึก"}
+            </div>`;
+        }
+      }
+    }catch(extraErr){
+      console.warn("Staff extra detail:",extraErr);
+    }
 
     const actions=document.getElementById("checkpoint4-detail-actions");
     let actionHtml='<button onclick="checkpoint4CloseStaffDetail()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">ปิด</button>';
@@ -2750,6 +2906,8 @@ window.checkpoint4OpenStaffDetail=async function(userId){
         const label=next==="suspended"?"ระงับบัญชี":"ปลดระงับบัญชี";
         const cls=next==="suspended"?"bg-amber-500":"bg-emerald-600";
         actionHtml=`
+          <button onclick="checkpoint4dOpenSalaryModal('${u.id}')" class="bg-indigo-600 text-white rounded-lg px-3 py-2 text-sm font-bold">ปรับฐานเงินเดือน</button>
+          <button onclick="checkpoint4dOpenPasswordModal('${u.id}')" class="bg-slate-700 text-white rounded-lg px-3 py-2 text-sm font-bold">เปลี่ยนรหัสผ่าน</button>
           <button onclick="checkpoint4SetStatus('${u.id}','${next}')" class="${cls} text-white rounded-lg px-3 py-2 text-sm font-bold">${label}</button>
           <button onclick="checkpoint4ArchiveStaff('${u.id}')" class="bg-red-600 text-white rounded-lg px-3 py-2 text-sm font-bold">ลบบัญชี (เก็บประวัติ)</button>
           ${actionHtml}`;
@@ -2760,6 +2918,118 @@ window.checkpoint4OpenStaffDetail=async function(userId){
     console.error("Staff detail:",err);
     document.getElementById("checkpoint4-detail-name").textContent="โหลดข้อมูลไม่สำเร็จ";
     document.getElementById("checkpoint4-detail-basic").innerHTML=`<div class="text-red-600">${liveEsc(err?.message||"Unknown error")}</div>`;
+  }
+};
+
+
+window.checkpoint4dOpenSalaryModal=function(userId){
+  const u=checkpoint4Staff.find(x=>String(x.id)===String(userId))||checkpoint4dDetailData?.profile;
+  if(!u)return;
+  document.getElementById("checkpoint4d-salary-target").textContent=`${u.display_name||u.username} • ${String(u.role||"").toUpperCase()}`;
+  document.getElementById("checkpoint4d-current-salary").textContent=liveMoney(u.base_salary||0);
+  document.getElementById("checkpoint4d-new-salary").value=Number(u.base_salary||0).toFixed(2);
+  document.getElementById("checkpoint4d-salary-reason").value="";
+  const modal=document.getElementById("checkpoint4d-salary-modal");
+  modal.dataset.userId=userId;
+  modal.classList.remove("hidden");modal.classList.add("flex");
+};
+
+window.checkpoint4dCloseSalaryModal=function(){
+  const modal=document.getElementById("checkpoint4d-salary-modal");
+  modal?.classList.add("hidden");modal?.classList.remove("flex");
+};
+
+window.checkpoint4dSaveSalary=async function(){
+  if(!isMaster||checkpoint4dSalaryBusy)return;
+  const modal=document.getElementById("checkpoint4d-salary-modal");
+  const userId=modal?.dataset.userId;
+  const newSalary=Number(document.getElementById("checkpoint4d-new-salary")?.value||0);
+  const reason=document.getElementById("checkpoint4d-salary-reason")?.value.trim();
+
+  if(!userId||!Number.isFinite(newSalary)||newSalary<0){
+    showToast("ฐานเงินเดือนใหม่ไม่ถูกต้อง",false);return;
+  }
+  if(!reason){showToast("กรุณาระบุเหตุผลการปรับเงินเดือน",false);return;}
+  if(!confirm(`ยืนยันปรับฐานเงินเดือนเป็น ${liveMoney(newSalary)} ?`))return;
+
+  checkpoint4dSalaryBusy=true;
+  const btn=document.getElementById("checkpoint4d-save-salary-btn");
+  if(btn){btn.disabled=true;btn.textContent="กำลังบันทึก...";}
+  try{
+    const {data,error}=await adminSb.rpc("fdg_master_adjust_base_salary",{
+      p_user_id:userId,
+      p_new_salary:newSalary,
+      p_reason:reason
+    });
+    if(error)throw error;
+
+    showToast(
+      `ปรับฐานเงินเดือนสำเร็จ ${liveMoney(data?.old_salary||0)} → ${liveMoney(data?.new_salary||newSalary)}`,
+      true
+    );
+    checkpoint4dCloseSalaryModal();
+    await checkpoint4RefreshManagement();
+    await checkpoint4OpenStaffDetail(userId);
+  }catch(err){
+    showToast(err?.message||"ปรับฐานเงินเดือนไม่สำเร็จ",false);
+  }finally{
+    checkpoint4dSalaryBusy=false;
+    if(btn){btn.disabled=false;btn.textContent="บันทึกการปรับฐานเงินเดือน";}
+  }
+};
+
+window.checkpoint4dOpenPasswordModal=function(userId){
+  const u=checkpoint4Staff.find(x=>String(x.id)===String(userId))||checkpoint4dDetailData?.profile;
+  if(!u)return;
+  document.getElementById("checkpoint4d-password-target").textContent=`${u.display_name||u.username} • ${u.username||"-"}`;
+  document.getElementById("checkpoint4d-new-password").value="";
+  document.getElementById("checkpoint4d-repassword").value="";
+  const modal=document.getElementById("checkpoint4d-password-modal");
+  modal.dataset.userId=userId;
+  modal.classList.remove("hidden");modal.classList.add("flex");
+};
+
+window.checkpoint4dClosePasswordModal=function(){
+  const modal=document.getElementById("checkpoint4d-password-modal");
+  modal?.classList.add("hidden");modal?.classList.remove("flex");
+};
+
+window.checkpoint4dResetPassword=async function(){
+  if(!isMaster||checkpoint4dPasswordBusy)return;
+  const modal=document.getElementById("checkpoint4d-password-modal");
+  const userId=modal?.dataset.userId;
+  const pass=document.getElementById("checkpoint4d-new-password")?.value||"";
+  const repass=document.getElementById("checkpoint4d-repassword")?.value||"";
+
+  if(!userId){showToast("ไม่พบพนักงาน",false);return;}
+  if(pass.length<8){showToast("Password ต้องอย่างน้อย 8 ตัวอักษร",false);return;}
+  if(pass!==repass){showToast("Password และ Repassword ไม่ตรงกัน",false);return;}
+  if(!confirm("ยืนยันเปลี่ยนรหัสผ่านพนักงาน?"))return;
+
+  checkpoint4dPasswordBusy=true;
+  const btn=document.getElementById("checkpoint4d-reset-password-btn");
+  if(btn){btn.disabled=true;btn.textContent="กำลังเปลี่ยนรหัส...";}
+
+  try{
+    const data=await checkpoint4Edge({
+      type:"STAFF_RESET_PASSWORD",
+      user_id:userId,
+      new_password:pass
+    });
+    showToast(
+      data?.unlocked
+        ?"เปลี่ยนรหัสและปลด Login Lock สำเร็จ"
+        :"เปลี่ยนรหัสผ่านสำเร็จ",
+      true
+    );
+    checkpoint4dClosePasswordModal();
+    await checkpoint4RefreshManagement();
+    await checkpoint4OpenStaffDetail(userId);
+  }catch(err){
+    showToast(err?.message||"เปลี่ยนรหัสผ่านไม่สำเร็จ",false);
+  }finally{
+    checkpoint4dPasswordBusy=false;
+    if(btn){btn.disabled=false;btn.textContent="เปลี่ยนรหัสผ่าน";}
   }
 };
 
