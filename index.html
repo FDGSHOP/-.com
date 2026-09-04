@@ -6,7 +6,6 @@
   <title>สินเชื่อเพื่อคนพะเยา</title>
   
   <!-- PWA Metadata -->
-  <link rel="manifest" href="phayao-clean-manifest.json">
   <meta name="theme-color" content="#1e5bb8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -374,6 +373,13 @@
   }
 </style>
 
+<link rel="manifest" href="./phayao-clean-manifest.json">
+<meta name="theme-color" content="#1e5bb8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="./fdg-logo-192.png">
+
 </head>
 <body>
 
@@ -383,7 +389,7 @@
       <img class="brand-logo" alt="โลโก้" src="fdg-logo-192.png">
       <div class="brand-copy">
         <div class="brand-title">สินเชื่อเพื่อคนพะเยา</div>
-        <div class="brand-sub">Customer Member</div>
+        <div class="brand-sub">สมาชิกสินเชื่อ</div>
       </div>
     </div>
     <div class="top-actions">
@@ -1510,23 +1516,70 @@
     }
 
     // -------------------------------------------------------------
-    // 3. PWA Installation Handler
+    // 3. PWA Installation Handler — Native prompt อัตโนมัติ
     // -------------------------------------------------------------
+    deferredPrompt = null;
+    let pwaAutoInstallArmed = false;
+
+    function isStandalonePwa() {
+      return window.matchMedia?.('(display-mode: standalone)').matches ||
+             window.navigator.standalone === true;
+    }
+
+    async function fireNativePwaInstallPrompt() {
+      if (!deferredPrompt || isStandalonePwa()) return false;
+
+      const promptEvent = deferredPrompt;
+      deferredPrompt = null;
+
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        const btn = document.getElementById('btnPwaInstall');
+        if (choice?.outcome === 'accepted' && btn) btn.style.display = 'none';
+        return choice?.outcome === 'accepted';
+      } catch (err) {
+        console.warn('PWA install prompt:', err);
+        deferredPrompt = promptEvent;
+        return false;
+      }
+    }
+
+    function armPwaInstallOnFirstGesture() {
+      if (pwaAutoInstallArmed || isStandalonePwa()) return;
+      pwaAutoInstallArmed = true;
+
+      const trigger = async () => {
+        pwaAutoInstallArmed = false;
+        await fireNativePwaInstallPrompt();
+      };
+
+      document.addEventListener('pointerdown', trigger, {capture:true, once:true});
+      document.addEventListener('keydown', trigger, {capture:true, once:true});
+    }
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      document.getElementById('btnPwaInstall').style.display = 'inline-block';
+
+      const btn = document.getElementById('btnPwaInstall');
+      if (btn) btn.style.display = 'inline-block';
+
+      armPwaInstallOnFirstGesture();
     });
 
-    function installPWA() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choice) => {
-          if (choice.outcome === 'accepted') document.getElementById('btnPwaInstall').style.display = 'none';
-          deferredPrompt = null;
-        });
-      } else {
-        alert("วิธีติดตั้งบน iOS (Safari):\nกดปุ่ม แชร์ (Share) ด้านล่าง แล้วเลือก 'เพิ่มไปยังหน้าจอหลัก' (Add to Home Screen)");
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const btn = document.getElementById('btnPwaInstall');
+      if (btn) btn.style.display = 'none';
+    });
+
+    async function installPWA() {
+      if (isStandalonePwa()) return;
+      const accepted = await fireNativePwaInstallPrompt();
+
+      if (!accepted && !deferredPrompt && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
+        alert("iPhone/iPad ต้องยืนยันผ่าน Safari: กด แชร์ แล้วเลือก “เพิ่มไปยังหน้าจอหลัก”");
       }
     }
 
@@ -2107,7 +2160,7 @@
     // LIVE mode: old localStorage preview initializer disabled.
 
     if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-      window.addEventListener('load',()=>navigator.serviceWorker.register('./phayao-clean-sw.js').catch(()=>{}));
+      window.addEventListener('load',()=>navigator.serviceWorker.register('./phayao-clean-sw.js', {updateViaCache:'none'}).catch(()=>{}));
     }
   </script>
 
@@ -3089,7 +3142,7 @@ function renderRealPaymentHistory(){
     const dt=new Date(p.verified_at||p.created_at);
     const type=
       p.payment_source==="RIDER_CASH" ? "เงินสด Rider" :
-      (p.payment_source==="ADMIN_ADJUSTMENT" || p.payment_source==="ADMIN_MANUAL") ? "Admin บันทึกฉุกเฉิน" :
+      p.payment_source==="ADMIN_MANUAL" ? "Admin บันทึกฉุกเฉิน" :
       p.payment_type==="INTEREST_ONLY" ? "ดอกเบี้ยลอย" :
       "เต็มงวด";
 
@@ -3125,7 +3178,7 @@ function receiptMoney(v){return money(Number(v||0));}
 
 function receiptPaymentTypeLabel(type,source){
   if(source==="RIDER_CASH")return "ชำระเงินสดผ่าน Rider";
-  if(source==="ADMIN_ADJUSTMENT" || source==="ADMIN_MANUAL")return "Admin บันทึกยอดฉุกเฉิน";
+  if(source==="ADMIN_MANUAL")return "Admin บันทึกยอดฉุกเฉิน";
   return type==="INTEREST_ONLY"
     ? "ชำระเฉพาะดอกเบี้ย (ดอกลอย — ไม่ตัดเงินต้น)"
     : "ชำระเต็มงวด (เงินต้น + ดอกเบี้ย)";
@@ -3150,7 +3203,7 @@ async function showElectronicReceipt(paymentId){
     setSafeText("recInstallmentNo",data.installment_no!=null?String(data.installment_no):"-");
     setSafeText("recType",receiptPaymentTypeLabel(data.payment_type,data.payment_source));
 
-    const dt=new Date(data.payment_time||data.verified_at||data.created_at);
+    const dt=new Date(data.verified_at||data.created_at);
     setSafeText(
       "recDate",
       dt.toLocaleString("th-TH",{
@@ -3176,7 +3229,7 @@ async function showElectronicReceipt(paymentId){
       "recPaymentChannel",
       data.payment_source==="RIDER_CASH"
         ?"เงินสดผ่าน Rider"
-        :(data.payment_source==="ADMIN_ADJUSTMENT" || data.payment_source==="ADMIN_MANUAL")
+        :data.payment_source==="ADMIN_MANUAL"
           ?"Admin Manual"
           :"PromptPay / EasySlip"
     );
@@ -3230,30 +3283,33 @@ async function requestPaymentChannelChange(){
 
   const current=liveLoan.payment_channel||liveCustomer.preferred_payment_channel||"SCAN";
   const requested=current==="SCAN"?"CASH":"SCAN";
+  if(!confirm(`ขอเปลี่ยนช่องทางจาก ${current} → ${requested} หรือไม่?\nคำขอจะส่งให้ Admin ตรวจสอบ`))return;
 
-  if(!confirm(
-    `ขอเปลี่ยนช่องทางจาก ${current} → ${requested} หรือไม่?\n`+
-    `คำขอจะส่งให้ Admin ตรวจสอบก่อนมีผลจริง`
-  ))return;
+  const {data:existing}=await liveSb
+    .from("payment_channel_requests")
+    .select("id,status")
+    .eq("customer_id",liveCustomer.id)
+    .eq("status","pending")
+    .limit(1);
 
-  try{
-    const {data,error}=await liveSb.rpc("fdg_customer_request_payment_channel",{
-      p_requested_channel:requested,
-      p_reason:"ลูกค้าร้องขอผ่านหน้าเว็บไซต์"
-    });
-    if(error)throw error;
+  if(existing?.length){
+    liveToast("คุณมีคำขอเปลี่ยนช่องทางที่รอการตรวจสอบอยู่แล้ว",false);return;
+  }
 
-    liveToast(
-      `ส่งคำขอ ${current} → ${requested} แล้ว\n`+
-      `รอ Admin อนุมัติก่อนเปลี่ยนจริง`
-    );
-  }catch(err){
-    const msg=String(err?.message||"");
-    if(msg.includes("REQUEST_ALREADY_PENDING")){
-      liveToast("มีคำขอเปลี่ยนช่องทางที่กำลังรอ Admin อยู่แล้ว",false);
-    }else{
-      liveToast(msg||"ส่งคำขอไม่สำเร็จ",false);
-    }
+  const {error}=await liveSb.from("payment_channel_requests").insert({
+    customer_id:liveCustomer.id,
+    loan_id:liveLoan.id,
+    current_channel:current,
+    requested_channel:requested,
+    reason:"ลูกค้าร้องขอผ่านหน้าเว็บไซต์",
+    status:"pending"
+  });
+
+  if(error){
+    console.error(error);
+    liveToast("ส่งคำขอไม่สำเร็จ",false);
+  }else{
+    liveToast(`ส่งคำขอเปลี่ยนเป็น ${requested} ให้ Admin แล้ว`);
   }
 }
 
