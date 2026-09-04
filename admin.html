@@ -449,7 +449,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <p class="text-xs text-amber-600">* Master สร้างแล้วใช้งานได้ทันที • ทุกการเปลี่ยนแปลงมี Audit Log</p>
-                            <button onclick="checkpoint4CreateStaff()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold text-sm">สร้างบัญชีพนักงาน</button>
+                            <button id="checkpoint4-create-staff-btn" onclick="checkpoint4CreateStaff()" class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded font-bold text-sm">สร้างบัญชีพนักงาน</button>
                         </div>
                     </div>
 
@@ -2215,6 +2215,74 @@ window.addEventListener("load",()=>setTimeout(bootAdminSession,900));
 </script>
 
 
+
+<!-- CHECKPOINT 4C: CREATE SUCCESS -->
+<div id="checkpoint4-create-success" class="hidden fixed inset-0 z-[4000] bg-black/50 items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 text-center">
+    <div class="mx-auto w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mb-3">✓</div>
+    <h3 class="font-bold text-xl text-slate-800">สร้างบัญชีสำเร็จ</h3>
+    <p class="text-sm text-slate-500 mt-1">บัญชีถูกสร้างใน Supabase Auth และ Staff Profile แล้ว</p>
+    <div class="mt-4 bg-slate-50 rounded-xl p-3 text-left text-sm">
+      <div><span class="text-slate-500">ชื่อ:</span> <b id="checkpoint4-success-name">-</b></div>
+      <div><span class="text-slate-500">Email:</span> <b id="checkpoint4-success-email">-</b></div>
+      <div><span class="text-slate-500">สิทธิ์:</span> <b id="checkpoint4-success-role">-</b></div>
+    </div>
+    <button onclick="checkpoint4CloseCreateSuccess()" class="mt-5 w-full bg-emerald-600 text-white rounded-xl py-2.5 font-bold">ตกลง</button>
+  </div>
+</div>
+
+<!-- CHECKPOINT 4C: STAFF DETAIL -->
+<div id="checkpoint4-staff-detail-modal" class="hidden fixed inset-0 z-[3900] bg-black/50 items-center justify-center p-3">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-hidden flex flex-col">
+    <div class="p-4 border-b flex items-start justify-between gap-3">
+      <div>
+        <div class="text-xs text-indigo-600 font-bold">EMPLOYEE PROFILE</div>
+        <h3 id="checkpoint4-detail-name" class="font-bold text-xl text-slate-800">ข้อมูลพนักงาน</h3>
+        <div id="checkpoint4-detail-role-status" class="text-xs text-slate-500 mt-1"></div>
+      </div>
+      <button onclick="checkpoint4CloseStaffDetail()" class="text-2xl text-slate-400 hover:text-slate-800">×</button>
+    </div>
+
+    <div class="p-4 overflow-y-auto space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="border rounded-xl p-3">
+          <div class="font-bold text-sm mb-2">ข้อมูลติดต่อ / การทำงาน</div>
+          <div id="checkpoint4-detail-basic" class="text-sm space-y-1"></div>
+        </div>
+        <div class="border rounded-xl p-3">
+          <div class="font-bold text-sm mb-2">บัญชีธนาคาร / ที่อยู่</div>
+          <div id="checkpoint4-detail-bank" class="text-sm space-y-1"></div>
+        </div>
+      </div>
+
+      <div class="border rounded-xl p-3">
+        <div class="font-bold text-sm mb-2">พื้นที่ / ภาระงาน / เงินบริษัท</div>
+        <div id="checkpoint4-detail-operation" class="text-sm"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="border rounded-xl p-3">
+          <div class="font-bold text-sm mb-2">สรุปรายได้เดือนปัจจุบัน</div>
+          <div id="checkpoint4-detail-income" class="text-sm"></div>
+        </div>
+        <div class="border rounded-xl p-3">
+          <div class="font-bold text-sm mb-2">ประวัติสลิปเงินเดือนที่มีในระบบ</div>
+          <div id="checkpoint4-detail-payroll" class="text-sm"></div>
+        </div>
+      </div>
+
+      <div class="border rounded-xl p-3">
+        <div class="font-bold text-sm mb-2">วันทำงานล่าสุด</div>
+        <div id="checkpoint4-detail-work" class="text-sm overflow-x-auto"></div>
+      </div>
+    </div>
+
+    <div id="checkpoint4-detail-actions" class="p-4 border-t bg-slate-50 flex flex-wrap gap-2 justify-end">
+      <button onclick="checkpoint4CloseStaffDetail()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">ปิด</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ============================================================
    CHECKPOINT 4 — LIVE STAFF / RIDER MANAGEMENT
@@ -2223,6 +2291,8 @@ let checkpoint4Staff=[];
 let checkpoint4Areas=[];
 let checkpoint4Jobs=[];
 let checkpoint4Busy=false;
+let checkpoint4CreateInFlight=false;
+let checkpoint4CurrentDetailUserId=null;
 
 async function checkpoint4Edge(body){
   const {data:s}=await adminSb.auth.getSession();
@@ -2280,21 +2350,10 @@ function checkpoint4RenderStaff(){
     const cash=Number(u.company_money_outstanding||0);
     const jobs=Number(u.open_jobs||0);
 
-    let actions='<span class="text-xs text-gray-400">ดูข้อมูล</span>';
-    if(isMaster && masterTarget){
-      if(archived){
-        actions=`<button onclick="checkpoint4RestoreStaff('${u.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold">กู้คืน</button>`;
-      }else{
-        const suspendAction=String(u.status)==="active"?"suspended":"active";
-        const suspendText=String(u.status)==="active"?"ระงับ":"ปลดระงับ";
-        const suspendClass=String(u.status)==="active"?"bg-amber-500":"bg-emerald-600";
-        actions=`
-          <div class="flex gap-1 flex-wrap">
-            <button onclick="checkpoint4SetStatus('${u.id}','${suspendAction}')" class="${suspendClass} text-white px-2 py-1 rounded text-xs font-bold">${suspendText}</button>
-            <button onclick="checkpoint4ArchiveStaff('${u.id}')" class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">ลบบัญชี</button>
-          </div>`;
-      }
-    }
+    let actions=`
+      <button onclick="checkpoint4OpenStaffDetail('${u.id}')" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
+        ดูข้อมูล
+      </button>`;
 
     return `<tr class="border-b align-top">
       <td class="p-3">
@@ -2339,8 +2398,8 @@ function checkpoint4RenderStaff(){
   const badge=document.getElementById("master-badge-indicator");
   if(badge){
     badge.textContent=isMaster
-      ?"Master: สร้าง / ระงับ / ลบ / พื้นที่"
-      :"Admin: ดูบัญชี + มอบหมายงาน";
+      ?"Master: สร้าง / ดูข้อมูล / จัดการสถานะ / พื้นที่"
+      :"Admin: ดูข้อมูลพนักงาน + มอบหมายงาน";
   }
 }
 
@@ -2499,11 +2558,15 @@ async function checkpoint4RefreshManagement(showMessage=false){
 
 window.checkpoint4CreateStaff=async function(){
   if(!isMaster){showToast("เฉพาะ Master เท่านั้นที่สร้างบัญชีได้",false);return;}
+  if(checkpoint4CreateInFlight){
+    showToast("กำลังสร้างบัญชีอยู่ กรุณารอผลก่อนกดซ้ำ",false);
+    return;
+  }
 
   const displayName=document.getElementById("new-user-fullname")?.value.trim();
   const phone=document.getElementById("new-user-phone")?.value.trim();
   const role=document.getElementById("new-user-role")?.value;
-  const email=document.getElementById("new-user-username")?.value.trim();
+  const email=document.getElementById("new-user-username")?.value.trim().toLowerCase();
   const password=document.getElementById("new-user-password")?.value||"";
   const bankName=document.getElementById("new-user-bankname")?.value.trim();
   const bankAccount=document.getElementById("new-user-bankacc")?.value.trim();
@@ -2513,7 +2576,19 @@ window.checkpoint4CreateStaff=async function(){
     showToast("กรอกชื่อ Email และ Password อย่างน้อย 8 ตัวอักษร",false);return;
   }
 
-  if(!confirm(`ยืนยันสร้างบัญชี ${role.toUpperCase()}\\n${displayName}\\n${email}`))return;
+  if(checkpoint4Staff.some(u=>String(u.username||"").toLowerCase()===email && !u.deleted_at)){
+    showToast("Email นี้มีบัญชีพนักงานอยู่แล้ว",false);return;
+  }
+
+  if(!confirm(`ยืนยันสร้างบัญชี ${role.toUpperCase()}\n${displayName}\n${email}`))return;
+
+  const btn=document.getElementById("checkpoint4-create-staff-btn");
+  checkpoint4CreateInFlight=true;
+  if(btn){
+    btn.disabled=true;
+    btn.dataset.oldText=btn.textContent;
+    btn.textContent="กำลังสร้างบัญชี...";
+  }
 
   liveSetBusy(true,"กำลังสร้าง Supabase Auth + Staff Profile...");
   try{
@@ -2530,16 +2605,162 @@ window.checkpoint4CreateStaff=async function(){
     });
 
     ["new-user-fullname","new-user-phone","new-user-username","new-user-password",
-     "new-user-bankname","new-user-bankacc","new-user-address"].forEach(id=>{
+     "new-user-bankacc","new-user-address"].forEach(id=>{
        const el=document.getElementById(id);if(el)el.value="";
      });
+    const bank=document.getElementById("new-user-bankname");
+    if(bank)bank.value="";
 
-    showToast(`สร้างบัญชี ${data.role} สำเร็จ`,true);
     await checkpoint4RefreshManagement();
+
+    document.getElementById("checkpoint4-success-name").textContent=displayName;
+    document.getElementById("checkpoint4-success-email").textContent=email;
+    document.getElementById("checkpoint4-success-role").textContent=String(data.role||role).toUpperCase();
+
+    const success=document.getElementById("checkpoint4-create-success");
+    success?.classList.remove("hidden");
+    success?.classList.add("flex");
+
+    showToast("สร้างบัญชีพนักงานสำเร็จ",true);
   }catch(err){
     console.error("Create staff:",err);
     showToast(err?.message||"สร้างบัญชีไม่สำเร็จ",false);
-  }finally{liveSetBusy(false);}
+  }finally{
+    liveSetBusy(false);
+    checkpoint4CreateInFlight=false;
+    if(btn){
+      btn.disabled=false;
+      btn.textContent=btn.dataset.oldText||"สร้างบัญชีพนักงาน";
+    }
+  }
+};
+
+window.checkpoint4CloseCreateSuccess=function(){
+  const el=document.getElementById("checkpoint4-create-success");
+  el?.classList.add("hidden");
+  el?.classList.remove("flex");
+};
+
+
+function checkpoint4CloseStaffDetail(){
+  const modal=document.getElementById("checkpoint4-staff-detail-modal");
+  modal?.classList.add("hidden");
+  modal?.classList.remove("flex");
+  checkpoint4CurrentDetailUserId=null;
+}
+
+function checkpoint4PayrollRows(rows){
+  if(!Array.isArray(rows)||!rows.length){
+    return '<div class="text-slate-400">ยังไม่มีสลิปเงินเดือนในระบบ</div>';
+  }
+  return rows.map(p=>{
+    const label=`${String(p.period_month).padStart(2,"0")}/${p.period_year}`;
+    const status=String(p.status||"-").toUpperCase();
+    return `<div class="flex justify-between border-b py-1.5 last:border-0">
+      <div>
+        <div class="font-bold">${liveEsc(label)}</div>
+        <div class="text-[11px] text-slate-500">ฐาน ${liveMoney(p.base_salary)} • คอมฯ ${liveMoney(p.commission)} • โบนัส ${liveMoney(p.bonus)} • หัก ${liveMoney(p.deduction)}</div>
+      </div>
+      <div class="text-right">
+        <div class="font-bold text-indigo-600">${liveMoney(p.total_amount)}</div>
+        <div class="text-[11px] ${status==="PAID"?"text-emerald-600":"text-amber-600"}">${liveEsc(status)}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function checkpoint4WorkRows(rows){
+  if(!Array.isArray(rows)||!rows.length)return '<div class="text-slate-400">ยังไม่มีประวัติวันทำงาน</div>';
+  return `<table class="w-full text-xs">
+    <thead><tr class="text-slate-500 border-b"><th class="py-1 text-left">วันที่</th><th>สถานะ</th><th class="text-right">เก็บเงิน</th><th class="text-right">คืนบริษัท</th><th class="text-right">คงค้าง</th></tr></thead>
+    <tbody>${rows.map(w=>`<tr class="border-b last:border-0">
+      <td class="py-1.5">${liveEsc(w.work_date||"-")}</td>
+      <td class="text-center">${liveEsc(String(w.status||"-").toUpperCase())}</td>
+      <td class="text-right">${liveMoney(w.total_collected)}</td>
+      <td class="text-right">${liveMoney(w.total_returned)}</td>
+      <td class="text-right ${Number(w.remaining_company_money||0)>0?"text-red-600 font-bold":"text-emerald-600"}">${liveMoney(w.remaining_company_money)}</td>
+    </tr>`).join("")}</tbody>
+  </table>`;
+}
+
+window.checkpoint4OpenStaffDetail=async function(userId){
+  checkpoint4CurrentDetailUserId=userId;
+  const modal=document.getElementById("checkpoint4-staff-detail-modal");
+  modal?.classList.remove("hidden");
+  modal?.classList.add("flex");
+
+  document.getElementById("checkpoint4-detail-name").textContent="กำลังโหลดข้อมูล...";
+  document.getElementById("checkpoint4-detail-basic").innerHTML='<div class="text-slate-400">กำลังโหลด...</div>';
+  document.getElementById("checkpoint4-detail-bank").innerHTML='<div class="text-slate-400">กำลังโหลด...</div>';
+  document.getElementById("checkpoint4-detail-operation").innerHTML='<div class="text-slate-400">กำลังโหลด...</div>';
+  document.getElementById("checkpoint4-detail-income").innerHTML='<div class="text-slate-400">กำลังโหลด...</div>';
+  document.getElementById("checkpoint4-detail-payroll").innerHTML='<div class="text-slate-400">กำลังโหลด...</div>';
+  document.getElementById("checkpoint4-detail-work").innerHTML='<div class="text-slate-400">กำลังโหลด...</div>';
+
+  try{
+    const {data,error}=await adminSb.rpc("fdg_staff_detail",{p_user_id:userId});
+    if(error)throw error;
+    const u=data?.profile||{};
+    const areas=data?.approved_areas||[];
+
+    document.getElementById("checkpoint4-detail-name").textContent=u.display_name||u.username||"ข้อมูลพนักงาน";
+    document.getElementById("checkpoint4-detail-role-status").textContent=
+      `${String(u.role||"-").toUpperCase()} • ${u.deleted_at?"ARCHIVED":String(u.status||"-").toUpperCase()} • เริ่มอยู่ในระบบ ${u.created_at?new Date(u.created_at).toLocaleDateString("th-TH"):"-"}`;
+
+    document.getElementById("checkpoint4-detail-basic").innerHTML=`
+      <div><span class="text-slate-500">Email/Login:</span> <b>${liveEsc(u.username||"-")}</b></div>
+      <div><span class="text-slate-500">โทร:</span> <b>${liveEsc(u.phone||"-")}</b></div>
+      <div><span class="text-slate-500">ตำแหน่ง:</span> <b>${liveEsc(String(u.role||"-").toUpperCase())}</b></div>
+      <div><span class="text-slate-500">เงินเดือนฐาน:</span> <b>${liveMoney(u.base_salary)}</b></div>
+      <div><span class="text-slate-500">ค่าคอมฯ:</span> <b>${(Number(u.commission_rate||0)*100).toFixed(2)}%</b></div>
+      <div><span class="text-slate-500">วันทำงานเป้าหมาย:</span> <b>${Number(u.required_work_days||0)} วัน</b></div>`;
+
+    document.getElementById("checkpoint4-detail-bank").innerHTML=`
+      <div><span class="text-slate-500">ธนาคาร:</span> <b>${liveEsc(u.bank_name||"ยังไม่ระบุ")}</b></div>
+      <div><span class="text-slate-500">เลขบัญชี:</span> <b>${liveEsc(u.bank_account_number||"-")}</b></div>
+      <div class="mt-2"><span class="text-slate-500">ที่อยู่:</span><br><b>${liveEsc(u.address||"-")}</b></div>`;
+
+    document.getElementById("checkpoint4-detail-operation").innerHTML=`
+      <div class="mb-2"><span class="text-slate-500">พื้นที่อนุมัติ:</span> ${checkpoint4AreaChips(areas)}</div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div class="bg-slate-50 rounded-lg p-2"><div class="text-[11px] text-slate-500">เงินบริษัทค้าง</div><b class="${Number(data.company_money_outstanding||0)>0?"text-red-600":"text-emerald-600"}">${liveMoney(data.company_money_outstanding)}</b></div>
+        <div class="bg-slate-50 rounded-lg p-2"><div class="text-[11px] text-slate-500">งานเปิด</div><b>${Number(data.open_jobs||0)}</b></div>
+        <div class="bg-slate-50 rounded-lg p-2"><div class="text-[11px] text-slate-500">วันทำงานเดือนนี้</div><b>${Number(data.work_days_this_month||0)} วัน</b></div>
+        <div class="bg-slate-50 rounded-lg p-2"><div class="text-[11px] text-slate-500">สถานะบัญชี</div><b>${liveEsc(u.deleted_at?"ARCHIVED":String(u.status||"-").toUpperCase())}</b></div>
+      </div>`;
+
+    document.getElementById("checkpoint4-detail-income").innerHTML=`
+      <div class="flex justify-between py-1"><span>ค่าคอมเก็บเงิน</span><b>${liveMoney(data.collection_commission_this_month)}</b></div>
+      <div class="flex justify-between py-1"><span>ค่าคอมแนะนำ</span><b>${liveMoney(data.referral_commission_this_month)}</b></div>
+      <div class="flex justify-between py-1 border-t mt-1 pt-2 text-indigo-700"><span class="font-bold">รวมคอมมิชชั่นเดือนนี้</span><b>${liveMoney(Number(data.collection_commission_this_month||0)+Number(data.referral_commission_this_month||0))}</b></div>`;
+
+    document.getElementById("checkpoint4-detail-payroll").innerHTML=checkpoint4PayrollRows(data.payroll||[]);
+    document.getElementById("checkpoint4-detail-work").innerHTML=checkpoint4WorkRows(data.recent_work_sessions||[]);
+
+    const actions=document.getElementById("checkpoint4-detail-actions");
+    let actionHtml='<button onclick="checkpoint4CloseStaffDetail()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">ปิด</button>';
+
+    if(isMaster && String(u.role)!=="master"){
+      if(u.deleted_at){
+        actionHtml=`
+          <button onclick="checkpoint4RestoreStaff('${u.id}')" class="bg-emerald-600 text-white rounded-lg px-3 py-2 text-sm font-bold">กู้คืนบัญชี</button>
+          ${actionHtml}`;
+      }else{
+        const next=String(u.status)==="active"?"suspended":"active";
+        const label=next==="suspended"?"ระงับบัญชี":"ปลดระงับบัญชี";
+        const cls=next==="suspended"?"bg-amber-500":"bg-emerald-600";
+        actionHtml=`
+          <button onclick="checkpoint4SetStatus('${u.id}','${next}')" class="${cls} text-white rounded-lg px-3 py-2 text-sm font-bold">${label}</button>
+          <button onclick="checkpoint4ArchiveStaff('${u.id}')" class="bg-red-600 text-white rounded-lg px-3 py-2 text-sm font-bold">ลบบัญชี (เก็บประวัติ)</button>
+          ${actionHtml}`;
+      }
+    }
+    actions.innerHTML=actionHtml;
+  }catch(err){
+    console.error("Staff detail:",err);
+    document.getElementById("checkpoint4-detail-name").textContent="โหลดข้อมูลไม่สำเร็จ";
+    document.getElementById("checkpoint4-detail-basic").innerHTML=`<div class="text-red-600">${liveEsc(err?.message||"Unknown error")}</div>`;
+  }
 };
 
 window.checkpoint4SetStatus=async function(userId,status){
@@ -2557,6 +2778,7 @@ window.checkpoint4SetStatus=async function(userId,status){
     });
     if(error)throw error;
     showToast(`${text}บัญชีสำเร็จ`,true);
+    checkpoint4CloseStaffDetail();
     await checkpoint4RefreshManagement();
   }catch(err){showToast(err?.message||`${text}ไม่สำเร็จ`,false);}
 };
@@ -2580,6 +2802,7 @@ window.checkpoint4ArchiveStaff=async function(userId){
     });
     if(error)throw error;
     showToast("ลบบัญชีเรียบร้อย • เก็บประวัติไว้ครบ",true);
+    checkpoint4CloseStaffDetail();
     await checkpoint4RefreshManagement();
   }catch(err){showToast(err?.message||"ลบบัญชีไม่สำเร็จ",false);}
 };
@@ -2590,6 +2813,7 @@ window.checkpoint4RestoreStaff=async function(userId){
     const {error}=await adminSb.rpc("fdg_master_restore_staff_account",{p_user_id:userId});
     if(error)throw error;
     showToast("กู้คืนบัญชีสำเร็จ",true);
+    checkpoint4CloseStaffDetail();
     await checkpoint4RefreshManagement();
   }catch(err){showToast(err?.message||"กู้คืนบัญชีไม่สำเร็จ",false);}
 };
